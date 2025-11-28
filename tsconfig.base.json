@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "allowSyntheticDefaultImports": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+      "@524/shared/*": ["packages/shared/src/*"],
+      "@524/api/*": ["packages/api/src/*"],
+      "@524/mobile/*": ["packages/mobile/src/*"],
+      "@524/web/*": ["packages/web/src/*"],
+      "@524/database/*": ["packages/database/src/*"],
+      "@524/notifications/*": ["packages/notifications/src/*"]
+    }
+  },
+  "include": [
+    "packages/**/*"
+  ]
+}
+
+

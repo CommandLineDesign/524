@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 5, "column": 0}, "map": {"version":3,"sources":["/turbopack/[project]/packages/web/src/app/providers.tsx"],"sourcesContent":["'use client';\n\nimport { QueryClient, QueryClientProvider } from '@tanstack/react-query';\nimport { ReactNode, useState } from 'react';\n\nexport function AppProviders({ children }: { children: ReactNode }) {\n  const [client] = useState(() => new QueryClient({\n    defaultOptions: {\n      queries: {\n        staleTime: 1000 * 30,\n        refetchOnWindowFocus: false\n      }\n    }\n  }));\n\n  return <QueryClientProvider client={client}>{children}</QueryClientProvider>;\n}\n\n"],"names":[],"mappings":";;;;;;;;;;AAAA;;;AAKO,SAAS,aAAa,EAAE,QAAQ,EAA2B;;IAChE,MAAM,CAAC,OAAO,GAAG,CAAA,GAAA,gLAAA,CAAA,WAAQ,AAAD,EAAE,IAAM,IAAI,gLAAA,CAAA,cAAW,CAAC;YAC9C,gBAAgB;gBACd,SAAS;oBACP,WAAW,OAAO;oBAClB,sBAAsB;gBACxB;YACF;QACF;IAEA,qBAAO,gNAAC,yLAAA,CAAA,sBAAmB;QAAC,QAAQ;kBAAS;;;;;;AAC/C;GAXgB;KAAA"}},
+    {"offset": {"line": 41, "column": 0}, "map": {"version":3,"sources":[],"names":[],"mappings":"A"}}]
+}

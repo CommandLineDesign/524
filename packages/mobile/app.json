@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "524 Mobile",
+    "slug": "five-two-four-mobile",
+    "version": "0.0.1",
+    "main": "index.ts",
+    "orientation": "portrait",
+    "updates": {
+      "fallbackToCacheTimeout": 0
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#111827"
+      }
+    },
+    "web": {
+      "bundler": "metro"
+    }
+  }
+}
+

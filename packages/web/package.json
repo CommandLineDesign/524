@@ -1,0 +1,36 @@
+{
+  "name": "@524/web",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev --turbo",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "test": "echo \"(web) tests not implemented yet\""
+  },
+  "dependencies": {
+    "@524/shared": "file:../shared",
+    "@tanstack/react-query": "^5.90.9",
+    "axios": "^1.7.7",
+    "classnames": "^2.5.1",
+    "date-fns": "^3.6.0",
+    "next": "^16.0.3",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "zustand": "^4.5.2"
+  },
+  "devDependencies": {
+    "@types/classnames": "^2.3.1",
+    "@types/date-fns": "^2.6.0",
+    "@types/node": "^20.19.25",
+    "@types/react": "^19.1.10",
+    "@types/react-dom": "^19.1.10",
+    "autoprefixer": "^10.4.22",
+    "postcss": "^8.4.38",
+    "tailwindcss": "^3.4.10"
+  }
+}
+
+
