@@ -15,7 +15,8 @@
     "dev:api": "./scripts/dev-api.sh",
     "dev:api:direct": "npm run dev --workspace @524/api",
     "dev:web": "npm run dev --workspace @524/web",
-    "dev:mobile": "npm run start --workspace @524/mobile"
+    "dev:mobile": "npm run start --workspace @524/mobile",
+    "vercel-build": "npm run build --workspace @524/shared && npm run build --workspace @524/database && npm run build --workspace @524/notifications && npm run build --workspace @524/api"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",
