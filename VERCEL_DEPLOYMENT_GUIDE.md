@@ -150,9 +150,9 @@ const isProduction = process.env.VERCEL_ENV === 'production';
 const isPreview = process.env.VERCEL_ENV === 'preview';
 
 // Construct URLs based on environment
-const apiUrl = isProduction 
+const apiUrl = isProduction
   ? 'https://524-api.vercel.app'
-  : process.env.API_URL || 'http://localhost:3000';
+  : process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
 ```
 
 ### Trigger API Deployment
@@ -192,8 +192,8 @@ Use the same API for all preview deployments:
 
 | Variable | Value | Environment |
 |----------|-------|-------------|
-| `API_URL` | `https://524-api.vercel.app` | **Production** |
-| `API_URL` | `https://524-api.vercel.app` | **Preview** (use prod API for now) |
+| `EXPO_PUBLIC_API_URL` | `https://524-api.vercel.app` | **Production** |
+| `EXPO_PUBLIC_API_URL` | `https://524-api.vercel.app` | **Preview** (use prod API for now) |
 | `NODE_ENV` | `production` | **All Environments** |
 | `ENV` | `production` | **Production** |
 | `ENV` | `preview` | **Preview** |
@@ -208,8 +208,8 @@ Create a separate staging API deployment for preview branches:
 
 | Variable | Value | Environment |
 |----------|-------|-------------|
-| `API_URL` | `https://524-api.vercel.app` | **Production** |
-| `API_URL` | `https://524-api-staging.vercel.app` | **Preview** |
+| `EXPO_PUBLIC_API_URL` | `https://524-api.vercel.app` | **Production** |
+| `EXPO_PUBLIC_API_URL` | `https://524-api-staging.vercel.app` | **Preview** |
 
 ### Option C: Dynamic URL Construction (Advanced)
 
@@ -231,7 +231,7 @@ const getApiUrl = () => {
   }
   
   // Fallback to environment variable
-  return process.env.API_URL || 'http://localhost:3000';
+  return process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
 };
 
 export const API_URL = getApiUrl();
