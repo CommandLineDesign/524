@@ -22,9 +22,10 @@
     "lint": "echo \"(shared) lint not configured yet\"",
     "test": "echo \"(shared) tests not implemented yet\""
   },
-  "devDependencies": {
+  "dependencies": {
     "typescript": "^5.4.5"
-  }
+  },
+  "devDependencies": {}
 }
 
 
