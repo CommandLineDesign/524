@@ -6,7 +6,7 @@ Utility scripts for bootstrapping and maintaining the 524 monorepo.
 
 ### Deployment Scripts
 
-- `deploy-vercel.sh` – Deploy API and Mobile Web to Vercel (requires Vercel CLI)
+- `deploy-vercel.sh` – Check Vercel deployment status and provide setup guidance
 
 ### Development Scripts
 

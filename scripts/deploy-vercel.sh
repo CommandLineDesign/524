@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# Vercel Deployment Script for 524 Beauty Marketplace
-# This script helps deploy API and Mobile Web to Vercel
+# Vercel Deployment Helper Script for 524 Beauty Marketplace
+# This script checks deployment status and provides guidance
 
 set -e
 
-echo "🚀 524 Beauty Marketplace - Vercel Deployment"
-echo "=============================================="
+echo "🚀 524 Beauty Marketplace - Vercel Deployment Helper"
+echo "===================================================="
 
 # Check if Vercel CLI is installed
 if ! command -v vercel &> /dev/null; then
@@ -20,45 +20,46 @@ if ! vercel whoami &> /dev/null; then
     exit 1
 fi
 
-# Function to deploy a package
-deploy_package() {
-    local package_name=$1
-    local package_dir=$2
-    local project_name=$3
+echo ""
+echo "📋 Deployment Status Check:"
+echo "---------------------------"
 
+# Check if projects exist
+api_exists=$(vercel projects ls | grep -q "524-api" && echo "✅" || echo "❌")
+mobile_exists=$(vercel projects ls | grep -q "524-mobile-web" && echo "✅" || echo "❌")
+
+echo "API Project (524-api): $api_exists"
+echo "Mobile Web Project (524-mobile-web): $mobile_exists"
+
+if [[ "$api_exists" == "❌" || "$mobile_exists" == "❌" ]]; then
     echo ""
-    echo "📦 Deploying $package_name..."
-    echo "------------------------------"
-
-    cd "$package_dir"
-
-    # Check if project exists, create if not
-    if ! vercel projects ls | grep -q "$project_name"; then
-        echo "📝 Creating new Vercel project: $project_name"
-        vercel --prod --name "$project_name" --yes
-    else
-        echo "📝 Deploying to existing project: $project_name"
-        vercel --prod --yes
+    echo "⚠️  Missing Projects Detected!"
+    echo "=============================="
+    echo "Please create the missing projects in the Vercel dashboard first:"
+    echo "1. Go to https://vercel.com/dashboard"
+    echo "2. Click 'Add New...' → 'Project'"
+    echo "3. Import your GitHub repository"
+    echo "4. Configure as per VERCEL_DEPLOYMENT_GUIDE.md"
+    echo ""
+    echo "Required projects:"
+    if [[ "$api_exists" == "❌" ]]; then
+        echo "- 524-api (Root Directory: packages/api)"
     fi
-
-    cd - > /dev/null
-}
-
-# Deploy API
-deploy_package "API" "packages/api" "524-api"
-
-# Deploy Mobile Web
-deploy_package "Mobile Web" "packages/mobile" "524-mobile-web"
+    if [[ "$mobile_exists" == "❌" ]]; then
+        echo "- 524-mobile-web (Root Directory: packages/mobile)"
+    fi
+    exit 1
+fi
 
 echo ""
-echo "✅ Deployment Complete!"
-echo "======================="
+echo "✅ All projects found!"
+echo "======================"
 echo ""
-echo "📋 Next Steps:"
-echo "1. Configure environment variables in Vercel dashboard"
-echo "2. Update CORS_ORIGIN with your new domains"
-echo "3. Test the deployments"
-echo "4. Share the URLs with your team"
+echo "📝 Next Steps:"
+echo "1. Ensure environment variables are set in Vercel dashboard"
+echo "2. Push code changes to trigger automatic deployments"
+echo "3. Or manually redeploy from Vercel dashboard"
+echo "4. Test your deployments"
 echo ""
 echo "🔗 Your apps should be available at:"
 echo "   API: https://524-api.vercel.app"
