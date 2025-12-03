@@ -7,7 +7,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "dev": "NODE_OPTIONS='--max-old-space-size=4096' tsx watch src/index.ts",
-    "build": "cd ../.. && npm run build --workspace @524/shared && npm run build --workspace @524/database && npm run build --workspace @524/notifications && tsc --project tsconfig.json",
+    "build": "tsc --project tsconfig.json",
     "vercel-build": "cd ../.. && npm run build --workspace @524/shared && npm run build --workspace @524/database && npm run build --workspace @524/notifications && npm run build --workspace @524/api",
     "start": "node dist/index.js",
     "lint": "echo \"(api) lint not configured yet\"",
