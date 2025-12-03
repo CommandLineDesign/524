@@ -5,14 +5,13 @@ let appInstance = null;
 
 async function getApp() {
   if (!appInstance) {
-    const { createApp } = await import('../dist/app.js');
+    const { createApp } = require('../dist/app.js');
     appInstance = await createApp();
   }
   return appInstance;
 }
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   const app = await getApp();
   return app(req, res);
-}
-
+};
