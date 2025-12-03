@@ -1,6 +1,6 @@
 {
   "installCommand": "cd ../.. && npm install",
-  "buildCommand": "cd ../shared && npm run build && cd ../mobile && npx expo export --platform web",
+  "buildCommand": "cd ../.. && npm run build -w @524/shared && cd packages/mobile && npx expo export --platform web",
   "outputDirectory": "dist",
   "framework": null,
   "rewrites": [
