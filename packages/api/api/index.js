@@ -1,11 +1,12 @@
 // Vercel Serverless Function handler
-// Uses pre-compiled dist files to avoid Vercel's in-place TypeScript compilation issues
+// Uses the bundled app which has all dependencies resolved
 
 let appInstance = null;
 
 async function getApp() {
   if (!appInstance) {
-    const { createApp } = require('../dist/app.js');
+    // Use the bundled version which has all workspace packages resolved
+    const { createApp } = require('../dist/app.bundle.js');
     appInstance = await createApp();
   }
   return appInstance;
