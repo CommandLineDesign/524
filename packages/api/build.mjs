@@ -13,10 +13,12 @@ await build({
   format: 'cjs', // CommonJS for maximum compatibility
   outfile: join(__dirname, 'dist/app.bundle.js'),
   external: [
-    // Don't bundle native modules
+    // Don't bundle native modules or optional dependencies
     'pg-native',
     'bufferutil',
     'utf-8-validate',
+    '@opentelemetry/*',
+    '@google-cloud/*',
   ],
   // Resolve workspace packages
   nodePaths: [
