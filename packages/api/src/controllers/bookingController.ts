@@ -1,4 +1,4 @@
-import type { NextFunction, Response } from 'express';
+import type { NextFunction, Request, Response } from 'express';
 
 import { BookingService } from '../services/bookingService';
 import type { AuthRequest } from '../middleware/auth';

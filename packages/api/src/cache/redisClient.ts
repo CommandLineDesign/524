@@ -14,7 +14,7 @@ export function getRedisClient(): Redis | null {
 
   if (!client) {
     client = new Redis(env.REDIS_URL);
-    client.on('error', (error) => logger.error({ error }, 'Redis error'));
+    client.on('error', (error: Error) => logger.error({ error }, 'Redis error'));
     client.on('connect', () => logger.info('Redis connection established'));
   }
 

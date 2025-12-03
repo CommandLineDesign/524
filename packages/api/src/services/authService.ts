@@ -6,6 +6,8 @@ import { db } from '../db/client.js';
 import { users } from '@524/database';
 import { env } from '../config/env.js';
 
+import type { AuthTokens, PhoneVerificationPayload, OAuthCallbackPayload } from '@524/shared/auth';
+
 export interface LoginResponse {
   user: {
     id: string;
@@ -80,5 +82,41 @@ export class AuthService {
       .limit(1);
 
     return user;
+  }
+
+  /**
+   * Send OTP to phone number
+   * TODO: Implement with SENS or other OTP provider
+   */
+  async sendOtp(_phoneNumber: string): Promise<void> {
+    // TODO: Implement OTP sending via SENS
+    console.log('[AuthService] sendOtp not yet implemented');
+  }
+
+  /**
+   * Verify OTP code
+   * TODO: Implement with SENS or other OTP provider
+   */
+  async verifyOtp(_payload: PhoneVerificationPayload): Promise<AuthTokens> {
+    // TODO: Implement OTP verification
+    throw new Error('OTP verification not yet implemented');
+  }
+
+  /**
+   * Handle OAuth callback
+   * TODO: Implement with Kakao, Naver, Apple, Google
+   */
+  async handleOAuthCallback(_payload: OAuthCallbackPayload): Promise<AuthTokens> {
+    // TODO: Implement OAuth callback handling
+    throw new Error('OAuth callback not yet implemented');
+  }
+
+  /**
+   * Refresh access token using refresh token
+   * TODO: Implement refresh token logic
+   */
+  async refreshTokens(_refreshToken: string): Promise<AuthTokens> {
+    // TODO: Implement token refresh
+    throw new Error('Token refresh not yet implemented');
   }
 }

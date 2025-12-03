@@ -101,7 +101,7 @@ export function requireAuth(allowedRoles?: ('customer' | 'artist' | 'admin')[]) 
       }
       
       // Check role permissions
-      if (allowedRoles && !allowedRoles.includes(req.user.role)) {
+      if (allowedRoles && !allowedRoles.includes(req.user.role as 'customer' | 'artist' | 'admin')) {
         return res.status(403).json({ 
           error: 'Insufficient permissions',
           required_roles: allowedRoles,

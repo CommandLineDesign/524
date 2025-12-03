@@ -61,7 +61,7 @@ export class ArtistRepository {
         primaryLocation: updates.primaryLocation,
         isAcceptingBookings: updates.isAcceptingBookings,
         verificationStatus: updates.verificationStatus,
-        averageRating: updates.averageRating,
+        averageRating: updates.averageRating?.toString(),
         totalReviews: updates.totalReviews,
         totalServices: updates.totalServices
       })
