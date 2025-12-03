@@ -2,7 +2,7 @@ import DateTimePicker, { DateTimePickerAndroid, type DateTimePickerEvent } from 
 import { StackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import { useQuery } from '@tanstack/react-query';
-import type { ArtistSearchResult } from '@524/shared/artists';
+import type { ArtistSearchResult } from '@524/shared';
 import React, { useEffect, useMemo, useState } from 'react';
 import type { ChangeEvent, CSSProperties } from 'react';
 import {

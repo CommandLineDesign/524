@@ -1,8 +1,7 @@
 import { create } from 'zustand';
 
-import type { BookedService, CreateBookingPayload } from '@524/shared/bookings';
-import type { ServiceType } from '@524/shared/constants';
-import { DEV_DEFAULT_LOCATION } from '@524/shared/dev';
+import type { BookedService, CreateBookingPayload, ServiceType } from '@524/shared';
+import { DEV_DEFAULT_LOCATION } from '@524/shared';
 
 interface BookingState {
   serviceType: ServiceType | null;

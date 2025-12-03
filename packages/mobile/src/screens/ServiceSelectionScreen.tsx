@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import type { ServiceType } from '@524/shared/constants';
+import type { ServiceType } from '@524/shared';
 
 import type { RootStackParamList } from '../navigation/AppNavigator';
 import { useBookingStore } from '../store/bookingStore';

@@ -1,5 +1,4 @@
-import type { CreateBookingPayload } from '@524/shared/bookings';
-import type { ArtistSearchResult } from '@524/shared/artists';
+import type { CreateBookingPayload, ArtistSearchResult } from '@524/shared';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:5524';
