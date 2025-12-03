@@ -2,8 +2,12 @@
 import { build } from 'esbuild';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { writeFileSync, mkdirSync } from 'fs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+
+// Ensure dist directory exists
+mkdirSync(join(__dirname, 'dist'), { recursive: true });
 
 await build({
   entryPoints: [join(__dirname, 'src/app.ts')],
@@ -30,3 +34,25 @@ await build({
 });
 
 console.log('✓ Bundled src/app.ts -> dist/app.bundle.js');
+
+// Create the handler file for Vercel
+const handlerCode = `// Vercel Serverless Function Handler
+const { createApp } = require('./app.bundle.js');
+
+let appInstance = null;
+
+async function getApp() {
+  if (!appInstance) {
+    appInstance = await createApp();
+  }
+  return appInstance;
+}
+
+module.exports = async function handler(req, res) {
+  const app = await getApp();
+  return app(req, res);
+};
+`;
+
+writeFileSync(join(__dirname, 'dist/handler.js'), handlerCode);
+console.log('✓ Created dist/handler.js');
