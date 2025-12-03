@@ -11,6 +11,7 @@
     "test": "echo \"(mobile) tests not implemented yet\""
   },
   "dependencies": {
+    "@524/shared": "file:../shared",
     "@expo/metro-runtime": "~6.1.2",
     "@react-native-community/datetimepicker": "^8.2.0",
     "@react-native-async-storage/async-storage": "^2.2.0",
