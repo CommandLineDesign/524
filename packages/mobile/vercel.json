@@ -1,23 +1,11 @@
 {
-  "version": 2,
-  "builds": [
+  "buildCommand": "npx expo export --platform web",
+  "outputDirectory": "dist",
+  "framework": null,
+  "rewrites": [
     {
-      "src": "package.json",
-      "use": "@expo/cli@latest",
-      "config": {
-        "experimental": true
-      }
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
-    }
-  ],
-  "env": {
-    "NODE_ENV": "production",
-    "ENV": "production"
-  }
+  ]
 }
-
