@@ -1,8 +1,6 @@
 {
   "version": 2,
   "installCommand": "cd ../.. && npm install --include=dev",
-  "buildCommand": "cd ../.. && npm run build --workspace @524/shared && npm run build --workspace @524/database && npm run build --workspace @524/notifications && npm run build --workspace @524/api",
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/api/index.js" }
-  ]
+  "buildCommand": "cd ../.. && npm run build --workspace @524/shared && npm run build --workspace @524/database && npm run build --workspace @524/notifications && npm run build --workspace @524/api && node packages/api/setup-vercel-output.mjs",
+  "outputDirectory": ".vercel/output"
 }
