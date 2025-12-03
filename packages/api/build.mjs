@@ -37,7 +37,7 @@ console.log('✓ Bundled src/app.ts -> dist/app.bundle.js');
 
 // Create the handler file for Vercel
 const handlerCode = `// Vercel Serverless Function Handler
-const { createApp } = require('./app.bundle.js');
+const { createApp } = require('../dist/app.bundle.js');
 
 let appInstance = null;
 
@@ -54,5 +54,7 @@ module.exports = async function handler(req, res) {
 };
 `;
 
-writeFileSync(join(__dirname, 'dist/handler.js'), handlerCode);
-console.log('✓ Created dist/handler.js');
+// Create handler in api/ folder (required by Vercel)
+mkdirSync(join(__dirname, 'api'), { recursive: true });
+writeFileSync(join(__dirname, 'api/index.js'), handlerCode);
+console.log('✓ Created api/index.js');
