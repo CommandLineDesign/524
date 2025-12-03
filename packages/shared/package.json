@@ -18,7 +18,7 @@
     }
   },
   "scripts": {
-    "build": "tsc --project tsconfig.json",
+    "build": "npx tsc --project tsconfig.json",
     "lint": "echo \"(shared) lint not configured yet\"",
     "test": "echo \"(shared) tests not implemented yet\""
   }
