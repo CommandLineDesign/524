@@ -8,6 +8,3 @@
     { "source": "/(.*)", "destination": "/index.js" }
   ]
 }
-
-
-# Trigger deploy Wed Dec  3 17:57:37 KST 2025
