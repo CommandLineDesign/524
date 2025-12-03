@@ -1,0 +1,9 @@
+# Ignore TypeScript source files - we use pre-bundled api/index.js
+src/
+*.ts
+tsconfig.json
+
+# Ignore build artifacts not needed for deployment
+dist/
+build.mjs
+

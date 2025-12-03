@@ -1,43 +1,39 @@
-// Compiles TypeScript source directly to a bundled file for Vercel serverless
+// Compiles TypeScript source directly to a self-contained Vercel serverless function
 import { build } from 'esbuild';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { writeFileSync, mkdirSync } from 'fs';
+import { mkdirSync } from 'fs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-// Ensure dist directory exists
+// Ensure directories exist
 mkdirSync(join(__dirname, 'dist'), { recursive: true });
+mkdirSync(join(__dirname, 'api'), { recursive: true });
 
+// Build the main bundle for local development
 await build({
-  entryPoints: [join(__dirname, 'src/app.ts')],
+  entryPoints: [join(__dirname, 'src/index.ts')],
   bundle: true,
   platform: 'node',
   target: 'node18',
-  format: 'cjs', // CommonJS for maximum compatibility
-  outfile: join(__dirname, 'dist/app.bundle.js'),
+  format: 'cjs',
+  outfile: join(__dirname, 'dist/index.js'),
   external: [
-    // Don't bundle native modules or optional dependencies
     'pg-native',
     'bufferutil',
     'utf-8-validate',
     '@opentelemetry/*',
     '@google-cloud/*',
   ],
-  // Resolve workspace packages
-  nodePaths: [
-    join(__dirname, '../../node_modules'),
-    join(__dirname, '../shared/dist'),
-    join(__dirname, '../database/dist'),
-    join(__dirname, '../notifications/dist'),
-  ],
+  nodePaths: [join(__dirname, '../../node_modules')],
 });
 
-console.log('✓ Bundled src/app.ts -> dist/app.bundle.js');
+console.log('✓ Bundled dist/index.js (for local development)');
 
-// Create the handler file for Vercel
-const handlerCode = `// Vercel Serverless Function Handler
-const { createApp } = require('../dist/app.bundle.js');
+// Build a self-contained serverless function for Vercel
+// This bundles everything including the handler wrapper
+const serverlessEntryCode = `
+import { createApp } from './app';
 
 let appInstance = null;
 
@@ -48,13 +44,40 @@ async function getApp() {
   return appInstance;
 }
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   const app = await getApp();
   return app(req, res);
-};
+}
 `;
 
-// Create handler in api/ folder (required by Vercel)
-mkdirSync(join(__dirname, 'api'), { recursive: true });
-writeFileSync(join(__dirname, 'api/index.js'), handlerCode);
-console.log('✓ Created api/index.js');
+// Write temporary entry file
+import { writeFileSync, unlinkSync } from 'fs';
+const tempEntry = join(__dirname, 'src/_vercel_handler.ts');
+writeFileSync(tempEntry, serverlessEntryCode);
+
+try {
+  await build({
+    entryPoints: [tempEntry],
+    bundle: true,
+    platform: 'node',
+    target: 'node18',
+    format: 'cjs',
+    outfile: join(__dirname, 'api/index.js'),
+    external: [
+      'pg-native',
+      'bufferutil',
+      'utf-8-validate',
+      '@opentelemetry/*',
+      '@google-cloud/*',
+    ],
+    nodePaths: [join(__dirname, '../../node_modules')],
+    // Banner to mark this as a CommonJS handler
+    banner: {
+      js: '// Vercel Serverless Function - Auto-generated, do not edit\n'
+    },
+  });
+  console.log('✓ Bundled api/index.js (self-contained serverless function)');
+} finally {
+  // Clean up temp file
+  unlinkSync(tempEntry);
+}
