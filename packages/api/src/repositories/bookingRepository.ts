@@ -51,7 +51,10 @@ export class BookingRepository {
         serviceType: payload.serviceType,
         occasion: payload.occasion,
         services: payload.services,
-        totalDurationMinutes: payload.services.reduce((sum, item) => sum + item.durationMinutes, 0),
+        totalDurationMinutes: payload.services.reduce(
+          (sum: number, item: any) => sum + item.durationMinutes,
+          0
+        ),
         scheduledDate: new Date(payload.scheduledDate),
         scheduledStartTime: scheduleStart,
         scheduledEndTime: scheduleEnd,
