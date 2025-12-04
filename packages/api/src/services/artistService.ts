@@ -1,7 +1,7 @@
 import type { ArtistProfile, ArtistSearchFilters, ArtistSearchResult } from '@524/shared/artists';
 
-import { ArtistRepository } from '../repositories/artistRepository';
-import { SearchService } from './searchService';
+import { ArtistRepository } from '../repositories/artistRepository.js';
+import { SearchService } from './searchService.js';
 
 export class ArtistService {
   constructor(

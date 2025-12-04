@@ -1,4 +1,4 @@
-import { startServer } from './server';
+import { startServer } from './server.js';
 
 // Main entry point for the API server
 startServer().catch((error) => {

@@ -2,12 +2,12 @@ import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
 
-import { env } from './config/env';
-import { createRateLimiter } from './middleware/rateLimiter';
-import { errorHandler } from './middleware/errorHandler';
-import { notFoundHandler } from './middleware/notFoundHandler';
-import { requestLogger } from './middleware/requestLogger';
-import { rootRouter } from './routes';
+import { env } from './config/env.js';
+import { createRateLimiter } from './middleware/rateLimiter.js';
+import { errorHandler } from './middleware/errorHandler.js';
+import { notFoundHandler } from './middleware/notFoundHandler.js';
+import { requestLogger } from './middleware/requestLogger.js';
+import { rootRouter } from './routes/index.js';
 
 export async function createApp() {
   const app = express();

@@ -1,9 +1,9 @@
 import http from 'http';
 
-import { createApp } from './app';
-import { env } from './config/env';
-import { createLogger } from './utils/logger';
-import { initializeChatSocket } from './websocket/chatSocket';
+import { createApp } from './app.js';
+import { env } from './config/env.js';
+import { createLogger } from './utils/logger.js';
+import { initializeChatSocket } from './websocket/chatSocket.js';
 
 const logger = createLogger('server');
 

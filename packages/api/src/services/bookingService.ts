@@ -1,8 +1,8 @@
 import type { BookingSummary, CreateBookingPayload, UpdateBookingStatusPayload } from '@524/shared/bookings';
 
-import { BookingRepository } from '../repositories/bookingRepository';
-import { NotificationService } from './notificationService';
-import { PaymentService } from './paymentService';
+import { BookingRepository } from '../repositories/bookingRepository.js';
+import { NotificationService } from './notificationService.js';
+import { PaymentService } from './paymentService.js';
 
 export class BookingService {
   constructor(

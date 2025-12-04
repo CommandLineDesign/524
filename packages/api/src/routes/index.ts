@@ -1,7 +1,7 @@
 import { Router } from 'express';
 
-import { healthRouter } from './health';
-import { v1Router } from './v1';
+import { healthRouter } from './health.js';
+import { v1Router } from './v1/index.js';
 
 const router = Router();
 

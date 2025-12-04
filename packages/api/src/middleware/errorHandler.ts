@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 
-import { createLogger } from '../utils/logger';
+import { createLogger } from '../utils/logger.js';
 
 const errorLogger = createLogger('errors');
 
