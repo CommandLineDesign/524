@@ -17,6 +17,7 @@
     "@524/database": "file:../database",
     "@524/notifications": "file:../notifications",
     "@524/shared": "file:../shared",
+    "@opentelemetry/api": "^1.9.0",
     "@types/bcryptjs": "^3.0.0",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
