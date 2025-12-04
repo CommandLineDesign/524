@@ -1,6 +1,6 @@
 import { Router } from 'express';
 
-import { ArtistController } from '../../controllers/artistController';
+import { ArtistController } from '../../controllers/artistController.js';
 
 const router = Router();
 

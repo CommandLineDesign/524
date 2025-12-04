@@ -1,7 +1,7 @@
 import { sendPushNotification } from '@524/notifications';
 import type { BookingSummary } from '@524/shared/bookings';
 
-import { createLogger } from '../utils/logger';
+import { createLogger } from '../utils/logger.js';
 
 const logger = createLogger('notifications');
 

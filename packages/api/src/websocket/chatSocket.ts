@@ -3,8 +3,8 @@ import type { Server as HttpServer } from 'http';
 import type { ChatMessage } from '@524/shared/messaging';
 import { Server } from 'socket.io';
 
-import { env } from '../config/env';
-import { createLogger } from '../utils/logger';
+import { env } from '../config/env.js';
+import { createLogger } from '../utils/logger.js';
 
 const logger = createLogger('websocket');
 

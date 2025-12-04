@@ -5,7 +5,7 @@ import { eq } from 'drizzle-orm';
 import { bookings } from '@524/database';
 import type { BookingSummary, CreateBookingPayload, UpdateBookingStatusPayload } from '@524/shared/bookings';
 
-import { db } from '../db/client';
+import { db } from '../db/client.js';
 
 type BookingRow = typeof bookings.$inferSelect;
 

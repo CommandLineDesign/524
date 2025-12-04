@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 
-import { ArtistService } from '../services/artistService';
+import { ArtistService } from '../services/artistService.js';
 
 const artistService = new ArtistService();
 

@@ -3,7 +3,7 @@ import crypto from 'crypto';
 import type { User } from '@524/database';
 import type { AuthTokens, OAuthCallbackPayload, PhoneVerificationPayload } from '@524/shared/auth';
 
-import { createLogger } from '../../utils/logger';
+import { createLogger } from '../../utils/logger.js';
 
 const logger = createLogger('auth:strategy');
 

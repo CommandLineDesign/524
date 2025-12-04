@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm';
 import { artistProfiles } from '@524/database';
 import type { ArtistProfile } from '@524/shared/artists';
 
-import { db } from '../db/client';
+import { db } from '../db/client.js';
 
 type ArtistProfileRow = typeof artistProfiles.$inferSelect;
 

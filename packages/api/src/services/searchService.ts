@@ -1,8 +1,8 @@
 import type { ArtistSearchFilters, ArtistSearchResult } from '@524/shared/artists';
 
 import { artistProfiles } from '@524/database';
-import { db } from '../db/client';
-import { createLogger } from '../utils/logger';
+import { db } from '../db/client.js';
+import { createLogger } from '../utils/logger.js';
 
 const logger = createLogger('search');
 

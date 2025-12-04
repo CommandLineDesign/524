@@ -1,7 +1,7 @@
 import { Router } from 'express';
 
-import { BookingController } from '../../controllers/bookingController';
-import { requireAuth, requireCustomer, requireArtist } from '../../middleware/auth';
+import { BookingController } from '../../controllers/bookingController.js';
+import { requireAuth, requireCustomer, requireArtist } from '../../middleware/auth.js';
 
 const router = Router();
 

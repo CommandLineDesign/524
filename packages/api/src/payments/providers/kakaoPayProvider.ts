@@ -1,7 +1,7 @@
 import type { BookingSummary } from '@524/shared/bookings';
 import type { PaymentAuthorizationResult } from '@524/shared/payments';
 
-import { createLogger } from '../../utils/logger';
+import { createLogger } from '../../utils/logger.js';
 
 const logger = createLogger('payments:kakao');
 

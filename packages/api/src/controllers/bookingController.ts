@@ -1,7 +1,7 @@
 import type { NextFunction, Request, Response } from 'express';
 
-import { BookingService } from '../services/bookingService';
-import type { AuthRequest } from '../middleware/auth';
+import { BookingService } from '../services/bookingService.js';
+import type { AuthRequest } from '../middleware/auth.js';
 
 const bookingService = new BookingService();
 

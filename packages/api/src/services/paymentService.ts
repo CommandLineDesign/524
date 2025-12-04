@@ -1,7 +1,7 @@
 import type { BookingSummary } from '@524/shared/bookings';
 import type { PaymentAuthorizationResult } from '@524/shared/payments';
 
-import { KakaoPayProvider } from '../payments/providers/kakaoPayProvider';
+import { KakaoPayProvider } from '../payments/providers/kakaoPayProvider.js';
 
 export class PaymentService {
   constructor(private readonly provider = new KakaoPayProvider()) {}

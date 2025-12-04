@@ -3,7 +3,7 @@ import { Pool } from 'pg';
 
 import * as schema from '@524/database';
 
-import { env } from '../config/env';
+import { env } from '../config/env.js';
 
 if (!env.DATABASE_URL) {
   throw new Error('DATABASE_URL is required to start the API');
