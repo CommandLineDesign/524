@@ -1,6 +1,6 @@
 // Vercel Serverless Function Handler
 // This file is copied to api/index.js during build
-const { createApp } = require('../dist/app.js');
+// Using lazy loading with dynamic import for ES module compatibility
 
 let app;
 
@@ -39,27 +39,29 @@ function setCorsHeaders(req, res) {
 module.exports = async function handler(req, res) {
   // Always set CORS headers first
   setCorsHeaders(req, res);
-  
+
   // Handle preflight OPTIONS requests immediately
   if (req.method === 'OPTIONS') {
     res.status(204).end();
     return;
   }
-  
-  // Initialize Express app lazily
+
+  // Initialize Express app lazily using dynamic import
   if (!app) {
     try {
+      const appModule = await import('../dist/app.js');
+      const createApp = appModule.createApp;
       app = await createApp();
     } catch (error) {
       console.error('Failed to create app:', error);
-      res.status(500).json({ 
+      res.status(500).json({
         error: 'Internal Server Error',
         message: 'Failed to initialize application'
       });
       return;
     }
   }
-  
+
   return app(req, res);
 };
 
