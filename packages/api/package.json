@@ -6,9 +6,9 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "dev": "NODE_OPTIONS='--max-old-space-size=4096' tsx watch src/index.ts",
-    "build": "tsc --project tsconfig.json && npm run copy-vercel-handler",
-    "copy-vercel-handler": "mkdir -p api && cp src/vercel-handler.cjs api/index.js",
-    "vercel-build": "cd ../.. && npm run build --workspace @524/shared && npm run build --workspace @524/database && npm run build --workspace @524/notifications && npm run build --workspace @524/api",
+    "build": "tsc --project tsconfig.json",
+    "build:vercel": "node scripts/build-vercel.mjs",
+    "vercel-build": "cd ../.. && npm run build --workspace @524/shared && npm run build --workspace @524/database && npm run build --workspace @524/notifications && npm run build --workspace @524/api && npm run build:vercel --workspace @524/api",
     "start": "node dist/index.js",
     "lint": "echo \"(api) lint not configured yet\"",
     "test": "echo \"(api) tests not implemented yet\""

@@ -1,8 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "installCommand": "npm install --include=dev",
-  "buildCommand": "npm run vercel-build",
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/api" }
-  ]
+  "buildCommand": "npm run vercel-build"
 }
