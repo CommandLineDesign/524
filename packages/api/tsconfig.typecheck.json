@@ -6,11 +6,11 @@
     "baseUrl": "../..",
     "paths": {
       "@524/shared": ["packages/shared/src/index.ts"],
-      "@524/shared/*": ["packages/shared/src/*"],
+      "@524/shared/*": ["packages/shared/src/*.ts"],
       "@524/database": ["packages/database/src/index.ts"],
-      "@524/database/*": ["packages/database/src/*"],
+      "@524/database/*": ["packages/database/src/*.ts"],
       "@524/notifications": ["packages/notifications/src/index.ts"],
-      "@524/notifications/*": ["packages/notifications/src/*"]
+      "@524/notifications/*": ["packages/notifications/src/*.ts"]
     }
   }
 }

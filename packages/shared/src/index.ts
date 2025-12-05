@@ -1,5 +1,6 @@
 export * from './auth.js';
 export * from './artists.js';
+export * from './admin.js';
 export * from './bookings.js';
 export * from './constants.js';
 export * from './i18n.js';
