@@ -88,7 +88,7 @@ This workflow provides a unified approach for processing any type of document wi
 
 1. **Apply Create Context Workflow**: Use [Create Context Workflow](create-context.md) procedures exactly
 2. **Format Specification Compliance**: MUST follow [Context Format Specification](../formats/context-format.md)
-3. **Category Classification**: Select appropriate category (design, entities, environment, game-mechanics, resources, systems, technical, technology)
+3. **Category Classification**: Select appropriate category (design, users, ui-ux, business-logic, data, systems, technical, technology)
 4. **Tracking Integration**: Update `ai/contexts.md` with ⚪ **New** status entry
 5. **Template Application**: Use correct template based on source type (Vision/Roadmap-Generated most common)
 6. **Validation Checklist**: Complete ALL validation requirements from create-context workflow

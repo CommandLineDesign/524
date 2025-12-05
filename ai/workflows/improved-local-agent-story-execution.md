@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This workflow provides standardized steps for local AI agents (in Cursor) to select, process, and complete user stories from the product backlog. It mirrors the remote GitHub Actions workflow while ensuring continuous execution from story selection through implementation completion in a single session. The workflow ensures proper git configuration, maintains PR visibility throughout implementation, and enforces quality standards before story completion.
+This workflow provides standardized steps for local AI agents to select, process, and complete user stories from the product backlog. It mirrors the remote GitHub Actions workflow while ensuring continuous execution from story selection through implementation completion in a single session. The workflow ensures proper git configuration, maintains PR visibility throughout implementation, and enforces quality standards before story completion.
 
 ## CRITICAL FORMAT REQUIREMENT
 

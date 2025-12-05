@@ -84,14 +84,14 @@ Gather comprehensive technical and architectural context from the project's cont
 
 **Actions:**
 
-1. **Review Game Mechanics Context**: Review `ai/context/game-mechanics/` for detailed gameplay systems affecting components
-2. **Check Entity Behaviors Context**: Check `ai/context/entities/` for entity behaviors and component relationships
-3. **Examine System Architectures Context**: Examine `ai/context/systems/` for technical system architectures and component patterns
-4. **Analyze Resources Context**: Look at `ai/context/resources/` for resource management components and flows
-5. **Study Environment Systems Context**: Review `ai/context/environment/` for environmental system components
-6. **Research Technical Patterns Context**: Check `ai/context/technology/` for technical implementation patterns affecting components
-7. **Validate Architecture Decisions Context**: Look at `ai/context/technical/` for architecture decisions affecting component design
-8. **Apply Design Principles Context**: Check `ai/context/design/` for design principles guiding component organization
+1. **Review Business Logic Context**: Review `ai/context/` for detailed business logic and rules affecting components
+2. **Check User Models Context**: Check `ai/context/` for user roles and component relationships
+3. **Examine System Architectures Context**: Examine `ai/context/` for technical system architectures and component patterns
+4. **Analyze Data Models Context**: Look at `ai/context/` for data schemas and flows
+5. **Study UI/UX Context**: Review `ai/context/` for design and interface components
+6. **Research Technical Patterns Context**: Check `ai/context/` for technical implementation patterns affecting components
+7. **Validate Architecture Decisions Context**: Look at `ai/context/` for architecture decisions affecting component design
+8. **Apply Design Principles Context**: Check `ai/context/` for design principles guiding component organization
 9. **Map Context to Components**: Map relevant context insights to specific components identified in Step 1
 10. **Cross-Reference Epic Requirements**: Cross-reference context findings with epic requirements for consistency
 11. **Document Context Patterns**: Document technical patterns and architectural constraints applicable to components
@@ -384,7 +384,7 @@ Update the source epic and master component list to reflect all processed compon
 - [ ] **Well-Defined Interfaces**: Interfaces between components are well-defined and consistent
 - [ ] **Accurate Dependencies**: Dependencies are accurately identified and documented for all processed components
 - [ ] **Realistic Performance**: Performance requirements are realistic and measurable for all processed components
-- [ ] **Architecture Alignment**: All processed components align with Unity ECS architecture patterns
+- [ ] **Architecture Alignment**: All processed components align with System Architecture patterns
 - [ ] **Comprehensive Testing**: Testing strategies are comprehensive and practical for all processed components
 - [ ] **Implementability**: All processed component specifications are implementable by developers
 

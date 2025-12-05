@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This workflow provides standardized steps for updating individual Planetform epic files (`./product/epics/*.md`) to incorporate feedback, additional context, design changes, and new insights while maintaining consistency across all related epics. It consolidates the epic update process from multiple prompts into a single authoritative workflow that ensures cross-epic dependencies, terminology, and design decisions remain coherent throughout the entire epic collection.
+This workflow provides standardized steps for updating individual 524 epic files (`./product/epics/*.md`) to incorporate feedback, additional context, design changes, and new insights while maintaining consistency across all related epics. It consolidates the epic update process from multiple prompts into a single authoritative workflow that ensures cross-epic dependencies, terminology, and design decisions remain coherent throughout the entire epic collection.
 
 ## CRITICAL FORMAT REQUIREMENT
 
@@ -36,20 +36,20 @@ Analyze the target epic's current state and determine the comprehensive scope of
 2. **Identify Update Scope**: Determine sections that need modification based on provided feedback and requirements
 3. **Assess Change Type**: Categorize updates (content, dependency, scope, consistency, status/priority) for planning
 4. **Document Rationale**: Record why updates are needed and expected impact on epic and related systems
-5. **Review Game Mechanics Context**: Check `ai/context/game-mechanics/` for related gameplay systems and interactions
-6. **Examine Entity Context**: Review `ai/context/entities/` for entity behaviors, relationships, and dependencies
-7. **Study Systems Context**: Examine `ai/context/systems/` for technical architectures and implementation patterns
-8. **Check Resource Context**: Look at `ai/context/resources/` for resource flows, dependencies, and constraints
-9. **Review Environment Context**: Check `ai/context/environment/` for environmental systems and interactions
-10. **Assess Technology Context**: Review `ai/context/technology/` for technical approaches and architectural decisions
-11. **Examine Design Context**: Study `ai/context/design/` for design philosophy, direction, and user experience principles
+5. **Review Business Logic Context**: Check `ai/context/` for related business logic systems and interactions
+6. **Examine User Context**: Review `ai/context/` for user behaviors, relationships, and dependencies
+7. **Study Systems Context**: Examine `ai/context/` for technical architectures and implementation patterns
+8. **Check Data Context**: Look at `ai/context/` for data flows, dependencies, and constraints
+9. **Review UI/UX Context**: Check `ai/context/` for design systems and interactions
+10. **Assess Technology Context**: Review `ai/context/` for technical approaches and architectural decisions
+11. **Examine Design Context**: Study `ai/context/` for design philosophy, direction, and user experience principles
 
 **Output:**
 
 - Complete understanding of current epic content and structure
 - Identified update scope with categorized change types
 - Documented rationale for updates with expected impact assessment
-- Enhanced understanding from game mechanics, entities, systems, resources, environment, technology, and design contexts
+- Enhanced understanding from business logic, users, systems, data, UI/UX, technology, and design contexts
 - Context-informed perspective on epic relationships and integration requirements
 - Comprehensive analysis foundation for subsequent workflow steps
 
@@ -80,7 +80,7 @@ Map all epic relationships and dependencies that may be affected by the updates 
 2. **Find Reverse Dependencies**: Search for epics that depend on the target epic or reference it
 3. **Discover Related Systems**: Search for epics mentioning similar systems, components, or technical approaches
 4. **Map Integration Points**: Identify epics sharing technical or functional boundaries with target epic
-5. **Conduct Keyword Searches**: Search for system names, technical terms, and gameplay mechanics across epics
+5. **Conduct Keyword Searches**: Search for system names, technical terms, and business logic across epics
 6. **Perform Semantic Searches**: Search for functional descriptions, user experiences, and technical capabilities
 7. **Analyze Dependency Chains**: Trace forward and backward dependency relationships through multiple levels
 8. **Study Integration Patterns**: Examine shared components, data flows, and interface patterns between epics
@@ -168,12 +168,12 @@ Review and plan updates to context files that relate to the epic changes to ensu
 2. **Assess Context Information Changes**: Evaluate what specific information needs updating in each identified context file
 3. **Plan Context File Updates**: Design modifications for existing context files to reflect epic changes
 4. **Plan New Context Creation**: Identify needs for new context files covering novel concepts or systems
-5. **Plan Game Mechanics Updates**: Design updates for `ai/context/game-mechanics/` files affected by epic changes
-6. **Plan Systems Updates**: Design modifications for `ai/context/systems/` files reflecting technical changes
-7. **Plan Entity Updates**: Plan updates for `ai/context/entities/` files reflecting entity behavior or relationship changes
-8. **Plan Technology Updates**: Design updates for `ai/context/technology/` files reflecting architectural changes
-9. **Plan Design Updates**: Plan modifications for `ai/context/design/` files reflecting design philosophy changes
-10. **Plan Technical Updates**: Design updates for `ai/context/technical/` files reflecting implementation changes
+5. **Plan Business Logic Updates**: Design updates for `ai/context/` files affected by epic changes
+6. **Plan Systems Updates**: Design modifications for `ai/context/` files reflecting technical changes
+7. **Plan User Updates**: Plan updates for `ai/context/` files reflecting user behavior or relationship changes
+8. **Plan Technology Updates**: Design updates for `ai/context/` files reflecting architectural changes
+9. **Plan Design Updates**: Plan modifications for `ai/context/` files reflecting design philosophy changes
+10. **Plan Technical Updates**: Design updates for `ai/context/` files reflecting implementation changes
 
 **Output:**
 
@@ -181,9 +181,9 @@ Review and plan updates to context files that relate to the epic changes to ensu
 - Assessed information changes needed in each context file for accuracy
 - Planned modifications for existing context files reflecting epic changes
 - Identified requirements for new context files covering novel concepts
-- Planned updates for game mechanics context files affected by epic changes
+- Planned updates for business logic context files affected by epic changes
 - Designed modifications for systems context files reflecting technical changes
-- Planned updates for entity context files reflecting behavior or relationship changes
+- Planned updates for user context files reflecting behavior or relationship changes
 - Designed updates for technology context files reflecting architectural changes
 - Planned modifications for design context files reflecting philosophy changes
 - Designed updates for technical context files reflecting implementation changes
@@ -194,7 +194,7 @@ Review and plan updates to context files that relate to the epic changes to ensu
 - [ ] **Information Assessment**: Required information changes accurately assessed for each context file
 - [ ] **Update Planning**: Context file modifications properly planned to reflect epic changes
 - [ ] **New Context Planning**: Requirements for new context files properly identified and planned
-- [ ] **Category Coverage**: All relevant context categories (game-mechanics, systems, entities, technology, design, technical) addressed
+- [ ] **Category Coverage**: All relevant context categories (business-logic, systems, users, technology, design, technical) addressed
 - [ ] **Change Alignment**: Context updates properly aligned with epic changes and requirements
 - [ ] **Cross-Reference Planning**: Context file cross-references and relationships maintained in planning
 - [ ] **Knowledge Base Integrity**: Context updates planned to maintain knowledge base accuracy and completeness
@@ -266,9 +266,9 @@ Execute planned context file updates to reflect epic changes and maintain accura
 2. **Create New Context Files**: Generate new context files for novel concepts or systems introduced in epic updates
 3. **Maintain Context Cross-References**: Update links between context files to reflect epic changes and new relationships
 4. **Validate Context-Epic Alignment**: Ensure context files accurately align with updated epic content and requirements
-5. **Update Game Mechanics Context**: Modify game mechanics context files reflecting gameplay system changes
+5. **Update Business Logic Context**: Modify business logic context files reflecting system changes
 6. **Update Systems Context**: Modify systems context files reflecting technical architecture changes
-7. **Update Entity Context**: Modify entity context files reflecting behavior or relationship changes
+7. **Update User Context**: Modify user context files reflecting behavior or relationship changes
 8. **Update Technology Context**: Modify technology context files reflecting architectural or approach changes
 9. **Update Design Context**: Modify design context files reflecting philosophy or user experience changes
 10. **Update Technical Context**: Modify technical context files reflecting implementation or pattern changes
@@ -279,9 +279,9 @@ Execute planned context file updates to reflect epic changes and maintain accura
 - New context files created for novel concepts or systems introduced in epic updates
 - Maintained cross-references between context files reflecting updated relationships
 - Validated alignment between context files and updated epic content
-- Updated game mechanics context files reflecting current gameplay system requirements
+- Updated business logic context files reflecting current system requirements
 - Updated systems context files reflecting current technical architecture
-- Updated entity context files reflecting current behavior and relationship requirements
+- Updated user context files reflecting current behavior and relationship requirements
 - Updated technology context files reflecting current architectural approaches
 - Updated design context files reflecting current philosophy and user experience principles
 - Updated technical context files reflecting current implementation patterns and approaches
@@ -312,7 +312,7 @@ Conduct comprehensive validation of all updates to ensure quality, consistency, 
 
 **Actions:**
 
-1. **Validate Technical Soundness**: Verify implementability and Unity ECS architecture alignment across all updates
+1. **Validate Technical Soundness**: Verify implementability and System Architecture alignment across all updates
 2. **Review User Story Quality**: Check that stories and acceptance criteria are realistic, testable, and implementable
 3. **Validate Effort Estimates**: Ensure estimates reflect current complexity understanding and implementation requirements
 4. **Confirm Format Compliance**: Verify all updated epics comply with Epic Format Specification exactly
@@ -325,7 +325,7 @@ Conduct comprehensive validation of all updates to ensure quality, consistency, 
 
 **Output:**
 
-- Validated technical soundness with confirmed implementability and Unity ECS alignment
+- Validated technical soundness with confirmed implementability and System Architecture alignment
 - Quality-reviewed user stories and acceptance criteria confirmed as realistic and testable
 - Validated effort estimates reflecting current complexity and implementation understanding
 - Format-compliant epic files confirmed to follow Epic Format Specification exactly
@@ -339,7 +339,7 @@ Conduct comprehensive validation of all updates to ensure quality, consistency, 
 **Validation:**
 
 - [ ] **MANDATORY FORMAT VALIDATION**: All epics MUST follow exact structure from [Epic Format Specification](../formats/epic-format.md)
-- [ ] **Technical Soundness**: All updates verified as implementable within Unity ECS architecture
+- [ ] **Technical Soundness**: All updates verified as implementable within System Architecture
 - [ ] **User Story Quality**: Stories and acceptance criteria confirmed as realistic and testable
 - [ ] **Effort Estimate Accuracy**: Estimates reflect current complexity understanding appropriately
 - [ ] **Terminology Consistency**: Language standardized across all related epic documentation
@@ -370,7 +370,7 @@ Conduct comprehensive validation of all updates to ensure quality, consistency, 
 
 - [ ] **Technical Accuracy**: All sections are comprehensive and technically accurate
 - [ ] **User Story Quality**: User stories and acceptance criteria are realistic and testable
-- [ ] **Architecture Alignment**: Technical requirements align with Unity ECS architecture
+- [ ] **Architecture Alignment**: Technical requirements align with System Architecture
 - [ ] **Risk Assessment**: Risk assessments and assumptions are current and valid
 - [ ] **Effort Estimates**: Estimates reflect current complexity understanding and implementation requirements
 
@@ -401,7 +401,7 @@ Conduct comprehensive validation of all updates to ensure quality, consistency, 
 
 **Quality Standards:**
 
-- Content is technically accurate and implementable within Unity ECS architecture
+- Content is technically accurate and implementable within System Architecture
 - User stories and acceptance criteria are realistic, testable, and provide clear implementation guidance
 - Integration points between systems are clearly defined, functional, and consistently documented
 - Effort estimates reflect current understanding of implementation complexity and requirements
@@ -446,7 +446,7 @@ Additional context, special considerations, or implementation details for this w
 
 - Epic updates often have cascading effects requiring systematic validation across multiple files and dependencies
 - The workflow emphasizes consistency maintenance and cross-epic integration as critical success factors for system coherence
-- Always validate that technical approaches remain compatible across related systems and maintain Unity ECS architecture alignment
+- Always validate that technical approaches remain compatible across related systems and maintain System Architecture alignment
 - Dependency relationships must reflect logical implementation sequences and avoid circular dependencies or conflicts
 - Context file updates are essential for maintaining the knowledge base that supports epic and story generation throughout development
 - Cross-reference integrity is critical for maintaining navigation and system understanding across the documentation

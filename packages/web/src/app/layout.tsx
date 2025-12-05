@@ -1,25 +1,21 @@
 import type { Metadata } from 'next';
 import './globals.css';
 
-import { AppProviders } from './providers';
-
 export const metadata: Metadata = {
-  title: '524 – Beauty Services Marketplace',
-  description: 'Korean beauty services marketplace connecting customers with professional artists.'
+  title: '524 Admin',
+  description: '524 Beauty Marketplace Admin Dashboard',
 };
 
 export default function RootLayout({
-  children
+  children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ko">
-      <body className="min-h-screen bg-slate-50 font-sans text-slate-900 antialiased">
-        <AppProviders>{children}</AppProviders>
+    <html lang="en">
+      <body style={{ margin: 0, padding: 0, fontFamily: 'Roboto, sans-serif' }}>
+        {children}
       </body>
     </html>
   );
 }
-
-

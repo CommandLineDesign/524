@@ -33,11 +33,11 @@ Validate the parent epic exists and gather all necessary inputs for story creati
 
 **Actions:**
 
-1. **Validate Epic Name**: CRITICAL - If epic name is not provided, display error: "ERROR: Epic name is required. Please provide the name of the epic file (e.g., 'unity-ecs-core-architecture.md') that this story belongs to."
+1. **Validate Epic Name**: CRITICAL - If epic name is not provided, display error: "ERROR: Epic name is required. Please provide the name of the epic file (e.g., '524-core-architecture.md') that this story belongs to."
 2. **Confirm Epic Exists**: Verify the referenced epic file exists in `product/epics/` directory
 3. **Stop If Invalid**: Do not proceed with any file creation or updates until valid epic name is specified
 4. **Gather Story Title**: Collect clear, descriptive name reflecting the user goal or system capability
-5. **Define User Role**: Identify the user type (Player, AI Entity, Colonist, System Administrator, Developer, etc.)
+5. **Define User Role**: Identify the user type (Customer, Artist, Admin, Developer, etc.)
 6. **Specify Goal**: Document specific, actionable objective the user wants to achieve
 7. **Articulate Benefit**: Define clear value proposition and motivation for the user
 8. **Assign Priority**: Determine Critical, High, Medium, or Low based on importance
@@ -130,12 +130,12 @@ Review relevant context files to enhance story authenticity, accuracy, and align
 
 **Actions:**
 
-1. **Review Game Mechanics**: Examine `ai/context/game-mechanics/` for related gameplay systems and user interaction patterns
-2. **Check Entity Behaviors**: Review `ai/context/entities/` for entity behaviors, properties, and user relationships
-3. **Examine System Capabilities**: Check `ai/context/systems/` for technical system capabilities and user interface points
-4. **Analyze Resource Patterns**: Look at `ai/context/resources/` for resource management patterns and user needs
-5. **Study Environment Interactions**: Review `ai/context/environment/` for environmental interactions and user experiences
-6. **Research Technical Constraints**: Check `ai/context/technology/` for technical capabilities and user interface constraints
+1. **Review Business Logic**: Examine `ai/context/` for related business logic systems and user interaction patterns
+2. **Check User Behaviors**: Review `ai/context/` for user behaviors, properties, and relationships
+3. **Examine System Capabilities**: Check `ai/context/` for technical system capabilities and user interface points
+4. **Analyze Data Patterns**: Look at `ai/context/` for data management patterns and user needs
+5. **Study UI/UX Interactions**: Review `ai/context/` for design interactions and user experiences
+6. **Research Technical Constraints**: Check `ai/context/` for technical capabilities and user interface constraints
 7. **Validate User Motivation**: Use context to understand deeper user needs and authentic motivations
 8. **Ensure Realistic Goals**: Verify story goals align with actual system capabilities from context
 9. **Confirm Accurate Benefits**: Validate that story benefits reflect real value based on context understanding

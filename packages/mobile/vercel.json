@@ -1,6 +1,6 @@
 {
-  "installCommand": "cd ../.. && npm install",
-  "buildCommand": "cd ../.. && npm run build -w @524/shared && cd packages/mobile && npx expo export --platform web",
+  "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
+  "buildCommand": "cd ../.. && pnpm --filter @524/shared build && cd packages/mobile && pnpm exec expo export --platform web",
   "outputDirectory": "dist",
   "framework": null,
   "rewrites": [

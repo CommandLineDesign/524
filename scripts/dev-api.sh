@@ -25,5 +25,5 @@ fi
 
 echo "🚀 Starting API server on port 5524..."
 cd packages/api
-npm run dev
+pnpm run dev
 

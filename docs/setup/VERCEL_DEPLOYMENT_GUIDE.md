@@ -1,6 +1,6 @@
 # Vercel Development Deployment Guide for 524 Beauty Marketplace
 
-This guide provides step-by-step instructions for deploying the 524 Beauty Marketplace API and Mobile Web App to Vercel for team development access.
+This guide provides step-by-step instructions for deploying the 524 Beauty Marketplace API, Mobile Web App, and Admin Web Dashboard to Vercel for team development access.
 
 ## Prerequisites
 
@@ -15,12 +15,13 @@ Before starting, ensure you have:
 Your monorepo contains:
 - **API** (`packages/api/`): Node.js/Express backend with PostgreSQL
 - **Mobile Web** (`packages/mobile/`): Expo React Native app (web-compatible)
+- **Admin Web** (`packages/web/`): Next.js admin dashboard for managing artists, users, and bookings
 
 ## Monorepo Setup with Vercel
 
 **Vercel fully supports monorepos!** You can create multiple Vercel projects from the same GitHub repository by specifying different **Root Directory** settings. This allows:
 
-- **Independent deployments**: API and mobile web deploy separately
+- **Independent deployments**: API, mobile web, and admin web deploy separately
 - **Separate environments**: Different env vars and settings per project
 - **Selective builds**: Only rebuilds when relevant code changes
 - **Team collaboration**: Different team members can manage different services
@@ -39,7 +40,7 @@ vercel login
 
 ### Create Vercel Projects in Dashboard
 
-**Yes!** For a monorepo, you create **two separate Vercel projects** connected to the **same GitHub repository**, each targeting a different directory.
+**Yes!** For a monorepo, you create **three separate Vercel projects** connected to the **same GitHub repository**, each targeting a different directory.
 
 1. **Go to Vercel Dashboard**: Visit [vercel.com](https://vercel.com) and sign in
 
@@ -64,6 +65,16 @@ vercel login
      - **Framework Preset**: "Other" (we'll configure manually)
      - Click "Create"
 
+4. **Create Admin Web Project**:
+   - Click "Add New..." → "Project"
+   - Click "Import Git Repository"
+   - **Select your same repository again** (Vercel allows multiple projects per repo)
+   - Configure project:
+     - **Name**: `524-admin-web`
+     - **Root Directory**: `packages/web` ← This tells Vercel to deploy from the web package
+     - **Framework Preset**: "Next.js" (Vercel will auto-detect this)
+     - Click "Create"
+
 ### Configure Build Settings
 
 After creating projects, configure each one:
@@ -84,6 +95,16 @@ After creating projects, configure each one:
 - **Node.js Version**: `18.x` or `20.x`
 
 > **Note:** The `packages/mobile/vercel.json` configures Expo web build automatically.
+
+**For Admin Web Project (`524-admin-web`)**:
+- Go to Project Settings → Build & Development Settings
+- **Framework Preset**: Next.js (should be auto-detected)
+- **Build Command**: `npm run build` (default for Next.js)
+- **Output Directory**: `.next` (default for Next.js, auto-configured)
+- **Install Command**: `npm install`
+- **Node.js Version**: `20.x` (recommended for Next.js 16+)
+
+> **Note:** Next.js projects on Vercel are automatically optimized. No additional configuration needed unless you have custom requirements.
 
 ## Step 2: Connect Neon Database via Integration
 
@@ -243,9 +264,92 @@ export const API_URL = getApiUrl();
 2. Click "Deployments" tab
 3. Click "Redeploy" on the latest deployment
 
-## Step 4: Update CORS in API
+## Step 4: Configure Admin Web App
 
-After both deployments are complete, configure CORS to allow your frontend domains:
+### Setting API_URL for Different Environments
+
+The Admin Web dashboard needs to connect to your API. Similar to Mobile Web, configure the API URL based on the deployment environment.
+
+**Recommended Approach: Use Stable Environment URLs**
+
+Set up stable API URLs for each environment:
+
+| Environment | Frontend URL | API URL |
+|-------------|--------------|---------|
+| Production | `524-admin-web.vercel.app` | `524-api.vercel.app` |
+| Preview | `524-admin-web-*.vercel.app` | `524-api-git-*.vercel.app` (or staging URL) |
+| Development | `localhost:3000` | `localhost:3000` |
+
+### Option A: Simple Setup (Single Staging API)
+
+Use the same API for all preview deployments:
+
+**In `524-admin-web` project → Settings → Environment Variables:**
+
+| Variable | Value | Environment |
+|----------|-------|-------------|
+| `NEXT_PUBLIC_API_URL` | `https://524-api.vercel.app` | **Production** |
+| `NEXT_PUBLIC_API_URL` | `https://524-api.vercel.app` | **Preview** (use prod API for now) |
+| `NODE_ENV` | `production` | **All Environments** |
+| `ENV` | `production` | **Production** |
+| `ENV` | `preview` | **Preview** |
+
+### Option B: Separate Staging API (Recommended for Teams)
+
+Create a separate staging API deployment for preview branches:
+
+1. **Create a staging branch** in your repo (e.g., `staging` or `develop`)
+2. **Configure `524-api` project** to deploy `staging` branch to a stable URL
+3. **Set preview environment variable** to use staging API:
+
+| Variable | Value | Environment |
+|----------|-------|-------------|
+| `NEXT_PUBLIC_API_URL` | `https://524-api.vercel.app` | **Production** |
+| `NEXT_PUBLIC_API_URL` | `https://524-api-staging.vercel.app` | **Preview** |
+
+### Option C: Dynamic URL Construction (Advanced)
+
+For branch-matched deployments, create a runtime API URL resolver in your Next.js app:
+
+```typescript
+// packages/web/src/config/api.ts
+const getApiUrl = () => {
+  // Production
+  if (process.env.VERCEL_ENV === 'production') {
+    return 'https://524-api.vercel.app';
+  }
+  
+  // Preview - construct from branch name
+  const branch = process.env.VERCEL_GIT_COMMIT_REF;
+  if (branch && process.env.VERCEL_ENV === 'preview') {
+    // Vercel preview URLs follow this pattern
+    return `https://524-api-git-${branch.replace(/\//g, '-')}.vercel.app`;
+  }
+  
+  // Fallback to environment variable
+  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+};
+
+export const API_URL = getApiUrl();
+```
+
+Then use this in your React Admin data provider:
+
+```typescript
+// packages/web/src/components/AdminApp.tsx
+import { API_URL } from '../config/api';
+const dataProvider = jsonServerProvider(API_URL);
+```
+
+### Trigger Admin Web Deployment
+
+1. Go to your `524-admin-web` project in Vercel dashboard
+2. Click "Deployments" tab
+3. Click "Redeploy" on the latest deployment
+
+## Step 5: Update CORS in API
+
+After all deployments are complete, configure CORS to allow your frontend domains:
 
 ### CORS Configuration for Multiple Environments
 
@@ -253,8 +357,8 @@ In your `524-api` project → Settings → Environment Variables:
 
 | Variable | Value | Environment |
 |----------|-------|-------------|
-| `CORS_ORIGIN` | `https://524-mobile-web.vercel.app` | **Production** |
-| `CORS_ORIGIN` | `https://524-mobile-web-*.vercel.app,https://524-mobile-web.vercel.app` | **Preview** |
+| `CORS_ORIGIN` | `https://524-mobile-web.vercel.app,https://524-admin-web.vercel.app` | **Production** |
+| `CORS_ORIGIN` | `https://524-mobile-web-*.vercel.app,https://524-admin-web-*.vercel.app,https://524-mobile-web.vercel.app,https://524-admin-web.vercel.app` | **Preview** |
 
 **Note:** For preview deployments, you may need to use a wildcard pattern or update CORS dynamically. Options:
 
@@ -265,35 +369,45 @@ In your `524-api` project → Settings → Environment Variables:
 
 2. **Use specific patterns** (more secure):
    ```bash
-   CORS_ORIGIN=https://524-mobile-web.vercel.app,https://524-mobile-web-git-*.vercel.app
+   CORS_ORIGIN=https://524-mobile-web.vercel.app,https://524-admin-web.vercel.app,https://524-mobile-web-git-*.vercel.app,https://524-admin-web-git-*.vercel.app
    ```
 
 3. **Dynamic CORS in code** (most flexible):
-   Update your API to check if the origin matches your project patterns.
+   Update your API to check if the origin matches your project patterns. This is recommended for production environments.
 
 ### Trigger API Redeployment
 
 After updating environment variables, trigger a new deployment from the Vercel dashboard.
 
-## Step 5: Test Your Deployments
+## Step 6: Test Your Deployments
 
 ### Test API
 Visit: `https://524-api.vercel.app/health`
 
+Expected response: `{"status":"ok"}` or similar health check response.
+
 ### Test Mobile Web App
 Visit: `https://524-mobile-web.vercel.app`
 
-## Step 6: Share with Your Team
+Verify the mobile web interface loads correctly.
+
+### Test Admin Web App
+Visit: `https://524-admin-web.vercel.app`
+
+Verify the admin dashboard loads and can connect to the API. You should see the React Admin interface.
+
+## Step 7: Share with Your Team
 
 Your team can now access:
 - **API**: `https://524-api.vercel.app`
 - **Mobile Web**: `https://524-mobile-web.vercel.app`
+- **Admin Web**: `https://524-admin-web.vercel.app`
 
 ## Deployment Workflow
 
 **For future deployments:**
 - Push code changes to your GitHub repository
-- Vercel will automatically deploy both projects
+- Vercel will automatically deploy all three projects (API, Mobile Web, Admin Web)
 - Or manually trigger deployments from the Vercel dashboard
 
 **Environment variable changes:**
@@ -310,8 +424,9 @@ Your team can now access:
 - Verify environment variables are set correctly
 
 **CORS Errors:**
-- Make sure `CORS_ORIGIN` includes your mobile web domain
+- Make sure `CORS_ORIGIN` includes both mobile web and admin web domains
 - Include `https://` protocol
+- For preview deployments, ensure wildcard patterns or specific preview URLs are included
 
 **API Connection Issues:**
 - Check that Neon integration is connected in Vercel dashboard

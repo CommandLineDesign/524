@@ -8,7 +8,7 @@
     "dev": "NODE_OPTIONS='--max-old-space-size=4096' tsx watch src/index.ts",
     "build": "tsc --project tsconfig.json",
     "build:vercel": "node scripts/build-vercel.mjs",
-    "vercel-build": "cd ../.. && npm run build --workspace @524/shared && npm run build --workspace @524/database && npm run build --workspace @524/notifications && npm run build --workspace @524/api && npm run build:vercel --workspace @524/api",
+    "vercel-build": "cd ../.. && pnpm --filter @524/shared build && pnpm --filter @524/database build && pnpm --filter @524/notifications build && pnpm --filter @524/api build && pnpm --filter @524/api build:vercel",
     "start": "node dist/index.js",
     "lint": "echo \"(api) lint not configured yet\"",
     "test": "echo \"(api) tests not implemented yet\""

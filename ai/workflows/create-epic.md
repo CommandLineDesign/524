@@ -26,10 +26,10 @@ Establish comprehensive understanding of epic scope, requirements, and context b
 **Input:**
 
 - Epic name and description concept
-- Proposed category assignment (Foundation, Orbital Phase, Surface Establishment, etc.)
+- Proposed category assignment (Foundation, Feature, Enhancement, etc.)
 - Priority justification reasoning (Critical, High, Medium, Low)
 - Key features and deliverables list
-- Technical considerations and Unity ECS requirements
+- Technical considerations and System Architecture requirements
 - User value proposition statement
 
 **Actions:**
@@ -84,8 +84,8 @@ Create a comprehensive epic specification file following the canonical Epic Form
 5. **Write Description**: Create detailed explanation of epic scope and user value proposition
 6. **Define Key Components**: List major deliverables and systems with brief descriptions
 7. **Create Acceptance Criteria**: Write specific, testable requirements using checkbox format
-8. **Document Technical Requirements**: Specify Unity ECS architecture requirements and performance considerations
-9. **Write User Stories**: Create Role-Goal-Benefit format examples for player and AI entity perspectives
+8. **Document Technical Requirements**: Specify System Architecture requirements and performance considerations
+9. **Write User Stories**: Create Role-Goal-Benefit format examples for Customer and Artist perspectives
 10. **Identify Risks and Assumptions**: Document technical risks, design assumptions, and external dependencies
 11. **Add Implementation Notes**: Include additional context and implementation considerations
 
@@ -95,8 +95,8 @@ Create a comprehensive epic specification file following the canonical Epic Form
 - All required sections populated with comprehensive information
 - Proper metadata fields completed with appropriate values
 - Testable acceptance criteria in checkbox format
-- Technical requirements aligned with Unity ECS architecture
-- User stories covering both player and AI entity perspectives
+- Technical requirements aligned with System Architecture
+- User stories covering both Customer and Artist perspectives
 
 **Validation:**
 
@@ -104,7 +104,7 @@ Create a comprehensive epic specification file following the canonical Epic Form
 - [ ] **Section Completeness**: ALL required sections are present and properly filled
 - [ ] **Metadata Accuracy**: Category, Priority, Status, Dependencies, Estimated Effort use specified options
 - [ ] **Acceptance Criteria Format**: Acceptance criteria use checkbox format and are specific/testable
-- [ ] **Technical Alignment**: Technical requirements align with Unity ECS architecture patterns
+- [ ] **Technical Alignment**: Technical requirements align with System Architecture patterns
 - [ ] **User Story Format**: User stories follow Role-Goal-Benefit format for both perspectives
 - [ ] **Content Quality**: All content is clear, accurate, and comprehensive
 
@@ -205,7 +205,7 @@ Validate all dependencies, technical consistency, and terminology alignment to e
 2. **Validate Dependency Logic**: Check that dependency relationships are logical and implementable
 3. **Check Circular Dependencies**: Identify and resolve any circular dependency chains
 4. **Confirm Prerequisites**: Validate that prerequisite epics provide necessary foundations
-5. **Verify Unity ECS Alignment**: Ensure architecture approaches align with existing epics
+5. **Verify System Architecture Alignment**: Ensure architecture approaches align with existing epics
 6. **Check Integration Compatibility**: Verify integration points are compatible with established systems
 7. **Validate Performance Requirements**: Check that performance requirements are realistic and measurable
 8. **Ensure Technical Consistency**: Confirm technical approaches are consistent across related epics
@@ -245,10 +245,10 @@ Integrate the epic with broader project vision and roadmap documentation to main
 
 **Actions:**
 
-1. **Assess Vision Impact**: Determine if the epic introduces concepts that enhance the game vision
+1. **Assess Vision Impact**: Determine if the epic introduces concepts that enhance the product vision
 2. **Update Vision Document**: Integrate new concepts seamlessly into existing vision narrative if applicable
 3. **Maintain Vision Consistency**: Preserve consistent tone, writing style, and structure
-4. **Align Technical Details**: Ensure technical details align with established game mechanics in vision
+4. **Align Technical Details**: Ensure technical details align with established business logic in vision
 5. **Evaluate Roadmap Impact**: Determine if the epic affects development sequencing or timelines
 6. **Update Roadmap Items**: Add or update relevant roadmap items if sequencing is affected
 7. **Maintain Phase Organization**: Ensure proper sequencing and dependencies in roadmap
@@ -263,10 +263,10 @@ Integrate the epic with broader project vision and roadmap documentation to main
 
 **Validation:**
 
-- [ ] **Vision Impact Assessment**: Epic's impact on game vision properly evaluated
+- [ ] **Vision Impact Assessment**: Epic's impact on product vision properly evaluated
 - [ ] **Vision Integration**: New concepts integrated seamlessly if vision updates needed
 - [ ] **Vision Consistency**: Tone, style, and structure preserved in vision updates
-- [ ] **Technical Alignment**: Technical details align with established game mechanics
+- [ ] **Technical Alignment**: Technical details align with established business logic
 - [ ] **Roadmap Impact Assessment**: Epic's effect on development sequencing evaluated
 - [ ] **Roadmap Updates**: Relevant roadmap items updated with proper sequencing
   - [ ] **Timeline Accuracy**: Development timelines adjusted appropriately if needed
@@ -289,7 +289,7 @@ Conduct comprehensive quality review to ensure the epic meets all format require
 1. **Run Format Validation**: Verify complete compliance with Epic Format Specification
 2. **Content Quality Review**: Assess comprehensiveness, clarity, and accuracy of all sections
 3. **Integration Verification**: Confirm proper tracking, context, and cross-reference integration
-4. **Technical Accuracy Check**: Validate technical requirements and Unity ECS alignment
+4. **Technical Accuracy Check**: Validate technical requirements and System Architecture alignment
 5. **Dependency Validation**: Ensure all dependencies are logical and properly documented
 6. **User Story Quality**: Verify user stories follow proper format and cover required perspectives
 7. **Final Cross-Reference Check**: Validate all links and references are functional
@@ -308,7 +308,7 @@ Conduct comprehensive quality review to ensure the epic meets all format require
 - [ ] **Section Completeness**: All required sections present and substantive
 - [ ] **Metadata Accuracy**: Category, Priority, Status, Dependencies, Estimated Effort properly completed
 - [ ] **Acceptance Criteria Quality**: Criteria are specific, testable, and use checkbox format
-- [ ] **Technical Requirements**: Requirements align with Unity ECS architecture patterns
+- [ ] **Technical Requirements**: Requirements align with System Architecture patterns
 - [ ] **User Story Format**: Stories follow Role-Goal-Benefit format for both perspectives
 - [ ] **Integration Completeness**: All system integrations completed and validated
 - [ ] **Cross-Reference Functionality**: All links and references are functional and accurate
@@ -336,7 +336,7 @@ Conduct comprehensive quality review to ensure the epic meets all format require
 - [ ] **Priority Justification**: Priority justification is clear and well-reasoned
 - [ ] **Dependencies Documentation**: Dependencies section not empty (use "None" if no dependencies)
 - [ ] **Acceptance Criteria**: Criteria are specific, testable, and comprehensive
-- [ ] **Technical Requirements**: Requirements align with Unity ECS architecture patterns
+- [ ] **Technical Requirements**: Requirements align with System Architecture patterns
 - [ ] **User Story Quality**: Stories follow Role-Goal-Benefit format for both perspectives
 - [ ] **Content Clarity**: All content is clear, accurate, and complete
 
@@ -357,7 +357,7 @@ Conduct comprehensive quality review to ensure the epic meets all format require
 
 - Epic file created with all required sections populated following canonical format
 - Content is comprehensive and provides clear development guidance
-- Technical requirements are specific, implementable, and aligned with Unity ECS architecture
+- Technical requirements are specific, implementable, and aligned with System Architecture
 - User value is clearly articulated and measurable through acceptance criteria
 
 **System Integration:**
@@ -408,8 +408,8 @@ Additional context, special considerations, or implementation details for this w
 - New epics always start with "⏳ Not Started" status for consistent tracking
 - File names must use kebab-case convention for system compatibility
 - Dependencies must reference actual epic files that exist in the system
-- Technical requirements must be compatible with Unity ECS architecture patterns
-- User stories should cover both player and AI entity perspectives where relevant
+- Technical requirements must be compatible with System Architecture patterns
+- User stories should cover both Customer and Artist perspectives where relevant
 - Always validate cross-references before finalizing any epic to maintain system integrity
 - Context files should be updated to reflect new information from the epic
 - Cross-reference impact should be considered for related epics, components, and user stories
