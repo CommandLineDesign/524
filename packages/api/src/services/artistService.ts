@@ -1,6 +1,7 @@
+import type { PendingArtistDetail } from '@524/shared/admin';
 import type { ArtistProfile, ArtistSearchFilters, ArtistSearchResult } from '@524/shared/artists';
 
-import { ArtistRepository } from '../repositories/artistRepository.js';
+import { ArtistRepository, type PendingArtistQuery } from '../repositories/artistRepository.js';
 import { SearchService } from './searchService.js';
 
 export class ArtistService {
@@ -19,5 +20,13 @@ export class ArtistService {
 
   searchArtists(filters: ArtistSearchFilters): Promise<ArtistSearchResult[]> {
     return this.searchService.searchArtists(filters);
+  }
+
+  getPendingArtists(query: PendingArtistQuery) {
+    return this.repository.findPending(query);
+  }
+
+  getPendingArtistById(artistId: string): Promise<PendingArtistDetail | null> {
+    return this.repository.findPendingById(artistId);
   }
 }
