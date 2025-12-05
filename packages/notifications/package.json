@@ -14,7 +14,11 @@
   },
   "scripts": {
     "build": "tsc --project tsconfig.json",
-    "lint": "echo \"(notifications) lint not configured yet\""
+    "lint": "biome lint .",
+    "lint:fix": "biome lint --write .",
+    "format": "biome format --write .",
+    "format:check": "biome format .",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "firebase-admin": "^12.1.0",

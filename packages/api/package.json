@@ -10,7 +10,11 @@
     "build:vercel": "node scripts/build-vercel.mjs",
     "vercel-build": "cd ../.. && pnpm --filter @524/shared build && pnpm --filter @524/database build && pnpm --filter @524/notifications build && pnpm --filter @524/api build && pnpm --filter @524/api build:vercel",
     "start": "node dist/index.js",
-    "lint": "echo \"(api) lint not configured yet\"",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint --write .",
+    "format": "biome format --write .",
+    "format:check": "biome format .",
+    "typecheck": "tsc --noEmit",
     "test": "echo \"(api) tests not implemented yet\""
   },
   "dependencies": {

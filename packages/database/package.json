@@ -16,7 +16,11 @@
     "build": "tsc --project tsconfig.json",
     "generate": "drizzle-kit generate --config drizzle.config.ts",
     "seed": "tsx src/seed.ts",
-    "lint": "echo \"(database) lint not configured yet\""
+    "lint": "biome lint .",
+    "lint:fix": "biome lint --write .",
+    "format": "biome format --write .",
+    "format:check": "biome format .",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@524/shared": "file:../shared",

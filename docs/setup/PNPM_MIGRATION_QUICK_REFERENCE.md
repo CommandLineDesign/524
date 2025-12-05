@@ -4,6 +4,12 @@
 
 ✅ **Safe to migrate** - Vercel fully supports pnpm. Main work is updating config files.
 
+**Repo checks (now standard):**
+- Lint: `pnpm lint`
+- Format (check): `pnpm format:check` / (write) `pnpm format`
+- Typecheck: `pnpm typecheck`
+- Hooks: `pnpm lefthook install` (pre-commit Biome + typecheck; pre-push lint/format/typecheck)
+
 ## Key Changes Required
 
 ### 1. Root Configuration

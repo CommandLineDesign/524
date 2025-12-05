@@ -1,0 +1,48 @@
+# Lefthook configuration for pre-commit hooks
+# Install with: pnpm lefthook install
+
+pre-commit:
+  parallel: true
+  commands:
+    biome-check:
+      run: pnpm exec biome check --write --no-errors-on-unmatched {staged_files}
+      stage_fixed: true
+      glob: "*.{ts,tsx,js,jsx,json,md}"
+      exclude: |
+        (?x)^(
+          .*\.lock$|
+          .*\.log$|
+          .*node_modules.*|
+          .*dist.*|
+          .*build.*|
+          .*\.next.*|
+          .*\.expo.*|
+          .*\.turbo.*|
+          .*migrations.*|
+          .*meta.*
+        )
+    typecheck:
+      run: pnpm typecheck
+      glob: "*.{ts,tsx}"
+      exclude: |
+        (?x)^(
+          .*node_modules.*|
+          .*dist.*|
+          .*build.*|
+          .*\.next.*|
+          .*\.expo.*|
+          .*\.turbo.*|
+          .*migrations.*|
+          .*meta.*
+        )
+
+pre-push:
+  parallel: true
+  commands:
+    lint:
+      run: pnpm lint
+    format-check:
+      run: pnpm format:check
+    typecheck:
+      run: pnpm typecheck
+
