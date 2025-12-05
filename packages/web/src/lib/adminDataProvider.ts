@@ -1,0 +1,80 @@
+import { type DataProvider, fetchUtils } from 'react-admin';
+
+import { API_BASE_URL, getStoredToken } from './adminApi';
+
+const resourceToEndpoint = {
+  'pending-artists': `${API_BASE_URL}/admin/pending-artists`,
+} as const;
+
+async function httpClient(url: string, options: fetchUtils.Options = {}) {
+  const token = getStoredToken();
+  const headers = new Headers(options.headers || {});
+
+  if (!headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json');
+  }
+
+  if (token) {
+    headers.set('Authorization', `Bearer ${token}`);
+  }
+
+  return fetchUtils.fetchJson(url, { ...options, headers });
+}
+
+export const adminDataProvider: DataProvider = {
+  async getList(resource, params) {
+    const endpoint = resourceToEndpoint[resource as keyof typeof resourceToEndpoint];
+    if (!endpoint) {
+      return Promise.reject(new Error(`Unsupported resource: ${resource}`));
+    }
+
+    const { page, perPage } = params.pagination ?? { page: 1, perPage: 25 };
+    const { field, order } = params.sort ?? { field: 'signupDate', order: 'DESC' };
+
+    const url = `${endpoint}?page=${page}&perPage=${perPage}&sortField=${field}&sortOrder=${order}`;
+    const { json } = await httpClient(url);
+
+    return {
+      data: json.data ?? [],
+      total: json.total ?? 0,
+    };
+  },
+
+  async getOne(resource, params) {
+    const endpoint = resourceToEndpoint[resource as keyof typeof resourceToEndpoint];
+    if (!endpoint) {
+      return Promise.reject(new Error(`Unsupported resource: ${resource}`));
+    }
+
+    const { json } = await httpClient(`${endpoint}/${params.id}`);
+    return { data: json.data };
+  },
+
+  async getMany() {
+    return { data: [] };
+  },
+
+  async getManyReference() {
+    return { data: [], total: 0 };
+  },
+
+  async update() {
+    return Promise.reject(new Error('Update not implemented'));
+  },
+
+  async updateMany() {
+    return Promise.reject(new Error('Update many not implemented'));
+  },
+
+  async create() {
+    return Promise.reject(new Error('Create not implemented'));
+  },
+
+  async delete() {
+    return Promise.reject(new Error('Delete not implemented'));
+  },
+
+  async deleteMany() {
+    return Promise.reject(new Error('Delete many not implemented'));
+  },
+};
