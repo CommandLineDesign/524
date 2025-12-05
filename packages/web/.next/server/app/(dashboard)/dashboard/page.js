@@ -1,6 +1,0 @@
-const CHUNK_PUBLIC_PATH = "server/app/(dashboard)/dashboard/page.js";
-const runtime = require("../../../chunks/ssr/[turbopack]_runtime.js");
-runtime.loadChunk("server/chunks/ssr/[project]__32a748._.js");
-runtime.loadChunk("server/chunks/ssr/[project]_packages_web_9fcf69._.js");
-runtime.getOrInstantiateRuntimeModule("[project]/packages/web/.next-internal/server/app/(dashboard)/dashboard/page/actions.js [app-rsc] (ecmascript)", CHUNK_PUBLIC_PATH);
-module.exports = runtime.getOrInstantiateRuntimeModule("[project]/packages/web/node_modules/next/dist/esm/build/templates/app-page.js?page=/(dashboard)/dashboard/page { COMPONENT_0 => \"[project]/packages/web/src/app/layout.tsx [app-rsc] (ecmascript, Next.js server component)\", COMPONENT_1 => \"[project]/packages/web/node_modules/next/dist/client/components/not-found-error.js [app-rsc] (ecmascript, Next.js server component)\", COMPONENT_2 => \"[project]/packages/web/src/app/(dashboard)/layout.tsx [app-rsc] (ecmascript, Next.js server component)\", COMPONENT_3 => \"[project]/packages/web/node_modules/next/dist/client/components/not-found-error.js [app-rsc] (ecmascript, Next.js server component)\", COMPONENT_4 => \"[project]/packages/web/src/app/(dashboard)/dashboard/page.tsx [app-rsc] (ecmascript, Next.js server component)\" } [app-rsc] (ecmascript) <facade>", CHUNK_PUBLIC_PATH).exports;

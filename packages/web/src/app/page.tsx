@@ -1,6 +1,2 @@
-"use client";
-import AdminApp from "../components/AdminApp";
-
-export default function Home() {
-  return <AdminApp />;
-}
+export { default } from "./page.client";
+export const dynamic = "force-dynamic";
