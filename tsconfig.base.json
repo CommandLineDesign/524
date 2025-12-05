@@ -20,7 +20,9 @@
       "@524/api/*": ["packages/api/src/*"],
       "@524/mobile/*": ["packages/mobile/src/*"],
       "@524/web/*": ["packages/web/src/*"],
+      "@524/database": ["packages/database/src/index.ts"],
       "@524/database/*": ["packages/database/src/*"],
+      "@524/notifications": ["packages/notifications/src/index.ts"],
       "@524/notifications/*": ["packages/notifications/src/*"]
     }
   },
