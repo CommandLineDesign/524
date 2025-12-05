@@ -1,9 +1,9 @@
-import { Router } from 'express';
+import { type Router as ExpressRouter, Router } from 'express';
 
 import { BookingController } from '../../controllers/bookingController.js';
 import { requireArtist, requireAuth, requireCustomer } from '../../middleware/auth.js';
 
-const router = Router();
+const router: ExpressRouter = Router();
 
 // Create booking (customers only)
 router.post('/', requireCustomer(), BookingController.createBooking);
@@ -14,4 +14,4 @@ router.get('/:bookingId', requireAuth(['customer', 'artist']), BookingController
 // Update booking status (artist only)
 router.patch('/:bookingId/status', requireArtist(), BookingController.updateBookingStatus);
 
-export const bookingRouter = router;
+export const bookingRouter: ExpressRouter = router;

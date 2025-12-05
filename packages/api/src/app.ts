@@ -1,5 +1,5 @@
 import cors from 'cors';
-import express from 'express';
+import express, { type Express } from 'express';
 import helmet from 'helmet';
 
 import { env } from './config/env.js';
@@ -9,8 +9,8 @@ import { createRateLimiter } from './middleware/rateLimiter.js';
 import { requestLogger } from './middleware/requestLogger.js';
 import { rootRouter } from './routes/index.js';
 
-export async function createApp() {
-  const app = express();
+export async function createApp(): Promise<Express> {
+  const app: Express = express();
 
   app.set('trust proxy', env.TRUST_PROXY);
 

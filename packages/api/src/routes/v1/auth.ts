@@ -1,5 +1,5 @@
 // Authentication routes with mock support
-import { Router } from 'express';
+import { type Router as ExpressRouter, Router } from 'express';
 import {
   getMockUserInfo,
   mockLogin,
@@ -11,7 +11,7 @@ import { features } from '../../config/features.js';
 import { type AuthRequest, requireAuth } from '../../middleware/auth.js';
 import { AuthService } from '../../services/authService.js';
 
-const router = Router();
+const router: ExpressRouter = Router();
 const authService = new AuthService();
 
 // ========================================
