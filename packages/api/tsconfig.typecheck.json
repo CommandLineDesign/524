@@ -2,6 +2,14 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "rootDir": "..",
-    "noEmit": true
+    "noEmit": true,
+    "paths": {
+      "@524/shared": ["../shared/src/index.ts"],
+      "@524/shared/*": ["../shared/src/*"],
+      "@524/database": ["../database/src/index.ts"],
+      "@524/database/*": ["../database/src/*"],
+      "@524/notifications": ["../notifications/src/index.ts"],
+      "@524/notifications/*": ["../notifications/src/*"]
+    }
   }
 }
