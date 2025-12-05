@@ -1,7 +1,7 @@
 import type { NextFunction, Request, Response } from 'express';
 
-import { BookingService } from '../services/bookingService.js';
 import type { AuthRequest } from '../middleware/auth.js';
+import { BookingService } from '../services/bookingService.js';
 
 const bookingService = new BookingService();
 
@@ -20,7 +20,7 @@ export const BookingController = {
 
       const booking = await bookingService.createBooking({
         ...req.body,
-        customerId: req.user.id
+        customerId: req.user.id,
       });
       res.status(201).json(booking);
     } catch (error) {
@@ -44,11 +44,13 @@ export const BookingController = {
 
   async updateBookingStatus(req: Request, res: Response, next: NextFunction) {
     try {
-      const booking = await bookingService.updateBookingStatus(req.params.bookingId, req.body.status);
+      const booking = await bookingService.updateBookingStatus(
+        req.params.bookingId,
+        req.body.status
+      );
       res.json(booking);
     } catch (error) {
       next(error);
     }
-  }
+  },
 };
-

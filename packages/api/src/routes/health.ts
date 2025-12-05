@@ -7,4 +7,3 @@ router.get('/', (_req, res) => {
 });
 
 export const healthRouter = router;
-

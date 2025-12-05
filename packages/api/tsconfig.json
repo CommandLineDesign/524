@@ -16,12 +16,6 @@
     "baseUrl": ".",
     "paths": {}
   },
-  "include": [
-    "src"
-  ],
-  "exclude": [
-    "dist"
-  ]
+  "include": ["src"],
+  "exclude": ["dist"]
 }
-
-

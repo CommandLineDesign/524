@@ -7,7 +7,7 @@ export const colors = {
   textSecondary: '#6b7280',
   subtle: '#4b5563',
   surface: '#f9fafb',
-  border: '#e5e7eb'
+  border: '#e5e7eb',
 };
 
 export const theme = {
@@ -20,4 +20,3 @@ export const theme = {
     xl: 32,
   },
 };
-

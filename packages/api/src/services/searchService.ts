@@ -21,7 +21,7 @@ export class SearchService {
         specialties: artistProfiles.specialties,
         averageRating: artistProfiles.averageRating,
         totalReviews: artistProfiles.totalReviews,
-        services: artistProfiles.services
+        services: artistProfiles.services,
       })
       .from(artistProfiles)
       .limit(25);
@@ -59,8 +59,7 @@ export class SearchService {
       specialties: (row.specialties as string[] | null) ?? [],
       averageRating: row.averageRating ? Number(row.averageRating) : 0,
       reviewCount: row.totalReviews ?? 0,
-      priceRange
+      priceRange,
     };
   }
 }
-

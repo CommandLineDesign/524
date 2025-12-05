@@ -9,4 +9,3 @@ router.use('/health', healthRouter);
 router.use('/v1', v1Router);
 
 export const rootRouter = router;
-

@@ -11,4 +11,3 @@ router.use('/bookings', bookingRouter);
 router.use('/artists', artistRouter);
 
 export const v1Router = router;
-

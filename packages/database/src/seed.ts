@@ -1,9 +1,9 @@
 #!/usr/bin/env node
+import { and, eq, ne } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/node-postgres';
-import { eq, ne, and } from 'drizzle-orm';
 import 'dotenv/config';
-import pg from 'pg';
 import * as bcrypt from 'bcryptjs';
+import pg from 'pg';
 import { users } from './schema/users.js';
 
 const { Pool } = pg;
@@ -67,62 +67,61 @@ const TEST_USERS = [
 const TEST_PASSWORD = 'password@1234';
 
 async function seed() {
-  const connectionString = process.env.DATABASE_URL ?? 'postgres://postgres:postgres@localhost:5432/beauty_marketplace';
-  
+  const connectionString =
+    process.env.DATABASE_URL ?? 'postgres://postgres:postgres@localhost:5432/beauty_marketplace';
+
   console.log('🌱 Seeding database with mock users...');
-  
+
   const pool = new Pool({ connectionString });
   const db = drizzle(pool);
-  
+
   try {
     // Hash password once for all users
     const passwordHash = await bcrypt.hash(TEST_PASSWORD, 10);
     console.log('🔐 Generated password hash');
-    
+
     // Insert or update test users
     for (const testUser of TEST_USERS) {
       try {
         // Clean up conflicting users (same phone, different ID)
-        await db.delete(users)
-          .where(
-            and(
-              eq(users.phoneNumber, testUser.phone_number),
-              ne(users.id, testUser.id)
-            )
-          );
+        await db
+          .delete(users)
+          .where(and(eq(users.phoneNumber, testUser.phone_number), ne(users.id, testUser.id)));
 
-        await db.insert(users).values({
-          id: testUser.id,
-          phoneNumber: testUser.phone_number,
-          email: testUser.email,
-          passwordHash,
-          name: testUser.name,
-          role: testUser.role,
-          phoneVerified: true,
-          isActive: true,
-          isVerified: true,
-        }).onConflictDoUpdate({
-          target: users.id,
-          set: {
-            passwordHash,
+        await db
+          .insert(users)
+          .values({
+            id: testUser.id,
+            phoneNumber: testUser.phone_number,
             email: testUser.email,
+            passwordHash,
+            name: testUser.name,
+            role: testUser.role,
             phoneVerified: true,
             isActive: true,
             isVerified: true,
-          }
-        });
-        
+          })
+          .onConflictDoUpdate({
+            target: users.id,
+            set: {
+              passwordHash,
+              email: testUser.email,
+              phoneVerified: true,
+              isActive: true,
+              isVerified: true,
+            },
+          });
+
         console.log(`✅ Seeded user: ${testUser.email} (${testUser.role})`);
       } catch (error) {
         console.error(`❌ Failed to seed ${testUser.email}:`, error);
       }
     }
-    
+
     console.log('\n✅ Seeding complete!');
     console.log('\n📝 Test credentials:');
     console.log('   Email: Any of the emails above');
     console.log(`   Password: ${TEST_PASSWORD}\n`);
-    
   } catch (error) {
     console.error('❌ Seeding failed:', error);
     process.exit(1);
@@ -132,4 +131,3 @@ async function seed() {
 }
 
 seed();
-

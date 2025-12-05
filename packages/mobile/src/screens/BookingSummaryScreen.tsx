@@ -1,10 +1,13 @@
-import DateTimePicker, { DateTimePickerAndroid, type DateTimePickerEvent } from '@react-native-community/datetimepicker';
-import { StackNavigationProp } from '@react-navigation/native-stack';
-import { useNavigation } from '@react-navigation/native';
-import { useQuery } from '@tanstack/react-query';
 import type { ArtistSearchResult } from '@524/shared';
+import DateTimePicker, {
+  DateTimePickerAndroid,
+  type DateTimePickerEvent,
+} from '@react-native-community/datetimepicker';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useQuery } from '@tanstack/react-query';
 import React, { useEffect, useMemo, useState } from 'react';
-import type { ChangeEvent, CSSProperties } from 'react';
+import type { CSSProperties, ChangeEvent } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -14,14 +17,14 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import type { RootStackParamList } from '../navigation/AppNavigator';
 import { createBooking, searchArtists } from '../api/client';
-import { useBookingStore } from '../store/bookingStore';
+import type { RootStackParamList } from '../navigation/AppNavigator';
 import { useAuthStore } from '../store/authStore';
+import { useBookingStore } from '../store/bookingStore';
 import { colors } from '../theme/colors';
 
 const webPickerInputStyle: CSSProperties = {
@@ -32,7 +35,7 @@ const webPickerInputStyle: CSSProperties = {
   fontSize: 16,
   fontFamily: 'inherit',
   backgroundColor: colors.background,
-  color: colors.text
+  color: colors.text,
 };
 
 interface AndroidDatePickerOptions {
@@ -61,9 +64,9 @@ function openAndroidDateTimePicker({ initialDate, onConfirm }: AndroidDatePicker
           const combinedDate = new Date(selectedDate);
           combinedDate.setHours(time.getHours(), time.getMinutes(), 0, 0);
           onConfirm(combinedDate);
-        }
+        },
       });
-    }
+    },
   });
 }
 
@@ -100,7 +103,7 @@ function formatDateTimeDisplay(date: Date) {
   return `${year}.${month}.${day} ${hours}:${minutes}`;
 }
 
-type BookingSummaryNavigationProp = StackNavigationProp<RootStackParamList, 'BookingSummary'>;
+type BookingSummaryNavigationProp = NativeStackNavigationProp<RootStackParamList, 'BookingSummary'>;
 
 export function BookingSummaryScreen() {
   const navigation = useNavigation<BookingSummaryNavigationProp>();
@@ -117,25 +120,32 @@ export function BookingSummaryScreen() {
   const [isArtistDropdownOpen, setIsArtistDropdownOpen] = useState(false);
   const [isIOSPickerVisible, setIsIOSPickerVisible] = useState(false);
   const defaultAppointmentDate = useMemo(() => getDefaultAppointmentDate(), []);
-  const scheduledDateValue = useMemo(() => (scheduledDate ? new Date(scheduledDate) : null), [scheduledDate]);
-  const [iosPickerValue, setIOSPickerValue] = useState<Date>(scheduledDateValue ?? defaultAppointmentDate);
+  const scheduledDateValue = useMemo(
+    () => (scheduledDate ? new Date(scheduledDate) : null),
+    [scheduledDate]
+  );
+  const [iosPickerValue, setIOSPickerValue] = useState<Date>(
+    scheduledDateValue ?? defaultAppointmentDate
+  );
   const [isWebPickerVisible, setIsWebPickerVisible] = useState(false);
-  const [webPickerValue, setWebPickerValue] = useState(() => formatDateTimeInputValue(defaultAppointmentDate));
+  const [webPickerValue, setWebPickerValue] = useState(() =>
+    formatDateTimeInputValue(defaultAppointmentDate)
+  );
   const [webMinSelectableValue] = useState(() => formatDateTimeInputValue(new Date()));
 
   const {
     data: artists,
     isLoading: isArtistsLoading,
     isError: isArtistsError,
-    refetch: refetchArtists
+    refetch: refetchArtists,
   } = useQuery<ArtistSearchResult[]>({
     queryKey: ['artists', serviceType, occasion],
     queryFn: () =>
       searchArtists({
         serviceType: serviceType ?? undefined,
-        occasion: occasion ?? undefined
+        occasion: occasion ?? undefined,
       }),
-    enabled: Boolean(serviceType)
+    enabled: Boolean(serviceType),
   });
 
   useEffect(() => {
@@ -148,12 +158,17 @@ export function BookingSummaryScreen() {
   const payload = user ? buildPayload(user.id) : null;
   const selectedArtist = (artists ?? []).find((artist) => artist.id === selectedArtistId) ?? null;
   const formattedAppointment =
-    scheduledDateValue !== null ? formatDateTimeDisplay(scheduledDateValue) : '예약 날짜와 시간을 선택해주세요';
+    scheduledDateValue !== null
+      ? formatDateTimeDisplay(scheduledDateValue)
+      : '예약 날짜와 시간을 선택해주세요';
   const isSubmitDisabled = !payload || isSubmitting;
 
   const handleConfirm = async () => {
     if (!payload) {
-      Alert.alert('정보가 부족해요', '서비스, 아티스트, 일정 정보를 모두 선택한 후 다시 시도해주세요.');
+      Alert.alert(
+        '정보가 부족해요',
+        '서비스, 아티스트, 일정 정보를 모두 선택한 후 다시 시도해주세요.'
+      );
       return;
     }
 
@@ -180,7 +195,7 @@ export function BookingSummaryScreen() {
     if (Platform.OS === 'android') {
       openAndroidDateTimePicker({
         initialDate: scheduledDateValue ?? defaultAppointmentDate,
-        onConfirm: (date) => setScheduledDate(date.toISOString())
+        onConfirm: (date) => setScheduledDate(date.toISOString()),
       });
       return;
     }
@@ -260,9 +275,15 @@ export function BookingSummaryScreen() {
           <View style={styles.formField}>
             <Text style={styles.fieldLabel}>예약 일정</Text>
             <Text style={styles.fieldHint}>고객이 원하는 날짜와 시간을 선택해주세요.</Text>
-            <TouchableOpacity accessibilityRole="button" style={styles.selectControl} onPress={openDateTimePicker}>
+            <TouchableOpacity
+              accessibilityRole="button"
+              style={styles.selectControl}
+              onPress={openDateTimePicker}
+            >
               <View>
-                <Text style={scheduledDateValue ? styles.selectText : styles.placeholderText}>{formattedAppointment}</Text>
+                <Text style={scheduledDateValue ? styles.selectText : styles.placeholderText}>
+                  {formattedAppointment}
+                </Text>
               </View>
               <Text style={styles.calendarGlyph}>CAL</Text>
             </TouchableOpacity>
@@ -289,7 +310,9 @@ export function BookingSummaryScreen() {
           </View>
           <View style={styles.summaryRow}>
             <Text style={styles.label}>총 금액</Text>
-            <Text style={styles.value}>{payload?.totalAmount ? `${payload.totalAmount.toLocaleString()}원` : '-'}</Text>
+            <Text style={styles.value}>
+              {payload?.totalAmount ? `${payload.totalAmount.toLocaleString()}원` : '-'}
+            </Text>
           </View>
         </View>
       </ScrollView>
@@ -322,7 +345,10 @@ export function BookingSummaryScreen() {
               <TouchableOpacity style={styles.modalButton} onPress={handleWebPickerCancel}>
                 <Text style={styles.modalButtonText}>취소</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.modalButton, styles.modalButtonPrimary]} onPress={handleWebPickerConfirm}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalButtonPrimary]}
+                onPress={handleWebPickerConfirm}
+              >
                 <Text style={[styles.modalButtonText, styles.modalButtonPrimaryText]}>완료</Text>
               </TouchableOpacity>
             </View>
@@ -330,7 +356,12 @@ export function BookingSummaryScreen() {
         </View>
       )}
 
-      <Modal visible={isArtistDropdownOpen} transparent animationType="fade" onRequestClose={() => setIsArtistDropdownOpen(false)}>
+      <Modal
+        visible={isArtistDropdownOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsArtistDropdownOpen(false)}
+      >
         <View style={styles.modalBackdrop}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>아티스트 선택</Text>
@@ -340,7 +371,9 @@ export function BookingSummaryScreen() {
               </View>
             ) : isArtistsError ? (
               <TouchableOpacity style={styles.dropdownState} onPress={() => refetchArtists()}>
-                <Text style={styles.errorText}>아티스트 목록을 불러오는 중 문제가 발생했어요. 다시 시도하려면 탭하세요.</Text>
+                <Text style={styles.errorText}>
+                  아티스트 목록을 불러오는 중 문제가 발생했어요. 다시 시도하려면 탭하세요.
+                </Text>
               </TouchableOpacity>
             ) : (artists ?? []).length === 0 ? (
               <View style={styles.dropdownState}>
@@ -353,14 +386,16 @@ export function BookingSummaryScreen() {
                     key={artist.id}
                     style={[
                       styles.artistOption,
-                      artist.id === selectedArtistId && styles.artistOptionSelected
+                      artist.id === selectedArtistId && styles.artistOptionSelected,
                     ]}
                     onPress={() => handleArtistSelect(artist.id)}
                   >
                     <View style={styles.artistOptionInfo}>
                       <Text style={styles.artistOptionLabel}>{artist.stageName}</Text>
                       <Text style={styles.artistOptionMeta}>
-                        {artist.specialties?.length ? artist.specialties.join(', ') : '서비스 정보 없음'}
+                        {artist.specialties?.length
+                          ? artist.specialties.join(', ')
+                          : '서비스 정보 없음'}
                       </Text>
                     </View>
                     <View style={styles.artistOptionMetaWrapper}>
@@ -373,7 +408,10 @@ export function BookingSummaryScreen() {
                 ))}
               </ScrollView>
             )}
-            <TouchableOpacity style={[styles.modalButton, styles.modalButtonPrimary]} onPress={() => setIsArtistDropdownOpen(false)}>
+            <TouchableOpacity
+              style={[styles.modalButton, styles.modalButtonPrimary]}
+              onPress={() => setIsArtistDropdownOpen(false)}
+            >
               <Text style={[styles.modalButtonText, styles.modalButtonPrimaryText]}>닫기</Text>
             </TouchableOpacity>
           </View>
@@ -381,7 +419,12 @@ export function BookingSummaryScreen() {
       </Modal>
 
       {Platform.OS === 'ios' && (
-        <Modal visible={isIOSPickerVisible} transparent animationType="fade" onRequestClose={handleIOSPickerCancel}>
+        <Modal
+          visible={isIOSPickerVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={handleIOSPickerCancel}
+        >
           <View style={styles.modalBackdrop}>
             <View style={styles.modalContent}>
               <Text style={styles.modalTitle}>예약 날짜/시간 선택</Text>
@@ -396,7 +439,10 @@ export function BookingSummaryScreen() {
                 <TouchableOpacity style={styles.modalButton} onPress={handleIOSPickerCancel}>
                   <Text style={styles.modalButtonText}>취소</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={[styles.modalButton, styles.modalButtonPrimary]} onPress={handleIOSPickerConfirm}>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.modalButtonPrimary]}
+                  onPress={handleIOSPickerConfirm}
+                >
                   <Text style={[styles.modalButtonText, styles.modalButtonPrimaryText]}>완료</Text>
                 </TouchableOpacity>
               </View>
@@ -413,12 +459,12 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 24,
     paddingVertical: 16,
-    backgroundColor: colors.background
+    backgroundColor: colors.background,
   },
   scrollContent: {
     flexGrow: 1,
     gap: 16,
-    paddingBottom: 24
+    paddingBottom: 24,
   },
   formCard: {
     backgroundColor: colors.surface,
@@ -426,7 +472,7 @@ const styles = StyleSheet.create({
     padding: 20,
     gap: 24,
     borderWidth: 1,
-    borderColor: colors.border
+    borderColor: colors.border,
   },
   summaryCard: {
     backgroundColor: colors.surface,
@@ -434,37 +480,37 @@ const styles = StyleSheet.create({
     padding: 20,
     gap: 16,
     borderWidth: 1,
-    borderColor: colors.border
+    borderColor: colors.border,
   },
   sectionTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: colors.text
+    color: colors.text,
   },
   summaryRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between'
+    justifyContent: 'space-between',
   },
   label: {
     fontSize: 15,
-    color: colors.subtle
+    color: colors.subtle,
   },
   value: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.text
+    color: colors.text,
   },
   formField: {
-    gap: 8
+    gap: 8,
   },
   fieldLabel: {
     fontSize: 15,
     fontWeight: '600',
-    color: colors.text
+    color: colors.text,
   },
   fieldHint: {
     fontSize: 13,
-    color: colors.muted
+    color: colors.muted,
   },
   selectControl: {
     marginTop: 8,
@@ -476,40 +522,40 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center'
+    alignItems: 'center',
   },
   selectText: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.text
+    color: colors.text,
   },
   selectSubText: {
     fontSize: 13,
     color: colors.subtle,
-    marginTop: 2
+    marginTop: 2,
   },
   placeholderText: {
     fontSize: 15,
-    color: colors.muted
+    color: colors.muted,
   },
   chevron: {
     fontSize: 18,
     color: colors.subtle,
-    marginLeft: 12
+    marginLeft: 12,
   },
   calendarGlyph: {
     fontSize: 13,
     fontWeight: '700',
     color: colors.subtle,
-    marginLeft: 12
+    marginLeft: 12,
   },
   artistList: {
-    maxHeight: 400
+    maxHeight: 400,
   },
   dropdownState: {
     padding: 16,
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
   },
   artistOption: {
     paddingHorizontal: 16,
@@ -520,86 +566,86 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
     gap: 12,
-    backgroundColor: colors.background
+    backgroundColor: colors.background,
   },
   artistOptionSelected: {
-    backgroundColor: '#fef3c7'
+    backgroundColor: '#fef3c7',
   },
   artistOptionInfo: {
-    flex: 1
+    flex: 1,
   },
   artistOptionLabel: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.text
+    color: colors.text,
   },
   artistOptionMeta: {
     fontSize: 12,
     color: colors.muted,
-    marginTop: 2
+    marginTop: 2,
   },
   artistOptionMetaWrapper: {
     alignItems: 'flex-end',
-    gap: 2
+    gap: 2,
   },
   errorText: {
     fontSize: 13,
     color: '#b91c1c',
-    textAlign: 'center'
+    textAlign: 'center',
   },
   ctaButton: {
     backgroundColor: colors.primary,
     paddingVertical: 16,
     borderRadius: 999,
-    alignItems: 'center'
+    alignItems: 'center',
   },
   ctaButtonDisabled: {
-    opacity: 0.6
+    opacity: 0.6,
   },
   ctaText: {
     color: colors.background,
     fontSize: 16,
-    fontWeight: '600'
+    fontWeight: '600',
   },
   modalBackdrop: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.4)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 24
+    padding: 24,
   },
   modalContent: {
     width: '100%',
     backgroundColor: colors.background,
     borderRadius: 16,
     padding: 16,
-    gap: 16
+    gap: 16,
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: colors.text
+    color: colors.text,
   },
   modalActions: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    gap: 12
+    gap: 12,
   },
   modalButton: {
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 999,
-    backgroundColor: colors.surface
+    backgroundColor: colors.surface,
   },
   modalButtonPrimary: {
-    backgroundColor: colors.primary
+    backgroundColor: colors.primary,
   },
   modalButtonText: {
     fontSize: 15,
-    color: colors.text
+    color: colors.text,
   },
   modalButtonPrimaryText: {
-    color: colors.background
+    color: colors.background,
   },
   webModalOverlay: {
     position: 'absolute',
@@ -611,9 +657,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.4)',
     padding: 24,
-    zIndex: 20
-  }
+    zIndex: 20,
+  },
 });
 
 /* helper definitions moved to top */
-

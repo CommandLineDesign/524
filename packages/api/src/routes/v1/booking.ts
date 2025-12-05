@@ -1,7 +1,7 @@
 import { Router } from 'express';
 
 import { BookingController } from '../../controllers/bookingController.js';
-import { requireAuth, requireCustomer, requireArtist } from '../../middleware/auth.js';
+import { requireArtist, requireAuth, requireCustomer } from '../../middleware/auth.js';
 
 const router = Router();
 
@@ -15,4 +15,3 @@ router.get('/:bookingId', requireAuth(['customer', 'artist']), BookingController
 router.patch('/:bookingId/status', requireArtist(), BookingController.updateBookingStatus);
 
 export const bookingRouter = router;
-

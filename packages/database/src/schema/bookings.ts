@@ -1,12 +1,26 @@
-import { boolean, integer, jsonb, numeric, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
+import {
+  boolean,
+  integer,
+  jsonb,
+  numeric,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+  varchar,
+} from 'drizzle-orm/pg-core';
 
 import { users } from './users.js';
 
 export const bookings = pgTable('bookings', {
   id: uuid('id').primaryKey().defaultRandom(),
   bookingNumber: varchar('booking_number', { length: 50 }).notNull().unique(),
-  customerId: uuid('customer_id').references(() => users.id).notNull(),
-  artistId: uuid('artist_id').references(() => users.id).notNull(),
+  customerId: uuid('customer_id')
+    .references(() => users.id)
+    .notNull(),
+  artistId: uuid('artist_id')
+    .references(() => users.id)
+    .notNull(),
   serviceType: varchar('service_type', { length: 20 }).notNull(),
   occasion: varchar('occasion', { length: 50 }).notNull(),
   services: jsonb('services').notNull(),
@@ -46,8 +60,7 @@ export const bookings = pgTable('bookings', {
   cancellationFee: numeric('cancellation_fee', { precision: 10, scale: 2 }),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
-  confirmedAt: timestamp('confirmed_at')
+  confirmedAt: timestamp('confirmed_at'),
 });
 
 export type Booking = typeof bookings.$inferSelect;
-

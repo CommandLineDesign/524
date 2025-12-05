@@ -17,8 +17,7 @@ export class KakaoPayProvider implements PaymentProvider {
       bookingId: booking.id,
       status: 'authorized',
       provider: 'kakao_pay',
-      transactionId: `KP-${Date.now()}`
+      transactionId: `KP-${Date.now()}`,
     };
   }
 }
-

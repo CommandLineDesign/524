@@ -21,4 +21,3 @@ export class ArtistService {
     return this.searchService.searchArtists(filters);
   }
 }
-

@@ -1,9 +1,14 @@
-import crypto from 'crypto';
+import crypto from 'node:crypto';
 
 import { eq } from 'drizzle-orm';
 
 import { bookings } from '@524/database';
-import type { BookingSummary, CreateBookingPayload, UpdateBookingStatusPayload } from '@524/shared/bookings';
+import type {
+  BookedService,
+  BookingSummary,
+  CreateBookingPayload,
+  UpdateBookingStatusPayload,
+} from '@524/shared/bookings';
 
 import { db } from '../db/client.js';
 
@@ -21,7 +26,7 @@ function mapRowToSummary(row: BookingRow): BookingSummary {
     scheduledStartTime: row.scheduledStartTime.toISOString(),
     scheduledEndTime: row.scheduledEndTime.toISOString(),
     totalAmount: Number(row.totalAmount),
-    status: row.status as BookingSummary['status']
+    status: row.status as BookingSummary['status'],
   };
 }
 
@@ -52,7 +57,7 @@ export class BookingRepository {
         occasion: payload.occasion,
         services: payload.services,
         totalDurationMinutes: payload.services.reduce(
-          (sum: number, item: any) => sum + item.durationMinutes,
+          (sum: number, item: BookedService) => sum + item.durationMinutes,
           0
         ),
         scheduledDate: new Date(payload.scheduledDate),
@@ -69,8 +74,8 @@ export class BookingRepository {
           subtotal,
           platformFee,
           tax,
-          total: totalAmount
-        }
+          total: totalAmount,
+        },
       })
       .returning();
 
@@ -82,7 +87,10 @@ export class BookingRepository {
     return record ? mapRowToSummary(record) : null;
   }
 
-  async updateStatus(bookingId: string, status: UpdateBookingStatusPayload['status']): Promise<BookingSummary> {
+  async updateStatus(
+    bookingId: string,
+    status: UpdateBookingStatusPayload['status']
+  ): Promise<BookingSummary> {
     const existing = await this.findById(bookingId);
     if (!existing) {
       throw Object.assign(new Error('Booking not found'), { status: 404 });
@@ -95,14 +103,15 @@ export class BookingRepository {
       .limit(1);
 
     const normalizedHistory =
-      (historyResult[0]?.statusHistory as Array<{ status: string; timestamp: string }> | null) ?? [];
+      (historyResult[0]?.statusHistory as Array<{ status: string; timestamp: string }> | null) ??
+      [];
     const updatedHistory = [...normalizedHistory, { status, timestamp: new Date().toISOString() }];
 
     const [record] = await db
       .update(bookings)
       .set({
         status,
-        statusHistory: updatedHistory
+        statusHistory: updatedHistory,
       })
       .where(eq(bookings.id, bookingId))
       .returning();
@@ -111,8 +120,10 @@ export class BookingRepository {
   }
 
   private generateBookingNumber() {
-    const datePart = new Date().toISOString().replace(/[-:TZ.]/g, '').slice(0, 12);
+    const datePart = new Date()
+      .toISOString()
+      .replace(/[-:TZ.]/g, '')
+      .slice(0, 12);
     return `BK-${datePart}`;
   }
 }
-

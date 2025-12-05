@@ -5,8 +5,7 @@ export default defineConfig({
   out: './migrations',
   dialect: 'postgresql',
   dbCredentials: {
-    url: process.env.DATABASE_URL ?? 'postgres://postgres:postgres@localhost:5432/beauty_marketplace'
-  }
+    url:
+      process.env.DATABASE_URL ?? 'postgres://postgres:postgres@localhost:5432/beauty_marketplace',
+  },
 });
-
-

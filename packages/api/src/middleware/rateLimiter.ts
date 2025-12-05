@@ -7,8 +7,7 @@ export function createRateLimiter() {
     standardHeaders: true,
     legacyHeaders: false,
     message: {
-      error: 'Too many requests, please try again later.'
-    }
+      error: 'Too many requests, please try again later.',
+    },
   });
 }
-

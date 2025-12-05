@@ -1,4 +1,4 @@
-import crypto from 'crypto';
+import crypto from 'node:crypto';
 
 import type { User } from '@524/database';
 import type { AuthTokens, OAuthCallbackPayload, PhoneVerificationPayload } from '@524/shared/auth';
@@ -22,7 +22,7 @@ export class KoreanAuthStrategy {
     return {
       accessToken: `access-${crypto.randomUUID()}`,
       refreshToken: `refresh-${crypto.randomUUID()}`,
-      expiresIn: 60 * 60
+      expiresIn: 60 * 60,
     };
   }
 
@@ -30,7 +30,7 @@ export class KoreanAuthStrategy {
     return {
       accessToken: `access-${user.id}`,
       refreshToken: `refresh-${user.id}`,
-      expiresIn: 60 * 60
+      expiresIn: 60 * 60,
     };
   }
 
@@ -51,9 +51,9 @@ export class KoreanAuthStrategy {
       createdAt: new Date(),
       updatedAt: new Date(),
       firebaseUid: null,
-      kakaoId: props.oauthProvider === 'kakao' ? props.oauthId ?? null : null,
-      naverId: props.oauthProvider === 'naver' ? props.oauthId ?? null : null,
-      appleId: props.oauthProvider === 'apple' ? props.oauthId ?? null : null,
+      kakaoId: props.oauthProvider === 'kakao' ? (props.oauthId ?? null) : null,
+      naverId: props.oauthProvider === 'naver' ? (props.oauthId ?? null) : null,
+      appleId: props.oauthProvider === 'apple' ? (props.oauthId ?? null) : null,
       email: null,
       profileImageUrl: null,
       birthYear: null,
@@ -61,8 +61,7 @@ export class KoreanAuthStrategy {
       language: 'ko',
       timezone: 'Asia/Seoul',
       notificationPreferences: null,
-      deactivatedAt: null
+      deactivatedAt: null,
     } as unknown as User;
   }
 }
-

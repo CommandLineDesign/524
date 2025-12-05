@@ -1,12 +1,12 @@
 import * as bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
 import { eq } from 'drizzle-orm';
+import jwt from 'jsonwebtoken';
 
-import { db } from '../db/client.js';
 import { users } from '@524/database';
 import { env } from '../config/env.js';
+import { db } from '../db/client.js';
 
-import type { AuthTokens, PhoneVerificationPayload, OAuthCallbackPayload } from '@524/shared/auth';
+import type { AuthTokens, OAuthCallbackPayload, PhoneVerificationPayload } from '@524/shared/auth';
 
 export interface LoginResponse {
   user: {
@@ -25,11 +25,7 @@ export class AuthService {
    */
   async loginWithEmail(email: string, password: string): Promise<LoginResponse | null> {
     // Find user by email
-    const [user] = await db
-      .select()
-      .from(users)
-      .where(eq(users.email, email))
-      .limit(1);
+    const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
 
     if (!user) {
       console.warn('[AuthService] Login failed - user not found', { email });
@@ -59,10 +55,15 @@ export class AuthService {
       { expiresIn: '24h' }
     );
 
+    if (!user.email) {
+      console.warn('[AuthService] Login failed - missing email', { userId: user.id });
+      return null;
+    }
+
     return {
       user: {
         id: user.id,
-        email: user.email!,
+        email: user.email,
         name: user.name,
         role: user.role,
         phoneNumber: user.phoneNumber,
@@ -75,11 +76,7 @@ export class AuthService {
    * Get user by ID
    */
   async getUserById(userId: string) {
-    const [user] = await db
-      .select()
-      .from(users)
-      .where(eq(users.id, userId))
-      .limit(1);
+    const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
 
     return user;
   }

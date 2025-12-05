@@ -1,4 +1,4 @@
-import type { CreateBookingPayload, ArtistSearchResult } from '@524/shared';
+import type { ArtistSearchResult, CreateBookingPayload } from '@524/shared';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:5524';
@@ -6,14 +6,14 @@ const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:5524';
 async function request<T>(path: string, options: RequestInit): Promise<T> {
   // Get auth token from storage
   const token = await AsyncStorage.getItem('auth_token');
-  
+
   const response = await fetch(`${API_BASE_URL}${path}`, {
     headers: {
       'Content-Type': 'application/json',
-      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-      ...(options.headers ?? {})
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(options.headers ?? {}),
     },
-    ...options
+    ...options,
   });
 
   if (!response.ok) {
@@ -28,7 +28,7 @@ async function request<T>(path: string, options: RequestInit): Promise<T> {
 export async function createBooking(payload: CreateBookingPayload) {
   return request('/api/v1/bookings', {
     method: 'POST',
-    body: JSON.stringify(payload)
+    body: JSON.stringify(payload),
   });
 }
 
@@ -56,7 +56,6 @@ export async function searchArtists(params: ArtistSearchParams = {}) {
   const searchPath = query.toString() ? `/api/v1/artists?${query.toString()}` : '/api/v1/artists';
 
   return request<ArtistSearchResult[]>(searchPath, {
-    method: 'GET'
+    method: 'GET',
   });
 }
-

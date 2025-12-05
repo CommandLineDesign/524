@@ -1,4 +1,4 @@
-import type { UserRole } from './constants';
+import type { UserRole } from './constants.js';
 
 export type OAuthProvider = 'kakao' | 'naver' | 'apple' | 'google';
 
@@ -25,4 +25,3 @@ export interface AuthenticatedUser {
   role: UserRole;
   phoneNumber: string;
 }
-

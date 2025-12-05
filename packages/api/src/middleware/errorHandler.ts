@@ -21,7 +21,6 @@ export function errorHandler(error: HttpError, req: Request, res: Response, _nex
   res.status(statusCode).json({
     error: error.message || 'Internal Server Error',
     details: error.details,
-    statusCode
+    statusCode,
   });
 }
-

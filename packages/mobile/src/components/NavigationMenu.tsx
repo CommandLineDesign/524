@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { Alert, Modal, StyleSheet, Text, TouchableOpacity, View, ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import React, { useState } from 'react';
+import { Alert, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import type { RootStackParamList } from '../navigation/AppNavigator';
 import { useAuthStore } from '../store/authStore';
 
@@ -44,12 +44,7 @@ export function NavigationMenu({ visible, onClose }: NavigationMenuProps) {
   };
 
   return (
-    <Modal
-      animationType="slide"
-      transparent={false}
-      visible={visible}
-      onRequestClose={onClose}
-    >
+    <Modal animationType="slide" transparent={false} visible={visible} onRequestClose={onClose}>
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.headerText}>524</Text>
@@ -61,9 +56,9 @@ export function NavigationMenu({ visible, onClose }: NavigationMenuProps) {
         <ScrollView style={styles.content}>
           <View style={styles.menuSection}>
             <Text style={styles.sectionTitle}>Navigation</Text>
-            {menuItems.map((item, index) => (
+            {menuItems.map((item) => (
               <TouchableOpacity
-                key={index}
+                key={item.screen}
                 style={styles.menuItem}
                 onPress={() => handleNavigate(item.screen)}
               >
@@ -91,7 +86,7 @@ export function NavigationMenu({ visible, onClose }: NavigationMenuProps) {
               style={[
                 styles.menuItem,
                 styles.logoutButton,
-                isLoggingOut && styles.logoutButtonDisabled
+                isLoggingOut && styles.logoutButtonDisabled,
               ]}
               onPress={handleLogout}
               disabled={isLoggingOut}
@@ -188,4 +183,3 @@ const styles = StyleSheet.create({
     color: '#fca5a5',
   },
 });
-

@@ -1,7 +1,7 @@
 // Mock authentication for development
 // This allows full API testing without external auth providers
 
-import { Request, Response, NextFunction } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { env } from '../config/env.js';
 
@@ -87,19 +87,19 @@ export async function mockLogin(req: Request, res: Response) {
 
   // Find user by ID or role
   let user: MockUser | undefined;
-  
+
   if (userId) {
     user = MOCK_USERS[userId];
   } else if (role) {
     // Find first user with matching role
-    user = Object.values(MOCK_USERS).find(u => u.role === role);
+    user = Object.values(MOCK_USERS).find((u) => u.role === role);
   } else {
     // Default to customer
     user = MOCK_USERS['mock-customer-1'];
   }
 
   if (!user) {
-    return res.status(404).json({ 
+    return res.status(404).json({
       error: 'Mock user not found',
       available_users: Object.keys(MOCK_USERS),
     });
@@ -136,8 +136,8 @@ export async function mockVerifyOTP(req: Request, res: Response) {
   const { phone_number, code } = req.body;
 
   // Find or create mock user for this phone number
-  let user = Object.values(MOCK_USERS).find(u => u.phone_number === phone_number);
-  
+  let user = Object.values(MOCK_USERS).find((u) => u.phone_number === phone_number);
+
   if (!user) {
     // Create new mock user
     user = {
@@ -166,7 +166,8 @@ export async function mockOAuthLogin(req: Request, res: Response) {
   const { provider } = req.params; // kakao, naver, apple
   const { role = 'customer' } = req.body;
 
-  const user = Object.values(MOCK_USERS).find(u => u.role === role) || MOCK_USERS['mock-customer-1'];
+  const user =
+    Object.values(MOCK_USERS).find((u) => u.role === role) || MOCK_USERS['mock-customer-1'];
   const token = generateMockToken(user.id);
 
   return res.json({
@@ -183,15 +184,14 @@ export async function mockOAuthLogin(req: Request, res: Response) {
  */
 export async function getMockUserInfo(req: AuthRequest, res: Response) {
   const user = req.user;
-  
+
   if (!user) {
     return res.status(401).json({ error: 'User not authenticated' });
   }
-  
+
   return res.json({
     ...user,
     mock: true,
     available_test_users: Object.keys(MOCK_USERS),
   });
 }
-

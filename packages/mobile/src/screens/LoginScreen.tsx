@@ -1,16 +1,16 @@
+import { useNavigation } from '@react-navigation/native';
 import React, { useState } from 'react';
 import {
-  View,
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
-  Alert,
-  ActivityIndicator,
-  ScrollView,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
 import { useAuthStore } from '../store/authStore';
 import { theme } from '../theme/colors';
 
@@ -46,7 +46,10 @@ export function LoginScreen() {
       await login(email, password);
       // Navigation will be handled by the navigation setup
     } catch (error) {
-      Alert.alert('로그인 실패', error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.');
+      Alert.alert(
+        '로그인 실패',
+        error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.'
+      );
     } finally {
       setIsLoading(false);
     }
@@ -237,4 +240,3 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
 });
-

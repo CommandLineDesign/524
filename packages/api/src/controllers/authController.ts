@@ -18,7 +18,7 @@ export const AuthController = {
     try {
       const result = await authService.verifyOtp({
         phoneNumber: req.body.phoneNumber,
-        code: req.body.code
+        code: req.body.code,
       });
 
       res.json(result);
@@ -31,7 +31,7 @@ export const AuthController = {
     try {
       const result = await authService.handleOAuthCallback({
         provider: req.body.provider,
-        code: req.body.code
+        code: req.body.code,
       });
 
       res.json(result);
@@ -47,6 +47,5 @@ export const AuthController = {
     } catch (error) {
       next(error);
     }
-  }
+  },
 };
-

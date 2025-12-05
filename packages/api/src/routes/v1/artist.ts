@@ -9,4 +9,3 @@ router.patch('/:artistId', ArtistController.updateArtistProfile);
 router.get('/', ArtistController.searchArtists);
 
 export const artistRouter = router;
-

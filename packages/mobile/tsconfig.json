@@ -6,11 +6,5 @@
     "skipLibCheck": true,
     "types": ["react", "react-native"]
   },
-  "include": [
-    "src",
-    "App.tsx",
-    "index.ts"
-  ]
+  "include": ["src", "App.tsx", "index.ts"]
 }
-
-

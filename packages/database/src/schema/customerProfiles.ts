@@ -4,7 +4,9 @@ import { users } from './users.js';
 
 export const customerProfiles = pgTable('customer_profiles', {
   id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id').references(() => users.id).notNull(),
+  userId: uuid('user_id')
+    .references(() => users.id)
+    .notNull(),
   skinType: varchar('skin_type', { length: 20 }),
   skinTone: varchar('skin_tone', { length: 50 }),
   hairType: varchar('hair_type', { length: 20 }),
@@ -22,8 +24,7 @@ export const customerProfiles = pgTable('customer_profiles', {
   cancelledBookings: integer('cancelled_bookings').default(0),
   averageRatingGiven: integer('average_rating_given'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull()
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
 export type CustomerProfile = typeof customerProfiles.$inferSelect;
-

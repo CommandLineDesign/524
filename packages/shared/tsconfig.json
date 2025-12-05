@@ -9,12 +9,6 @@
     "declaration": true,
     "declarationMap": true
   },
-  "include": [
-    "src"
-  ],
-  "exclude": [
-    "dist"
-  ]
+  "include": ["src"],
+  "exclude": ["dist"]
 }
-
-
