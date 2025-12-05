@@ -1,5 +1,5 @@
 {
-  "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
+  "installCommand": "cd ../.. && pnpm install --frozen-lockfile --include=dev",
   "buildCommand": "cd ../.. && pnpm --filter @524/shared build && cd packages/mobile && pnpm exec expo export --platform web",
   "outputDirectory": "dist",
   "framework": null,
