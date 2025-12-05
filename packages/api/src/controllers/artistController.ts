@@ -33,12 +33,11 @@ export const ArtistController = {
       const results = await artistService.searchArtists({
         query: req.query.query as string,
         occasion: req.query.occasion as string,
-        serviceType: req.query.serviceType as string
+        serviceType: req.query.serviceType as string,
       });
       res.json(results);
     } catch (error) {
       next(error);
     }
-  }
+  },
 };
-

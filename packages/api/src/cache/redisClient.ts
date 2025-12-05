@@ -20,4 +20,3 @@ export function getRedisClient(): Redis | null {
 
   return client;
 }
-

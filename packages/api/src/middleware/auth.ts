@@ -1,21 +1,23 @@
 // Authentication middleware with mock support
-import { Request, Response, NextFunction } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
+import { MOCK_USERS, MockUser } from '../auth/mock-auth.js';
 import { env } from '../config/env.js';
 import { features } from '../config/features.js';
-import { MOCK_USERS, MockUser } from '../auth/mock-auth.js';
 import { AuthService } from '../services/authService.js';
 
 const authService = new AuthService();
 
 export interface AuthRequest extends Request {
-  user?: MockUser | {
-    id: string;
-    email: string;
-    name: string;
-    role: string;
-    phoneNumber: string;
-  };
+  user?:
+    | MockUser
+    | {
+        id: string;
+        email: string;
+        name: string;
+        role: string;
+        phoneNumber: string;
+      };
 }
 
 interface TokenPayload {
@@ -34,50 +36,47 @@ export function requireAuth(allowedRoles?: ('customer' | 'artist' | 'admin')[]) 
     try {
       // Check for Authorization header
       const authHeader = req.headers.authorization;
-      
+
       // Mock auth: Allow special header for easy testing
       if (!features.USE_REAL_AUTH && req.headers['x-mock-user-id']) {
         const mockUserId = req.headers['x-mock-user-id'] as string;
         const mockUser = MOCK_USERS[mockUserId];
-        
+
         if (!mockUser) {
-          return res.status(401).json({ 
+          return res.status(401).json({
             error: 'Invalid mock user ID',
             available_users: Object.keys(MOCK_USERS),
           });
         }
-        
+
         // Check role if specified
         if (allowedRoles && !allowedRoles.includes(mockUser.role)) {
-          return res.status(403).json({ 
+          return res.status(403).json({
             error: 'Insufficient permissions',
             required_roles: allowedRoles,
             your_role: mockUser.role,
           });
         }
-        
+
         req.user = mockUser;
         return next();
       }
-      
+
       // Standard JWT authentication
       if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(401).json({ 
+        return res.status(401).json({
           error: 'No token provided',
-          hint: features.USE_REAL_AUTH 
+          hint: features.USE_REAL_AUTH
             ? 'Include Authorization: Bearer <token> header'
             : 'Use x-mock-user-id header or POST /api/v1/auth/mock/login',
         });
       }
-      
+
       const token = authHeader.split('Bearer ')[1];
-      
+
       // Verify JWT
-      const decoded = jwt.verify(
-        token, 
-        env.JWT_SECRET || 'dev-secret'
-      ) as TokenPayload;
-      
+      const decoded = jwt.verify(token, env.JWT_SECRET || 'dev-secret') as TokenPayload;
+
       // For mock tokens, get user from MOCK_USERS
       if (decoded.mock && !features.USE_REAL_AUTH) {
         const mockUser = MOCK_USERS[decoded.user_id];
@@ -99,16 +98,19 @@ export function requireAuth(allowedRoles?: ('customer' | 'artist' | 'admin')[]) 
           phoneNumber: user.phoneNumber,
         };
       }
-      
+
       // Check role permissions
-      if (allowedRoles && !allowedRoles.includes(req.user.role as 'customer' | 'artist' | 'admin')) {
-        return res.status(403).json({ 
+      if (
+        allowedRoles &&
+        !allowedRoles.includes(req.user.role as 'customer' | 'artist' | 'admin')
+      ) {
+        return res.status(403).json({
           error: 'Insufficient permissions',
           required_roles: allowedRoles,
           your_role: req.user.role,
         });
       }
-      
+
       next();
     } catch (error) {
       if (error instanceof jwt.JsonWebTokenError) {
@@ -129,11 +131,11 @@ export function optionalAuth() {
   return async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const authHeader = req.headers.authorization;
-      
+
       if (!authHeader) {
         return next();
       }
-      
+
       // Use the same logic as requireAuth but don't fail
       return requireAuth()(req, res, next);
     } catch (error) {
@@ -164,4 +166,3 @@ export const requireArtist = () => requireRole('artist');
  * Require admin role
  */
 export const requireAdmin = () => requireRole('admin');
-

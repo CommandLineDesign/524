@@ -1,15 +1,15 @@
-import { StackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import type { RootStackParamList } from '../navigation/AppNavigator';
-import { colors } from '../theme/colors';
 import { MenuButton } from '../components/MenuButton';
 import { NavigationMenu } from '../components/NavigationMenu';
+import type { RootStackParamList } from '../navigation/AppNavigator';
+import { colors } from '../theme/colors';
 
-type WelcomeNavigationProp = StackNavigationProp<RootStackParamList, 'Welcome'>;
+type WelcomeNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Welcome'>;
 
 export function WelcomeScreen() {
   const navigation = useNavigation<WelcomeNavigationProp>();
@@ -26,7 +26,8 @@ export function WelcomeScreen() {
         <Text style={styles.tagline}>524</Text>
         <Text style={styles.headline}>어디서 예뻐지실 건가요?</Text>
         <Text style={styles.description}>
-          서울 최고의 뷰티 아티스트와 실시간으로 예약하세요. 헤어, 메이크업, 그리고 특별한 일정까지 모두 한 곳에서.
+          서울 최고의 뷰티 아티스트와 실시간으로 예약하세요. 헤어, 메이크업, 그리고 특별한 일정까지
+          모두 한 곳에서.
         </Text>
       </View>
 
@@ -46,7 +47,7 @@ export function WelcomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -63,22 +64,22 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 24,
     paddingTop: 48,
-    gap: 16
+    gap: 16,
   },
   tagline: {
     fontSize: 12,
     letterSpacing: 4,
-    color: colors.muted
+    color: colors.muted,
   },
   headline: {
     fontSize: 32,
     fontWeight: '700',
-    color: colors.text
+    color: colors.text,
   },
   description: {
     fontSize: 16,
     color: colors.subtle,
-    lineHeight: 24
+    lineHeight: 24,
   },
   primaryButton: {
     backgroundColor: colors.primary,
@@ -91,7 +92,6 @@ const styles = StyleSheet.create({
   primaryButtonText: {
     color: colors.background,
     fontSize: 16,
-    fontWeight: '600'
-  }
+    fontWeight: '600',
+  },
 });
-

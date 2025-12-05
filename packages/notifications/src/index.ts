@@ -11,7 +11,7 @@ function ensureApp() {
     try {
       const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
       admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount)
+        credential: admin.credential.cert(serviceAccount),
       });
       appInitialized = true;
     } catch (error) {
@@ -30,7 +30,7 @@ export async function sendPushNotification(token: string, payload: PushPayload) 
   if (!appInitialized) {
     ensureApp();
   }
-  
+
   if (!appInitialized) {
     console.warn('Push notification skipped - Firebase not configured');
     return;
@@ -41,14 +41,12 @@ export async function sendPushNotification(token: string, payload: PushPayload) 
       token,
       notification: {
         title: payload.title,
-        body: payload.body
+        body: payload.body,
       },
-      data: payload.data
+      data: payload.data,
     });
   } catch (error) {
     console.error('Failed to send push notification:', error);
     throw error;
   }
 }
-
-

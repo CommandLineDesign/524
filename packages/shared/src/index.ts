@@ -1,10 +1,8 @@
-export * from './auth';
-export * from './artists';
-export * from './bookings';
-export * from './constants';
-export * from './i18n';
-export * from './messaging';
-export * from './payments';
-export * from './dev';
-
-
+export * from './auth.js';
+export * from './artists.js';
+export * from './bookings.js';
+export * from './constants.js';
+export * from './i18n.js';
+export * from './messaging.js';
+export * from './payments.js';
+export * from './dev.js';

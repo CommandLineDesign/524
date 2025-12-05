@@ -1,5 +1,5 @@
-import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { create } from 'zustand';
 
 interface User {
   id: string;
@@ -41,7 +41,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       }
 
       const data = await response.json();
-      
+
       // Save to async storage
       await AsyncStorage.setItem('auth_token', data.token);
       await AsyncStorage.setItem('user', JSON.stringify(data.user));
@@ -76,4 +76,3 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 }));
-

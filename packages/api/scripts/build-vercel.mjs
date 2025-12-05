@@ -25,35 +25,27 @@ async function bundleHandler() {
     format: 'esm',
     sourcemap: true,
     tsconfig: path.join(projectRoot, 'tsconfig.json'),
-    external: ['pg-native']
+    external: ['pg-native'],
   });
 }
 
 async function writeFunctionConfig() {
   const config = {
     runtime: 'nodejs20.x',
-    handler: 'index.mjs'
+    handler: 'index.mjs',
   };
 
-  await writeFile(
-    path.join(FUNCTION_DIR, '.vc-config.json'),
-    JSON.stringify(config, null, 2)
-  );
+  await writeFile(path.join(FUNCTION_DIR, '.vc-config.json'), JSON.stringify(config, null, 2));
 }
 
 async function writeRoutingConfig() {
   const routesConfig = {
     version: 3,
-    routes: [
-      { src: '/(.*)', dest: 'api' }
-    ]
+    routes: [{ src: '/(.*)', dest: 'api' }],
   };
 
   await mkdir(path.join(VERCELOUT_DIR), { recursive: true });
-  await writeFile(
-    path.join(VERCELOUT_DIR, 'config.json'),
-    JSON.stringify(routesConfig, null, 2)
-  );
+  await writeFile(path.join(VERCELOUT_DIR, 'config.json'), JSON.stringify(routesConfig, null, 2));
 }
 
 async function main() {
@@ -67,4 +59,3 @@ main().catch((error) => {
   console.error('Failed to build Vercel output', error);
   process.exit(1);
 });
-

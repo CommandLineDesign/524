@@ -19,7 +19,11 @@
   },
   "scripts": {
     "build": "tsc --project tsconfig.json",
-    "lint": "echo \"(shared) lint not configured yet\"",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint --write .",
+    "format": "biome format --write .",
+    "format:check": "biome format .",
+    "typecheck": "tsc --noEmit",
     "test": "echo \"(shared) tests not implemented yet\""
   },
   "dependencies": {
@@ -27,5 +31,3 @@
   },
   "devDependencies": {}
 }
-
-

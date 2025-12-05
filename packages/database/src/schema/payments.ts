@@ -1,13 +1,28 @@
-import { boolean, jsonb, numeric, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
+import {
+  boolean,
+  jsonb,
+  numeric,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+  varchar,
+} from 'drizzle-orm/pg-core';
 
 import { bookings } from './bookings.js';
 import { users } from './users.js';
 
 export const payments = pgTable('payments', {
   id: uuid('id').primaryKey().defaultRandom(),
-  bookingId: uuid('booking_id').references(() => bookings.id).notNull(),
-  customerId: uuid('customer_id').references(() => users.id).notNull(),
-  artistId: uuid('artist_id').references(() => users.id).notNull(),
+  bookingId: uuid('booking_id')
+    .references(() => bookings.id)
+    .notNull(),
+  customerId: uuid('customer_id')
+    .references(() => users.id)
+    .notNull(),
+  artistId: uuid('artist_id')
+    .references(() => users.id)
+    .notNull(),
   subtotal: numeric('subtotal', { precision: 10, scale: 2 }).notNull(),
   platformFee: numeric('platform_fee', { precision: 10, scale: 2 }).notNull(),
   travelFee: numeric('travel_fee', { precision: 10, scale: 2 }).default('0'),
@@ -37,8 +52,7 @@ export const payments = pgTable('payments', {
   taxInvoiceIssued: boolean('tax_invoice_issued').default(false),
   taxInvoiceNumber: varchar('tax_invoice_number', { length: 50 }),
   createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull()
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
 export type Payment = typeof payments.$inferSelect;
-

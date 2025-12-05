@@ -22,18 +22,18 @@ const DEFAULT_SERVICES: Record<ServiceType, Omit<BookedService, 'id'>> = {
   hair: {
     name: '프리미엄 헤어 스타일링',
     durationMinutes: 45,
-    price: 80000
+    price: 80000,
   },
   makeup: {
     name: '시그니처 메이크업',
     durationMinutes: 40,
-    price: 120000
+    price: 120000,
   },
   combo: {
     name: '헤어 & 메이크업 패키지',
     durationMinutes: 90,
-    price: 180000
-  }
+    price: 180000,
+  },
 };
 
 const initialState = {
@@ -41,7 +41,7 @@ const initialState = {
   occasion: null,
   scheduledDate: null,
   selectedArtistId: null,
-  services: [] as BookedService[]
+  services: [] as BookedService[],
 };
 
 export const useBookingStore = create<BookingState>((set, get) => ({
@@ -64,13 +64,16 @@ export const useBookingStore = create<BookingState>((set, get) => ({
         : [
             {
               id: `svc-${serviceType}`,
-              ...DEFAULT_SERVICES[serviceType]
-            }
+              ...DEFAULT_SERVICES[serviceType],
+            },
           ];
 
     const scheduleTimestamp = scheduledDate;
-    const estimatedDurationMinutes = effectiveServices.reduce((sum, item) => sum + item.durationMinutes, 0) || 60;
-    const scheduleEndTime = new Date(new Date(scheduleTimestamp).getTime() + estimatedDurationMinutes * 60 * 1000).toISOString();
+    const estimatedDurationMinutes =
+      effectiveServices.reduce((sum, item) => sum + item.durationMinutes, 0) || 60;
+    const scheduleEndTime = new Date(
+      new Date(scheduleTimestamp).getTime() + estimatedDurationMinutes * 60 * 1000
+    ).toISOString();
 
     return {
       customerId,
@@ -82,8 +85,7 @@ export const useBookingStore = create<BookingState>((set, get) => ({
       scheduledEndTime: scheduleEndTime,
       totalAmount: effectiveServices.reduce((sum, item) => sum + item.price, 0),
       services: effectiveServices,
-      location: DEV_DEFAULT_LOCATION
+      location: DEV_DEFAULT_LOCATION,
     };
-  }
+  },
 }));
-

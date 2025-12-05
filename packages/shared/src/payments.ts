@@ -6,4 +6,3 @@ export interface PaymentAuthorizationResult {
   status: 'authorized' | 'failed';
   transactionId: string;
 }
-

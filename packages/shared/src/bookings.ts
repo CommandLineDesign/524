@@ -1,4 +1,4 @@
-import type { BookingStatus, ServiceType } from './constants';
+import type { BookingStatus, ServiceType } from './constants.js';
 
 export interface ServiceLocation {
   latitude: number;
@@ -44,4 +44,3 @@ export interface BookingSummary {
 export interface UpdateBookingStatusPayload {
   status: BookingStatus;
 }
-

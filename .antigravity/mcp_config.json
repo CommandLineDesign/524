@@ -1,1 +1,5 @@
-{"mcpServers":{"Neon":{"command":"npx","args":["-y","mcp-remote@latest","https://mcp.neon.tech/mcp"]}}}
+{
+  "mcpServers": {
+    "Neon": { "command": "npx", "args": ["-y", "mcp-remote@latest", "https://mcp.neon.tech/mcp"] }
+  }
+}

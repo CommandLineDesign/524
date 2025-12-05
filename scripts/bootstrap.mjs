@@ -15,4 +15,3 @@ function run(command) {
 console.log('🔧 Bootstrapping 524 workspace...');
 run('pnpm install');
 console.log('✅ Dependencies installed');
-

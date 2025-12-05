@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import { Admin, Resource, ListGuesser } from "react-admin";
-import jsonServerProvider from "ra-data-json-server";
+import jsonServerProvider from 'ra-data-json-server';
+import { Admin, ListGuesser, Resource } from 'react-admin';
 
-const dataProvider = jsonServerProvider("https://jsonplaceholder.typicode.com");
+const dataProvider = jsonServerProvider('https://jsonplaceholder.typicode.com');
 
 const AdminApp = () => (
-    <Admin dataProvider={dataProvider}>
-        <Resource name="users" list={ListGuesser} />
-    </Admin>
+  <Admin dataProvider={dataProvider}>
+    <Resource name="users" list={ListGuesser} />
+  </Admin>
 );
 
 export default AdminApp;

@@ -1,6 +1,6 @@
 // Learn more https://docs.expo.dev/guides/customizing-metro
 const { getDefaultConfig } = require('expo/metro-config');
-const path = require('path');
+const path = require('node:path');
 
 // Find the project root (monorepo root)
 const projectRoot = __dirname;
@@ -36,4 +36,3 @@ config.transformer = {
 };
 
 module.exports = config;
-

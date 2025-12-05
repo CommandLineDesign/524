@@ -1,4 +1,4 @@
-import type { Server as HttpServer } from 'http';
+import type { Server as HttpServer } from 'node:http';
 
 import type { ChatMessage } from '@524/shared/messaging';
 import { Server } from 'socket.io';
@@ -16,17 +16,18 @@ export function initializeChatSocket(server: HttpServer) {
   }
 
   // Parse CORS_ORIGIN to handle comma-separated values or wildcard
-  const corsOrigin = env.CORS_ORIGIN === '*' 
-    ? '*' 
-    : env.CORS_ORIGIN.includes(',')
-    ? env.CORS_ORIGIN.split(',').map((origin: string) => origin.trim())
-    : env.CORS_ORIGIN;
+  const corsOrigin =
+    env.CORS_ORIGIN === '*'
+      ? '*'
+      : env.CORS_ORIGIN.includes(',')
+        ? env.CORS_ORIGIN.split(',').map((origin: string) => origin.trim())
+        : env.CORS_ORIGIN;
 
   io = new Server(server, {
     cors: {
       origin: corsOrigin,
-      credentials: true
-    }
+      credentials: true,
+    },
   });
 
   io.on('connection', (socket) => {
@@ -47,4 +48,3 @@ export function initializeChatSocket(server: HttpServer) {
 
   return io;
 }
-

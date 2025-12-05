@@ -10,11 +10,10 @@ export function createLogger(name?: string) {
       env.NODE_ENV === 'development'
         ? {
             target: 'pino-pretty',
-            options: { colorize: true }
+            options: { colorize: true },
           }
-        : undefined
+        : undefined,
   });
 }
 
 export const logger = createLogger();
-

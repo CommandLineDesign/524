@@ -32,19 +32,24 @@ function mapRowToProfile(row: ArtistProfileRow): ArtistProfile {
     serviceRadiusKm: toNumber(row.serviceRadiusKm, 0),
     primaryLocation: (row.primaryLocation as ArtistProfile['primaryLocation']) ?? {
       latitude: 0,
-      longitude: 0
+      longitude: 0,
     },
     isAcceptingBookings: row.isAcceptingBookings ?? true,
-    verificationStatus: (row.verificationStatus as ArtistProfile['verificationStatus']) ?? 'pending',
+    verificationStatus:
+      (row.verificationStatus as ArtistProfile['verificationStatus']) ?? 'pending',
     averageRating: toNumber(row.averageRating, 0),
     totalReviews: row.totalReviews ?? 0,
-    totalServices: row.totalServices ?? 0
+    totalServices: row.totalServices ?? 0,
   };
 }
 
 export class ArtistRepository {
   async findById(artistId: string): Promise<ArtistProfile | null> {
-    const [record] = await db.select().from(artistProfiles).where(eq(artistProfiles.id, artistId)).limit(1);
+    const [record] = await db
+      .select()
+      .from(artistProfiles)
+      .where(eq(artistProfiles.id, artistId))
+      .limit(1);
     return record ? mapRowToProfile(record) : null;
   }
 
@@ -63,7 +68,7 @@ export class ArtistRepository {
         verificationStatus: updates.verificationStatus,
         averageRating: updates.averageRating?.toString(),
         totalReviews: updates.totalReviews,
-        totalServices: updates.totalServices
+        totalServices: updates.totalServices,
       })
       .where(eq(artistProfiles.id, artistId))
       .returning();
@@ -75,4 +80,3 @@ export class ArtistRepository {
     return mapRowToProfile(updated);
   }
 }
-

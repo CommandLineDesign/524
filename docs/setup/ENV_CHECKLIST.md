@@ -138,7 +138,10 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ./scripts/setup-env.sh
 
 # Install dependencies
-npm install
+pnpm install
+
+# Install git hooks (Biome + typecheck on commit)
+pnpm lefthook install
 
 # Start local PostgreSQL (macOS)
 brew services start postgresql
@@ -147,10 +150,10 @@ brew services start postgresql
 brew services start redis
 
 # Run database migrations (creates tables in Neon development branch)
-npm run db:migrate --workspace @524/database
+pnpm --filter @524/database db:migrate
 
 # Start development servers
-npm run dev
+pnpm dev
 ```
 
 ## Production Checklist

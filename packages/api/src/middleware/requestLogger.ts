@@ -15,7 +15,7 @@ export function requestLogger() {
           method: req.method,
           path: req.originalUrl,
           status: res.statusCode,
-          durationMs
+          durationMs,
         },
         'http request'
       );
@@ -24,4 +24,3 @@ export function requestLogger() {
     next();
   };
 }
-

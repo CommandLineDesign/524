@@ -6,22 +6,22 @@
     "noEmit": false,
     "module": "ES2022",
     "moduleResolution": "Node",
+    "paths": {
+      "@524/shared": ["../shared/dist/index.d.ts"],
+      "@524/shared/*": ["../shared/dist/*.d.ts"],
+      "@524/database": ["../database/dist/index.d.ts"],
+      "@524/database/*": ["../database/dist/*.d.ts"],
+      "@524/notifications": ["../notifications/dist/index.d.ts"],
+      "@524/notifications/*": ["../notifications/dist/*.d.ts"]
+    },
     "allowImportingTsExtensions": false,
     "target": "ES2022",
     "lib": ["ES2022"],
     "types": ["node"],
     "sourceMap": true,
     "declaration": true,
-    "declarationMap": true,
-    "baseUrl": ".",
-    "paths": {}
+    "declarationMap": true
   },
-  "include": [
-    "src"
-  ],
-  "exclude": [
-    "dist"
-  ]
+  "include": ["src"],
+  "exclude": ["dist"]
 }
-
-

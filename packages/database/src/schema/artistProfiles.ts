@@ -1,10 +1,22 @@
-import { boolean, integer, jsonb, numeric, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
+import {
+  boolean,
+  integer,
+  jsonb,
+  numeric,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+  varchar,
+} from 'drizzle-orm/pg-core';
 
 import { users } from './users.js';
 
 export const artistProfiles = pgTable('artist_profiles', {
   id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id').references(() => users.id).notNull(),
+  userId: uuid('user_id')
+    .references(() => users.id)
+    .notNull(),
   stageName: varchar('stage_name', { length: 100 }).notNull(),
   bio: text('bio'),
   specialties: jsonb('specialties'),
@@ -43,8 +55,7 @@ export const artistProfiles = pgTable('artist_profiles', {
   accountStatus: varchar('account_status', { length: 20 }).default('active'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
-  verifiedAt: timestamp('verified_at')
+  verifiedAt: timestamp('verified_at'),
 });
 
 export type ArtistProfile = typeof artistProfiles.$inferSelect;
-

@@ -1,4 +1,8 @@
-import type { BookingSummary, CreateBookingPayload, UpdateBookingStatusPayload } from '@524/shared/bookings';
+import type {
+  BookingSummary,
+  CreateBookingPayload,
+  UpdateBookingStatusPayload,
+} from '@524/shared/bookings';
 
 import { BookingRepository } from '../repositories/bookingRepository.js';
 import { NotificationService } from './notificationService.js';
@@ -22,10 +26,12 @@ export class BookingService {
     return this.repository.findById(bookingId);
   }
 
-  async updateBookingStatus(bookingId: string, status: UpdateBookingStatusPayload['status']): Promise<BookingSummary> {
+  async updateBookingStatus(
+    bookingId: string,
+    status: UpdateBookingStatusPayload['status']
+  ): Promise<BookingSummary> {
     const booking = await this.repository.updateStatus(bookingId, status);
     await this.notificationService.notifyBookingStatusChanged(booking);
     return booking;
   }
 }
-

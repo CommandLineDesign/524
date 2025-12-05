@@ -14,19 +14,18 @@ Bootstrap workspace for the 524 Korean beauty services marketplace platform desc
 ## Getting Started
 
 ```bash
-npm install
-# or: npm install --workspaces --include-workspace-root
+pnpm install
 
-npm run dev --workspace @524/api
-npm run dev --workspace @524/web
-npm run start --workspace @524/mobile
+pnpm --filter @524/api dev
+pnpm --filter @524/web dev
+pnpm --filter @524/mobile start
 ```
 
 ## Quick Start
 
 ### 1. Install Dependencies
 ```bash
-npm install
+pnpm install
 ```
 
 ### 2. Setup Environment Variables
@@ -42,20 +41,34 @@ npm install
 ```bash
 # Make sure PostgreSQL and Redis are running locally
 # Then run migrations
-npm run db:migrate --workspace @524/database
+pnpm --filter @524/database db:migrate
 ```
 
 ### 4. Start Development Servers
 ```bash
 # Start API server (port 3000)
-npm run dev --workspace @524/api
+pnpm --filter @524/api dev
 
 # Start web dashboard (port 3001)
-npm run dev --workspace @524/web
+pnpm --filter @524/web dev
 
 # Start mobile app
-npm run start --workspace @524/mobile
+pnpm --filter @524/mobile start
 ```
+
+## Quality checks
+
+- Lint: `pnpm lint`
+- Format write: `pnpm format`
+- Format check: `pnpm format:check`
+- Typecheck: `pnpm typecheck`
+- One-off Biome check+fix: `pnpm check:fix`
+
+## Git hooks
+
+- Install hooks (runs automatically via `pnpm install` or manually): `pnpm lefthook install`
+- Pre-commit runs Biome on staged files and typechecks
+- Pre-push runs lint, format check, and typecheck
 
 ## Environment Setup
 

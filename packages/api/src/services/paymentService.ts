@@ -10,4 +10,3 @@ export class PaymentService {
     return this.provider.authorize(booking);
   }
 }
-
