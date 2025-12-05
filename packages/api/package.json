@@ -14,7 +14,7 @@
     "lint:fix": "biome lint --write .",
     "format": "biome format --write .",
     "format:check": "biome format .",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --project tsconfig.typecheck.json",
     "test": "echo \"(api) tests not implemented yet\""
   },
   "dependencies": {
@@ -41,7 +41,9 @@
   "devDependencies": {
     "@types/express": "^4.17.21",
     "@types/express-rate-limit": "^6.0.2",
+    "@types/cors": "^2.8.17",
     "@types/jsonwebtoken": "^9.0.10",
+    "@types/pg": "^8.15.6",
     "@types/node": "^20.19.25",
     "@vercel/node": "^3.0.0",
     "esbuild": "^0.24.2",
