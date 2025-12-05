@@ -1,6 +1,6 @@
 import { type DataProvider, fetchUtils } from 'react-admin';
 
-import { API_BASE_URL, getStoredToken } from './adminApi.js';
+import { API_BASE_URL, getStoredToken } from './adminApi';
 
 const resourceToEndpoint = {
   'pending-artists': `${API_BASE_URL}/admin/pending-artists`,

@@ -6,7 +6,7 @@ import {
   clearStoredAuth,
   getStoredToken,
   setStoredToken,
-} from './adminApi.js';
+} from './adminApi';
 
 export const adminAuthProvider: AuthProvider = {
   async login() {

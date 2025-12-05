@@ -2,11 +2,11 @@
 
 import { Admin, Resource } from 'react-admin';
 
-import { adminAuthProvider } from '../lib/adminAuthProvider.js';
-import { adminDataProvider } from '../lib/adminDataProvider.js';
-import AdminLoginPage from './AdminLoginPage.js';
-import PendingArtistShow from './pendingArtists/PendingArtistShow.js';
-import PendingArtistsList from './pendingArtists/PendingArtistsList.js';
+import { adminAuthProvider } from '../lib/adminAuthProvider';
+import { adminDataProvider } from '../lib/adminDataProvider';
+import AdminLoginPage from './AdminLoginPage';
+import PendingArtistShow from './pendingArtists/PendingArtistShow';
+import PendingArtistsList from './pendingArtists/PendingArtistsList';
 
 const AdminApp = () => (
   <Admin
