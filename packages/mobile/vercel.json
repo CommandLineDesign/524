@@ -1,5 +1,5 @@
 {
-  "installCommand": "cd ../.. && pnpm install --include=dev",
+  "installCommand": "cd ../.. && pnpm install --prod=false --config.ignore-workspace-root-check=true",
   "buildCommand": "cd ../.. && pnpm --filter @524/shared build && cd packages/mobile && pnpm exec expo export --platform web",
   "outputDirectory": "dist",
   "framework": null,

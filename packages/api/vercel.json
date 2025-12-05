@@ -1,5 +1,5 @@
 {
   "version": 2,
-  "installCommand": "cd ../.. && pnpm install --include=dev",
+  "installCommand": "cd ../.. && pnpm install --prod=false --config.ignore-workspace-root-check=true",
   "buildCommand": "pnpm run vercel-build"
 }

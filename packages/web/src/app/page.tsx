@@ -1,6 +1,5 @@
-import dynamic from "next/dynamic";
-
-const AdminApp = dynamic(() => import("../components/AdminApp"), { ssr: false });
+"use client";
+import AdminApp from "../components/AdminApp";
 
 export default function Home() {
   return <AdminApp />;
