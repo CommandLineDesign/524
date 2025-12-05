@@ -6,7 +6,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "dev": "NODE_OPTIONS='--max-old-space-size=4096' tsx watch src/index.ts",
-    "build": "tsc --project tsconfig.json",
+    "build": "pnpm --filter @524/shared build && pnpm --filter @524/database build && pnpm --filter @524/notifications build && tsc --project tsconfig.json",
     "build:vercel": "node scripts/build-vercel.mjs",
     "vercel-build": "cd ../.. && pnpm --filter @524/shared build && pnpm --filter @524/database build && pnpm --filter @524/notifications build && pnpm --filter @524/api build && pnpm --filter @524/api build:vercel",
     "start": "node dist/index.js",
