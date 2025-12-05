@@ -23,7 +23,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
-    "@lefthook/cli": "^0.1.0",
+    "lefthook": "^1.7.13",
     "concurrently": "^8.2.2",
     "typescript": "^5.4.5"
   },
