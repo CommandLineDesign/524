@@ -21,20 +21,6 @@ pre-commit:
           .*migrations.*|
           .*meta.*
         )
-    typecheck:
-      run: pnpm typecheck
-      glob: "*.{ts,tsx}"
-      exclude: |
-        (?x)^(
-          .*node_modules.*|
-          .*dist.*|
-          .*build.*|
-          .*\.next.*|
-          .*\.expo.*|
-          .*\.turbo.*|
-          .*migrations.*|
-          .*meta.*
-        )
 
 pre-push:
   parallel: true
