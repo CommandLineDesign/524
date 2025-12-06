@@ -17,6 +17,14 @@ Your monorepo contains:
 - **Mobile Web** (`packages/mobile/`): Expo React Native app (web-compatible)
 - **Admin Web** (`packages/web/`): Next.js admin dashboard for managing artists, users, and bookings
 
+## Local Port Conventions (for previews and callbacks)
+
+- API: `http://localhost:5240`
+- Admin Web: `http://localhost:5241`
+- Expo Metro (mobile bundler): `http://localhost:5242`
+
+Vercel environments do not expose custom ports, but set env vars (e.g., `NEXT_PUBLIC_API_BASE_URL`, `EXPO_PUBLIC_API_URL`) to the deployed hostnames that replace these local URLs. Update any OAuth/payment redirect URIs to match the API origin you deploy to Vercel.
+
 ## Monorepo Setup with Vercel
 
 **Vercel fully supports monorepos!** You can create multiple Vercel projects from the same GitHub repository by specifying different **Root Directory** settings. This allows:

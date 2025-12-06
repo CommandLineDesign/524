@@ -46,13 +46,13 @@ pnpm --filter @524/database db:migrate
 
 ### 4. Start Development Servers
 ```bash
-# Start API server (port 3000)
+# Start API server (port 5240)
 pnpm --filter @524/api dev
 
-# Start web dashboard (port 3001)
+# Start web dashboard (port 5241)
 pnpm --filter @524/web dev
 
-# Start mobile app
+# Start mobile app (Expo Metro on port 5242)
 pnpm --filter @524/mobile start
 ```
 

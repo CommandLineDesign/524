@@ -18,7 +18,7 @@ interface AuthState {
   loadSession: () => Promise<void>;
 }
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:5524';
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:5240';
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,

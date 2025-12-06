@@ -8,16 +8,30 @@ import {
   setStoredToken,
 } from './adminApi';
 
+type LoginParams = {
+  email?: string;
+  password?: string;
+};
+
 export const adminAuthProvider: AuthProvider = {
-  async login() {
-    const response = await fetch(`${API_BASE_URL}/auth/mock/login`, {
+  async login(params?: LoginParams) {
+    const email = params?.email?.trim();
+    const password = params?.password;
+
+    if (!email || !password) {
+      throw new Error('Email and password are required');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ role: 'admin' }),
+      body: JSON.stringify({ email, password }),
     });
 
     if (!response.ok) {
-      throw new Error('Login failed');
+      const errorBody = await response.json().catch(() => ({}));
+      const message = typeof errorBody?.error === 'string' ? errorBody.error : 'Login failed';
+      throw new Error(message);
     }
 
     const payload = await response.json();
