@@ -82,7 +82,7 @@ function mapPendingRow(row: PendingArtistRow): PendingArtistDetail {
         : new Date(row.signupDate).toISOString(),
     verificationStatus: row.verificationStatus ?? 'pending',
     bio: row.bio,
-    specialties,
+    specialties: specialties ?? [],
   };
 }
 

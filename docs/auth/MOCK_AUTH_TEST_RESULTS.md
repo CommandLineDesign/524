@@ -5,23 +5,25 @@
 
 ## ✅ What's Working
 
+> Note: canonical local API port is now **5240**. Replace any `localhost:5524` references below with `localhost:5240`.
+
 ### 1. API Server
-- ✅ Running on port `5524`
-- ✅ Health check: `http://localhost:5524/api/health`
+- ✅ Running on port `5240`
+- ✅ Health check: `http://localhost:5240/api/health`
 - ✅ Node v22.21.1 (correct version)
 
 ### 2. Mock Authentication Routes
 ```bash
 # Get available mock users
-curl http://localhost:5524/api/v1/auth/mock/users
+curl http://localhost:5240/api/v1/auth/mock/users
 
 # Login with role
-curl -X POST http://localhost:5524/api/v1/auth/mock/login \
+curl -X POST http://localhost:5240/api/v1/auth/mock/login \
   -H "Content-Type: application/json" \
   -d '{"role": "customer"}'
 
 # Get current user info
-curl http://localhost:5524/api/v1/auth/me \
+curl http://localhost:5240/api/v1/auth/me \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 

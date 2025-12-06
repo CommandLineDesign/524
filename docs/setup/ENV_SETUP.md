@@ -26,6 +26,16 @@ This guide shows you how to set up environment variables for the 524 Beauty Mark
 
 ---
 
+## Local Port Map (canonical)
+
+- API: `http://localhost:5240`
+- Admin Web: `http://localhost:5241`
+- Expo Metro (mobile bundler): `http://localhost:5242`
+
+When you see `localhost:3000/3001` in older snippets, substitute the new ports above. Also update any OAuth/payment callback URLs and CORS origins to use the API port `5240`.
+
+---
+
 ## Root `.env.example`
 
 Create this file at the root: `/524/.env.example`
@@ -134,9 +144,9 @@ SENTRY_DSN=https://xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx@o123456.ingest.sentry.io/123
 # ========================================
 # APPLICATION URLS
 # ========================================
-API_URL=http://localhost:3000
-WEB_DASHBOARD_URL=http://localhost:3001
-CORS_ORIGIN=http://localhost:3001,http://localhost:3000
+API_URL=http://localhost:5240
+WEB_DASHBOARD_URL=http://localhost:5241
+CORS_ORIGIN=http://localhost:5241,http://localhost:5240
 
 # ========================================
 # MISC
@@ -163,7 +173,7 @@ Create this file at: `/524/packages/api/.env.example`
 # SERVER
 # ========================================
 NODE_ENV=development
-PORT=3000
+PORT=5240
 HOST=0.0.0.0
 
 # ========================================

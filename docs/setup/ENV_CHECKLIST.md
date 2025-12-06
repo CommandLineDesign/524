@@ -119,13 +119,15 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 ## Development Setup
 
-### Local URLs
-- [ ] API: `http://localhost:3000`
-- [ ] Web Dashboard: `http://localhost:3001`
-- [ ] Mobile: Set appropriate URL based on platform:
-  - iOS Simulator: `http://localhost:3000`
-  - Android Emulator: `http://10.0.2.2:3000`
-  - Physical Device: `http://YOUR_LOCAL_IP:3000`
+### Local URLs (canonical ports)
+- [ ] API: `http://localhost:5240`
+- [ ] Web Dashboard: `http://localhost:5241`
+- [ ] Mobile API base: `http://localhost:5240` (set via `EXPO_PUBLIC_API_URL`)
+- [ ] Expo Metro bundler: `http://localhost:5242`
+- [ ] Mobile devices:
+  - iOS Simulator: `http://localhost:5240`
+  - Android Emulator: `http://10.0.2.2:5240`
+  - Physical Device: `http://YOUR_LOCAL_IP:5240`
 
 ### CORS Configuration
 - [ ] Update `CORS_ORIGIN` to include all frontend URLs

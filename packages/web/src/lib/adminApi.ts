@@ -1,6 +1,6 @@
 export const ADMIN_TOKEN_STORAGE_KEY = 'adminAuthToken';
 export const ADMIN_USER_STORAGE_KEY = 'adminUser';
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:3000/api/v1';
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:5240/api/v1';
 
 export function getStoredToken(): string | null {
   if (typeof window === 'undefined') {

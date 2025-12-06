@@ -12,13 +12,13 @@ You now have a **complete mock authentication system** that lets you develop all
 npm run dev:api
 ```
 
-The API will start on **port 5524** (changed from 3000 to avoid conflicts).
+The API now runs on **port 5240**. If you see `localhost:5524` in older snippets below, swap it for `localhost:5240`.
 
 ### 2. Get a Mock Token
 
 ```bash
 # Login as a customer
-curl -X POST http://localhost:5524/api/v1/auth/mock/login \
+curl -X POST http://localhost:5240/api/v1/auth/mock/login \
   -H "Content-Type: application/json" \
   -d '{"role": "customer"}'
 
@@ -32,7 +32,7 @@ curl -X POST http://localhost:5524/api/v1/auth/mock/login \
 TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 
 # Make authenticated requests
-curl http://localhost:5524/api/v1/bookings \
+curl http://localhost:5240/api/v1/bookings \
   -H "Authorization: Bearer $TOKEN"
 ```
 

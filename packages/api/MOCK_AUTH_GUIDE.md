@@ -8,6 +8,8 @@ When the business team sets up the real auth accounts, you can flip a single fea
 
 ## Quick Start
 
+> Canonical local API port is **5240**. Replace `localhost:5524` in the examples below with `localhost:5240`.
+
 ### 1. Enable Mock Auth (Default)
 
 In `/packages/api/.env`:
@@ -19,7 +21,7 @@ USE_REAL_AUTH=false
 
 **Option A: Simple Login**
 ```bash
-curl -X POST http://localhost:5524/api/v1/auth/mock/login \
+curl -X POST http://localhost:5240/api/v1/auth/mock/login \
   -H "Content-Type: application/json" \
   -d '{"role": "customer"}'
 ```

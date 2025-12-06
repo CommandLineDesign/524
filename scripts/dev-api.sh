@@ -23,7 +23,8 @@ if [ -f ".nvmrc" ]; then
   fi
 fi
 
-echo "🚀 Starting API server on port 5524..."
+export PORT="${PORT:-5240}"
+echo "🚀 Starting API server on port ${PORT}..."
 cd packages/api
 pnpm run dev
 
