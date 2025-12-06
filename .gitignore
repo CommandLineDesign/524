@@ -11,6 +11,11 @@ tmp/
 *.log
 yarn.lock
 package-lock.json
+*.tsbuildinfo
+
+# Vercel build artifacts
+.vercel/
+**/.vercel/
 
 # Environment variables
 .env
