@@ -4,6 +4,7 @@ import { API_BASE_URL, getStoredToken } from './adminApi';
 
 const resourceToEndpoint = {
   'pending-artists': `${API_BASE_URL}/admin/pending-artists`,
+  users: `${API_BASE_URL}/admin/users`,
 } as const;
 
 async function httpClient(url: string, options: fetchUtils.Options = {}) {
@@ -29,9 +30,27 @@ export const adminDataProvider: DataProvider = {
     }
 
     const { page, perPage } = params.pagination ?? { page: 1, perPage: 25 };
-    const { field, order } = params.sort ?? { field: 'signupDate', order: 'DESC' };
+    const { field, order } = params.sort ?? { field: 'createdAt', order: 'DESC' };
 
-    const url = `${endpoint}?page=${page}&perPage=${perPage}&sortField=${field}&sortOrder=${order}`;
+    // Build query params
+    const queryParams = new URLSearchParams({
+      page: String(page),
+      perPage: String(perPage),
+      sortField: field,
+      sortOrder: order,
+    });
+
+    // Add filters
+    if (params.filter) {
+      if (params.filter.role) {
+        queryParams.append('role', params.filter.role);
+      }
+      if (params.filter.q || params.filter.search) {
+        queryParams.append('search', params.filter.q || params.filter.search);
+      }
+    }
+
+    const url = `${endpoint}?${queryParams.toString()}`;
     const { json } = await httpClient(url);
 
     return {
@@ -64,10 +83,9 @@ export const adminDataProvider: DataProvider = {
       return Promise.reject(new Error(`Unsupported resource: ${resource}`));
     }
 
-    const body = JSON.stringify(params.data);
     const { json } = await httpClient(`${endpoint}/${params.id}`, {
-      method: 'PATCH',
-      body,
+      method: 'PUT',
+      body: JSON.stringify(params.data),
     });
 
     return { data: json.data };

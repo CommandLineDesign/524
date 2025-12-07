@@ -8,6 +8,9 @@ import AdminLoginPage from './AdminLoginPage';
 import PendingArtistEdit from './pendingArtists/PendingArtistEdit';
 import PendingArtistShow from './pendingArtists/PendingArtistShow';
 import PendingArtistsList from './pendingArtists/PendingArtistsList';
+import UserEdit from './users/UserEdit';
+import UserShow from './users/UserShow';
+import UsersList from './users/UsersList';
 
 const AdminApp = () => (
   <Admin
@@ -22,6 +25,13 @@ const AdminApp = () => (
       show={PendingArtistShow}
       edit={PendingArtistEdit}
       options={{ label: 'Pending Artists' }}
+    />
+    <Resource
+      name="users"
+      list={UsersList}
+      show={UserShow}
+      edit={UserEdit}
+      options={{ label: 'Users' }}
     />
   </Admin>
 );
