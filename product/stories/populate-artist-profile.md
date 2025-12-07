@@ -3,7 +3,7 @@
 **Epic**: [Admin Dashboard](../epics/admin-dashboard.md)
 **Role**: Admin
 **Priority**: High
-**Status**: 📝 In Progress
+**Status**: ✅ Completed
 **Dependencies**:
 
 - [View Pending Artists](./view-pending-artists.md)
