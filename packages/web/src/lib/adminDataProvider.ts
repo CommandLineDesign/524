@@ -9,8 +9,8 @@ const resourceToEndpoint = {
 
 export type AdminDataProvider = DataProvider & {
   activatePendingArtist: (artistId: string) => Promise<{ data: unknown }>;
-  banUser: (userId: string, reason: string) => Promise<{ data: unknown }>;
-  unbanUser: (userId: string) => Promise<{ data: unknown }>;
+  banUser: (resource: string, params: { id: string; reason: string }) => Promise<{ data: unknown }>;
+  unbanUser: (resource: string, params: { id: string }) => Promise<{ data: unknown }>;
 };
 
 async function httpClient(url: string, options: fetchUtils.Options = {}) {
