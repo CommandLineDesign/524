@@ -59,7 +59,7 @@ function mapRowToProfile(row: ArtistProfileRow): ArtistProfile {
     },
     isAcceptingBookings: row.isAcceptingBookings ?? true,
     verificationStatus:
-      (row.verificationStatus as ArtistProfile['verificationStatus']) ?? 'pending',
+      (row.verificationStatus as ArtistProfile['verificationStatus']) ?? 'pending_review',
     averageRating: toNumber(row.averageRating, 0),
     totalReviews: row.totalReviews ?? 0,
     totalServices: row.totalServices ?? 0,
@@ -85,7 +85,7 @@ function mapPendingRow(row: PendingArtistRow): PendingArtistDetail {
       row.signupDate instanceof Date
         ? row.signupDate.toISOString()
         : new Date(row.signupDate).toISOString(),
-    verificationStatus: row.verificationStatus ?? 'pending',
+    verificationStatus: row.verificationStatus ?? 'pending_review',
     bio: row.bio,
     specialties: specialties ?? [],
     portfolioImages: (row.portfolioImages as PendingArtistDetail['portfolioImages']) ?? [],
@@ -156,7 +156,7 @@ export class ArtistRepository {
       })
       .from(artistProfiles)
       .leftJoin(users, eq(users.id, artistProfiles.userId))
-      .where(eq(artistProfiles.verificationStatus, 'pending'))
+      .where(eq(artistProfiles.verificationStatus, 'pending_review'))
       .orderBy(sortDirection)
       .limit(perPage)
       .offset(offset);
@@ -165,7 +165,7 @@ export class ArtistRepository {
       (await db
         .select({ count: sql<number>`count(*)` })
         .from(artistProfiles)
-        .where(eq(artistProfiles.verificationStatus, 'pending'))) ?? [];
+        .where(eq(artistProfiles.verificationStatus, 'pending_review'))) ?? [];
 
     const total = countRow?.count ?? 0;
 
@@ -194,7 +194,12 @@ export class ArtistRepository {
       })
       .from(artistProfiles)
       .leftJoin(users, eq(users.id, artistProfiles.userId))
-      .where(and(eq(artistProfiles.id, artistId), eq(artistProfiles.verificationStatus, 'pending')))
+      .where(
+        and(
+          eq(artistProfiles.id, artistId),
+          eq(artistProfiles.verificationStatus, 'pending_review')
+        )
+      )
       .limit(1);
 
     if (!row) {

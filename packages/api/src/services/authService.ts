@@ -1,8 +1,8 @@
 import * as bcrypt from 'bcryptjs';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import jwt from 'jsonwebtoken';
 
-import { users } from '@524/database';
+import { userRoles, users } from '@524/database';
 import { env } from '../config/env.js';
 import { db } from '../db/client.js';
 
@@ -13,7 +13,8 @@ export interface LoginResponse {
     id: string;
     email: string;
     name: string;
-    role: string;
+    roles: string[];
+    primaryRole: string;
     phoneNumber: string;
   };
   token: string;
@@ -24,8 +25,23 @@ export class AuthService {
    * Login with email and password
    */
   async loginWithEmail(email: string, password: string): Promise<LoginResponse | null> {
-    // Find user by email
-    const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
+    // Find user by email with roles
+    const [user] = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        name: users.name,
+        phoneNumber: users.phoneNumber,
+        passwordHash: users.passwordHash,
+        roles: sql<
+          string[]
+        >`coalesce(array_agg(distinct ${userRoles.role})::text[], ARRAY[]::text[])`,
+      })
+      .from(users)
+      .leftJoin(userRoles, eq(users.id, userRoles.userId))
+      .where(eq(users.email, email))
+      .groupBy(users.id)
+      .limit(1);
 
     if (!user) {
       console.warn('[AuthService] Login failed - user not found', { email });
@@ -45,10 +61,13 @@ export class AuthService {
     }
 
     // Generate JWT token
+    const primaryRole = user.roles?.[0] ?? 'customer';
+
     const token = jwt.sign(
       {
         user_id: user.id,
-        role: user.role,
+        role: primaryRole,
+        roles: user.roles ?? [],
         phone_number: user.phoneNumber,
       },
       env.JWT_SECRET || 'dev-secret',
@@ -65,7 +84,8 @@ export class AuthService {
         id: user.id,
         email: user.email,
         name: user.name,
-        role: user.role,
+        roles: user.roles ?? [],
+        primaryRole,
         phoneNumber: user.phoneNumber,
       },
       token,
@@ -76,7 +96,21 @@ export class AuthService {
    * Get user by ID
    */
   async getUserById(userId: string) {
-    const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+    const [user] = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        name: users.name,
+        phoneNumber: users.phoneNumber,
+        roles: sql<
+          string[]
+        >`coalesce(array_agg(distinct ${userRoles.role})::text[], ARRAY[]::text[])`,
+      })
+      .from(users)
+      .leftJoin(userRoles, eq(users.id, userRoles.userId))
+      .where(eq(users.id, userId))
+      .groupBy(users.id)
+      .limit(1);
 
     return user;
   }

@@ -3,6 +3,7 @@ import {
   Datagrid,
   DateField,
   FilterButton,
+  FunctionField,
   List,
   Pagination,
   SearchInput,
@@ -54,7 +55,11 @@ const UsersList = () => (
       <TextField source="email" label="Email" sortable={false} />
       <TextField source="phoneNumber" label="Phone" sortable={false} />
       <BooleanField source="phoneVerified" label="Phone Verified" sortable={false} />
-      <TextField source="role" label="Role" sortable={false} />
+      <FunctionField
+        label="Roles"
+        render={(record) => (Array.isArray(record.roles) ? record.roles.join(', ') : '')}
+        sortable={false}
+      />
       <BooleanField source="isActive" label="Active" sortable={false} />
       <BooleanField source="isVerified" label="Verified" sortable={false} />
       <DateField source="createdAt" label="Created" showTime sortBy="createdAt" />

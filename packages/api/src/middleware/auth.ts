@@ -1,10 +1,14 @@
+import { userRoles, users } from '@524/database';
+import { eq, sql } from 'drizzle-orm';
 // Authentication middleware with mock support
 import { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { MOCK_USERS, MockUser } from '../auth/mock-auth.js';
 import { env } from '../config/env.js';
 import { features } from '../config/features.js';
+import { db } from '../db/client.js';
 import { AuthService } from '../services/authService.js';
+import { hasAllowedRole, selectPrimaryRole } from '../utils/roleHelpers.js';
 
 const authService = new AuthService();
 
@@ -15,14 +19,17 @@ export interface AuthRequest extends Request {
         id: string;
         email: string;
         name: string;
-        role: string;
+        roles: string[];
+        primaryRole: string;
         phoneNumber: string;
-      };
+      }
+    | (MockUser & { roles?: string[]; primaryRole?: string });
 }
 
 interface TokenPayload {
   user_id: string;
-  role: 'customer' | 'artist' | 'admin';
+  role: 'customer' | 'artist' | 'admin' | 'support';
+  roles?: string[];
   phone_number: string;
   mock?: boolean;
 }
@@ -31,7 +38,7 @@ interface TokenPayload {
  * Main authentication middleware
  * Supports both mock and real authentication based on feature flag
  */
-export function requireAuth(allowedRoles?: ('customer' | 'artist' | 'admin')[]) {
+export function requireAuth(allowedRoles?: ('customer' | 'artist' | 'admin' | 'support')[]) {
   return async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       // Check for Authorization header
@@ -58,7 +65,11 @@ export function requireAuth(allowedRoles?: ('customer' | 'artist' | 'admin')[]) 
           });
         }
 
-        req.user = mockUser;
+        req.user = {
+          ...mockUser,
+          roles: [mockUser.role],
+          primaryRole: mockUser.role,
+        };
         return next();
       }
 
@@ -83,32 +94,55 @@ export function requireAuth(allowedRoles?: ('customer' | 'artist' | 'admin')[]) 
         if (!mockUser) {
           return res.status(401).json({ error: 'Mock user not found' });
         }
-        req.user = mockUser;
+        req.user = {
+          ...mockUser,
+          roles: [mockUser.role],
+          primaryRole: mockUser.role,
+        };
       } else {
         // Real auth: fetch user from database
-        const user = await authService.getUserById(decoded.user_id);
+        const [user] = await db
+          .select({
+            id: users.id,
+            email: users.email,
+            name: users.name,
+            phoneNumber: users.phoneNumber,
+            roles: sql<
+              string[]
+            >`coalesce(array_agg(distinct ${userRoles.role})::text[], ARRAY[]::text[])`,
+          })
+          .from(users)
+          .leftJoin(userRoles, eq(users.id, userRoles.userId))
+          .where(eq(users.id, decoded.user_id))
+          .groupBy(users.id);
+
         if (!user) {
           return res.status(401).json({ error: 'User not found' });
         }
+        const roles = user.roles ?? [];
         req.user = {
           id: user.id,
           email: user.email || '',
           name: user.name,
-          role: user.role,
+          roles,
+          primaryRole: selectPrimaryRole(roles),
           phoneNumber: user.phoneNumber,
         };
       }
 
       // Check role permissions
-      if (
-        allowedRoles &&
-        !allowedRoles.includes(req.user.role as 'customer' | 'artist' | 'admin')
-      ) {
-        return res.status(403).json({
-          error: 'Insufficient permissions',
-          required_roles: allowedRoles,
-          your_role: req.user.role,
-        });
+      if (allowedRoles) {
+        if (!req.user) {
+          return res.status(401).json({ error: 'Unauthorized' });
+        }
+        const userRolesList = (req.user as { roles?: string[] }).roles ?? [];
+        if (!hasAllowedRole(userRolesList, allowedRoles)) {
+          return res.status(403).json({
+            error: 'Insufficient permissions',
+            required_roles: allowedRoles,
+            your_roles: userRolesList,
+          });
+        }
       }
 
       next();
@@ -148,7 +182,7 @@ export function optionalAuth() {
 /**
  * Require specific role
  */
-export function requireRole(role: 'customer' | 'artist' | 'admin') {
+export function requireRole(role: 'customer' | 'artist' | 'admin' | 'support') {
   return requireAuth([role]);
 }
 
