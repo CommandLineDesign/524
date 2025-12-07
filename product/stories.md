@@ -15,7 +15,7 @@ Master tracking file for all user stories, organized by epic.
 | Status | Story | Priority | Effort |
 |--------|-------|----------|--------|
 | 📝 | [View Pending Artists](./stories/view-pending-artists.md) | High | S |
-| ⏳ | [Populate Artist Profile](./stories/populate-artist-profile.md) | High | M |
+| 📝 | [Populate Artist Profile](./stories/populate-artist-profile.md) | High | M |
 | ⏳ | [Activate Artist Account](./stories/activate-artist-account.md) | High | S |
 | ⏳ | [View and Edit Users](./stories/view-edit-users.md) | Medium | M |
 | ⏳ | [Ban User Account](./stories/ban-user-account.md) | Medium | S |
@@ -30,8 +30,8 @@ Master tracking file for all user stories, organized by epic.
 | Metric | Count |
 |--------|-------|
 | **Total Stories** | 8 |
-| **Not Started** | 7 |
-| **In Progress** | 1 |
+| **Not Started** | 6 |
+| **In Progress** | 2 |
 | **Completed** | 0 |
 | **Completion Rate** | 0% |
 
