@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 
+import type { ArtistProfile } from '@524/shared/artists';
 import { ArtistService } from '../services/artistService.js';
 
 const artistService = new ArtistService();
@@ -54,6 +55,34 @@ export const AdminArtistController = {
       }
 
       res.json({ data: artist });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async updatePendingArtist(req: Request, res: Response, next: NextFunction) {
+    try {
+      const artistId = req.params.artistId;
+      const updates = req.body ?? {};
+
+      const allowedKeys: (keyof ArtistProfile)[] = [
+        'stageName',
+        'bio',
+        'specialties',
+        'yearsExperience',
+        'portfolioImages',
+        'services',
+      ];
+
+      const filteredUpdates = allowedKeys.reduce<Partial<ArtistProfile>>((acc, key) => {
+        if (updates[key] !== undefined) {
+          acc[key] = updates[key];
+        }
+        return acc;
+      }, {});
+
+      const updated = await artistService.updateArtistProfile(artistId, filteredUpdates);
+      res.json({ data: updated });
     } catch (error) {
       next(error);
     }

@@ -21,6 +21,8 @@ export interface ArtistProfile {
   averageRating: number;
   totalReviews: number;
   totalServices: number;
+  portfolioImages?: PortfolioImage[];
+  services?: ArtistServiceOffering[];
 }
 
 export interface ArtistSearchFilters {
@@ -36,4 +38,15 @@ export interface ArtistSearchResult {
   averageRating: number;
   reviewCount: number;
   priceRange: [number, number];
+}
+
+export interface PortfolioImage {
+  url: string;
+  caption?: string;
+}
+
+export interface ArtistServiceOffering {
+  name: string;
+  description?: string;
+  price: number;
 }

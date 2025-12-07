@@ -58,8 +58,19 @@ export const adminDataProvider: DataProvider = {
     return { data: [], total: 0 };
   },
 
-  async update() {
-    return Promise.reject(new Error('Update not implemented'));
+  async update(resource, params) {
+    const endpoint = resourceToEndpoint[resource as keyof typeof resourceToEndpoint];
+    if (!endpoint) {
+      return Promise.reject(new Error(`Unsupported resource: ${resource}`));
+    }
+
+    const body = JSON.stringify(params.data);
+    const { json } = await httpClient(`${endpoint}/${params.id}`, {
+      method: 'PATCH',
+      body,
+    });
+
+    return { data: json.data };
   },
 
   async updateMany() {

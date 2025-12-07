@@ -7,5 +7,10 @@ const router: ExpressRouter = Router();
 
 router.get('/pending-artists', requireAdmin(), AdminArtistController.listPendingArtists);
 router.get('/pending-artists/:artistId', requireAdmin(), AdminArtistController.getPendingArtist);
+router.patch(
+  '/pending-artists/:artistId',
+  requireAdmin(),
+  AdminArtistController.updatePendingArtist
+);
 
 export const adminRouter: ExpressRouter = router;
