@@ -16,7 +16,7 @@ Master tracking file for all user stories, organized by epic.
 |--------|-------|----------|--------|
 | ✅ | [View Pending Artists](./stories/view-pending-artists.md) | High | S |
 | ✅ | [Populate Artist Profile](./stories/populate-artist-profile.md) | High | M |
-| ⏳ | [Activate Artist Account](./stories/activate-artist-account.md) | High | S |
+| ✅ | [Activate Artist Account](./stories/activate-artist-account.md) | High | S |
 | ✅ | [View and Edit Users](./stories/view-edit-users.md) | Medium | M |
 | ⏳ | [Ban User Account](./stories/ban-user-account.md) | Medium | S |
 | ⏳ | [View All Bookings](./stories/view-all-bookings.md) | Medium | M |
