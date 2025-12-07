@@ -14,10 +14,10 @@ Master tracking file for all user stories, organized by epic.
 
 | Status | Story | Priority | Effort |
 |--------|-------|----------|--------|
-| 📝 | [View Pending Artists](./stories/view-pending-artists.md) | High | S |
+| ✅ | [View Pending Artists](./stories/view-pending-artists.md) | High | S |
 | ✅ | [Populate Artist Profile](./stories/populate-artist-profile.md) | High | M |
-| ⏳ | [Activate Artist Account](./stories/activate-artist-account.md) | High | S |
-| ⏳ | [View and Edit Users](./stories/view-edit-users.md) | Medium | M |
+| ✅ | [Activate Artist Account](./stories/activate-artist-account.md) | High | S |
+| ✅ | [View and Edit Users](./stories/view-edit-users.md) | Medium | M |
 | ⏳ | [Ban User Account](./stories/ban-user-account.md) | Medium | S |
 | ⏳ | [View All Bookings](./stories/view-all-bookings.md) | Medium | M |
 | ⏳ | [Process Manual Refund](./stories/process-manual-refund.md) | Medium | S |
@@ -30,10 +30,10 @@ Master tracking file for all user stories, organized by epic.
 | Metric | Count |
 |--------|-------|
 | **Total Stories** | 8 |
-| **Not Started** | 6 |
-| **In Progress** | 1 |
-| **Completed** | 1 |
-| **Completion Rate** | 0% |
+| **Not Started** | 5 |
+| **In Progress** | 0 |
+| **Completed** | 3 |
+| **Completion Rate** | 38% |
 
 ---
 

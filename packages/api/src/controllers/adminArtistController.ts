@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from 'express';
 
 import type { ArtistProfile } from '@524/shared/artists';
+import type { AuthRequest } from '../middleware/auth.js';
 import { ArtistService } from '../services/artistService.js';
 
 const artistService = new ArtistService();
@@ -83,6 +84,18 @@ export const AdminArtistController = {
 
       const updated = await artistService.updateArtistProfile(artistId, filteredUpdates);
       res.json({ data: updated });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async activatePendingArtist(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const artistId = req.params.artistId;
+      const reviewerId = req.user?.id;
+
+      const activated = await artistService.activatePendingArtist(artistId, reviewerId);
+      res.json({ data: activated });
     } catch (error) {
       next(error);
     }
