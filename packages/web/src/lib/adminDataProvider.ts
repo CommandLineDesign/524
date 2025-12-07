@@ -5,6 +5,7 @@ import { API_BASE_URL, getStoredToken } from './adminApi';
 const resourceToEndpoint = {
   'pending-artists': `${API_BASE_URL}/admin/pending-artists`,
   users: `${API_BASE_URL}/admin/users`,
+  bookings: `${API_BASE_URL}/admin/bookings`,
 } as const;
 
 export type AdminDataProvider = DataProvider & {
@@ -47,13 +48,18 @@ export const adminDataProvider: AdminDataProvider = {
     });
 
     // Add filters
-    if (params.filter) {
-      if (params.filter.role) {
-        queryParams.append('role', params.filter.role);
+    const filters = params.filter ?? {};
+    for (const [key, value] of Object.entries(filters)) {
+      if (value === undefined || value === null || value === '') {
+        continue;
       }
-      if (params.filter.q || params.filter.search) {
-        queryParams.append('search', params.filter.q || params.filter.search);
+
+      if (key === 'q' || key === 'search') {
+        queryParams.set('search', String(value));
+        continue;
       }
+
+      queryParams.set(key, String(value));
     }
 
     const url = `${endpoint}?${queryParams.toString()}`;

@@ -15,7 +15,7 @@
     "format": "biome format --write .",
     "format:check": "biome format .",
     "typecheck": "tsc --project tsconfig.typecheck.json",
-    "test": "tsx --test src/utils/roleHelpers.test.ts"
+    "test": "tsx --test \"src/**/*.test.ts\""
   },
   "dependencies": {
     "@524/database": "file:../database",
