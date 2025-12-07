@@ -16,7 +16,7 @@ const PendingArtistsList = () => (
     empty={<EmptyPendingArtists />}
     emptyWhileLoading
   >
-    <Datagrid rowClick="show" bulkActionButtons={false}>
+    <Datagrid rowClick="edit" bulkActionButtons={false}>
       <TextField source="name" label="Name" sortable={false} />
       <TextField source="stageName" label="Stage Name" sortable={false} />
       <TextField source="email" label="Email" sortable={false} />

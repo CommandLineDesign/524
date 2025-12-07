@@ -18,6 +18,9 @@ type PendingArtistRow = {
   verificationStatus: ArtistProfile['verificationStatus'];
   bio: string | null;
   specialties: unknown;
+  portfolioImages: unknown;
+  services: unknown;
+  yearsExperience: number | null;
 };
 
 export interface PendingArtistQuery {
@@ -60,6 +63,8 @@ function mapRowToProfile(row: ArtistProfileRow): ArtistProfile {
     averageRating: toNumber(row.averageRating, 0),
     totalReviews: row.totalReviews ?? 0,
     totalServices: row.totalServices ?? 0,
+    portfolioImages: (row.portfolioImages as ArtistProfile['portfolioImages']) ?? [],
+    services: (row.services as ArtistProfile['services']) ?? [],
   };
 }
 
@@ -83,6 +88,9 @@ function mapPendingRow(row: PendingArtistRow): PendingArtistDetail {
     verificationStatus: row.verificationStatus ?? 'pending',
     bio: row.bio,
     specialties: specialties ?? [],
+    portfolioImages: (row.portfolioImages as PendingArtistDetail['portfolioImages']) ?? [],
+    services: (row.services as PendingArtistDetail['services']) ?? [],
+    yearsExperience: row.yearsExperience ?? null,
   };
 }
 
@@ -112,6 +120,8 @@ export class ArtistRepository {
         averageRating: updates.averageRating?.toString(),
         totalReviews: updates.totalReviews,
         totalServices: updates.totalServices,
+        portfolioImages: updates.portfolioImages,
+        services: updates.services,
       })
       .where(eq(artistProfiles.id, artistId))
       .returning();
@@ -140,6 +150,9 @@ export class ArtistRepository {
         verificationStatus: artistProfiles.verificationStatus,
         bio: artistProfiles.bio,
         specialties: artistProfiles.specialties,
+        portfolioImages: artistProfiles.portfolioImages,
+        services: artistProfiles.services,
+        yearsExperience: artistProfiles.yearsExperience,
       })
       .from(artistProfiles)
       .leftJoin(users, eq(users.id, artistProfiles.userId))
@@ -175,6 +188,9 @@ export class ArtistRepository {
         verificationStatus: artistProfiles.verificationStatus,
         bio: artistProfiles.bio,
         specialties: artistProfiles.specialties,
+        portfolioImages: artistProfiles.portfolioImages,
+        services: artistProfiles.services,
+        yearsExperience: artistProfiles.yearsExperience,
       })
       .from(artistProfiles)
       .leftJoin(users, eq(users.id, artistProfiles.userId))

@@ -1,4 +1,4 @@
-import type { ArtistProfile } from './artists.js';
+import type { ArtistProfile, ArtistServiceOffering, PortfolioImage } from './artists.js';
 
 export interface PendingArtistListItem {
   id: string;
@@ -14,4 +14,7 @@ export interface PendingArtistListItem {
 export interface PendingArtistDetail extends PendingArtistListItem {
   bio?: string | null;
   specialties?: string[] | null;
+  portfolioImages?: PortfolioImage[] | null;
+  services?: ArtistServiceOffering[] | null;
+  yearsExperience?: number | null;
 }
