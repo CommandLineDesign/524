@@ -5,6 +5,8 @@ import { Admin, Resource } from 'react-admin';
 import { adminAuthProvider } from '../lib/adminAuthProvider';
 import { adminDataProvider } from '../lib/adminDataProvider';
 import AdminLoginPage from './AdminLoginPage';
+import BookingShow from './bookings/BookingShow';
+import BookingsList from './bookings/BookingsList';
 import PendingArtistEdit from './pendingArtists/PendingArtistEdit';
 import PendingArtistShow from './pendingArtists/PendingArtistShow';
 import PendingArtistsList from './pendingArtists/PendingArtistsList';
@@ -25,6 +27,12 @@ const AdminApp = () => (
       show={PendingArtistShow}
       edit={PendingArtistEdit}
       options={{ label: 'Pending Artists' }}
+    />
+    <Resource
+      name="bookings"
+      list={BookingsList}
+      show={BookingShow}
+      options={{ label: 'Bookings' }}
     />
     <Resource
       name="users"

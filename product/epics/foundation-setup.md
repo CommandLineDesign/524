@@ -28,9 +28,9 @@ This epic establishes the core technical foundation for the 524 Beauty Marketpla
 
 - [x] Monorepo initialized with `mobile`, `web`, `api`, `shared`, `database` packages.
 - [ ] Docker Compose file created and verified to spin up local database and cache.
-- [ ] CI pipeline configured to run linting and tests on pull requests.
-- [ ] Base TypeScript configuration (`tsconfig.base.json`) established and extended by all packages.
-- [ ] Pre-commit hooks (Husky) configured for linting and formatting.
+- [x] CI pipeline configured to run linting and tests on pull requests.
+- [x] Base TypeScript configuration (`tsconfig.base.json`) established and extended by all packages.
+- [x] Pre-commit hooks (Husky) configured for linting and formatting.
 - [ ] Cloud infrastructure provisioning scripts prepared for staging environment.
 
 ## Technical Requirements
