@@ -73,7 +73,8 @@ export class UserRepository {
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
     // Build sort
-    let sortColumn = users.createdAt;
+    type SortColumn = typeof users.createdAt | typeof users.name | typeof users.email;
+    let sortColumn: SortColumn = users.createdAt;
     if (query.sortField === 'name') {
       sortColumn = users.name;
     } else if (query.sortField === 'email') {
