@@ -1,6 +1,6 @@
 import { and, asc, desc, eq, ilike, or, sql } from 'drizzle-orm';
 
-import { users } from '@524/database';
+import { userRoles, users } from '@524/database';
 
 import { db } from '../db/client.js';
 
@@ -9,7 +9,7 @@ export interface UserQuery {
   perPage: number;
   sortField?: 'createdAt' | 'name' | 'email';
   sortOrder?: 'ASC' | 'DESC';
-  role?: 'customer' | 'artist' | 'admin';
+  role?: 'customer' | 'artist' | 'admin' | 'support';
   search?: string;
 }
 
@@ -19,21 +19,32 @@ export interface UserListItem {
   email: string | null;
   phoneNumber: string;
   phoneVerified: boolean;
-  role: string;
+  roles: string[];
   isActive: boolean;
   isVerified: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
 
-function mapRowToUserListItem(row: typeof users.$inferSelect): UserListItem {
+function mapRowToUserListItem(row: {
+  id: string;
+  name: string;
+  email: string | null;
+  phoneNumber: string;
+  phoneVerified: boolean | null;
+  roles: string[] | null;
+  isActive: boolean | null;
+  isVerified: boolean | null;
+  createdAt: Date;
+  updatedAt: Date;
+}): UserListItem {
   return {
     id: row.id,
     name: row.name,
     email: row.email ?? null,
     phoneNumber: row.phoneNumber,
     phoneVerified: row.phoneVerified ?? false,
-    role: row.role,
+    roles: row.roles ?? [],
     isActive: row.isActive ?? true,
     isVerified: row.isVerified ?? false,
     createdAt: row.createdAt,
@@ -43,8 +54,37 @@ function mapRowToUserListItem(row: typeof users.$inferSelect): UserListItem {
 
 export class UserRepository {
   async findById(userId: string) {
-    const [record] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
-    return record ?? null;
+    const [record] = await db
+      .select({
+        id: users.id,
+        name: users.name,
+        email: users.email,
+        phoneNumber: users.phoneNumber,
+        phoneVerified: users.phoneVerified,
+        roles: sql<
+          string[]
+        >`coalesce(array_agg(distinct ${userRoles.role})::text[], ARRAY[]::text[])`,
+        isActive: users.isActive,
+        isVerified: users.isVerified,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+      })
+      .from(users)
+      .leftJoin(userRoles, eq(users.id, userRoles.userId))
+      .where(eq(users.id, userId))
+      .groupBy(
+        users.id,
+        users.name,
+        users.email,
+        users.phoneNumber,
+        users.phoneVerified,
+        users.isActive,
+        users.isVerified,
+        users.createdAt,
+        users.updatedAt
+      )
+      .limit(1);
+    return record ? mapRowToUserListItem(record) : null;
   }
 
   async findMany(query: UserQuery) {
@@ -54,7 +94,9 @@ export class UserRepository {
     const conditions = [];
 
     if (query.role) {
-      conditions.push(eq(users.role, query.role));
+      conditions.push(
+        sql`exists (select 1 from ${userRoles} ur where ur.user_id = ${users.id} and ur.role = ${query.role})`
+      );
     }
 
     if (query.search) {
@@ -86,18 +128,44 @@ export class UserRepository {
 
     // Get data
     const rows = await db
-      .select()
+      .select({
+        id: users.id,
+        name: users.name,
+        email: users.email,
+        phoneNumber: users.phoneNumber,
+        phoneVerified: users.phoneVerified,
+        roles: sql<
+          string[]
+        >`coalesce(array_agg(distinct ${userRoles.role})::text[], ARRAY[]::text[])`,
+        isActive: users.isActive,
+        isVerified: users.isVerified,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+      })
       .from(users)
-      .where(whereClause)
+      .leftJoin(userRoles, eq(users.id, userRoles.userId))
+      .where(whereClause ?? sql`true`)
+      .groupBy(
+        users.id,
+        users.name,
+        users.email,
+        users.phoneNumber,
+        users.phoneVerified,
+        users.isActive,
+        users.isVerified,
+        users.createdAt,
+        users.updatedAt
+      )
       .orderBy(sortDirection)
       .limit(query.perPage)
       .offset(offset);
 
     // Get count
     const [countRow] = await db
-      .select({ count: sql<number>`count(*)` })
+      .select({ count: sql<number>`count(distinct ${users.id})` })
       .from(users)
-      .where(whereClause ?? sql`1=1`);
+      .leftJoin(userRoles, eq(users.id, userRoles.userId))
+      .where(whereClause ?? sql`true`);
 
     const total = countRow?.count ?? 0;
 
@@ -121,6 +189,7 @@ export class UserRepository {
       throw Object.assign(new Error('User not found'), { status: 404 });
     }
 
-    return updated;
+    // Return with roles populated
+    return this.findById(userId);
   }
 }

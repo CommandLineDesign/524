@@ -3,6 +3,7 @@ import {
   integer,
   jsonb,
   numeric,
+  pgEnum,
   pgTable,
   text,
   timestamp,
@@ -11,6 +12,14 @@ import {
 } from 'drizzle-orm/pg-core';
 
 import { users } from './users.js';
+
+export const artistVerificationStatus = pgEnum('artist_verification_status', [
+  'pending_review',
+  'in_review',
+  'verified',
+  'rejected',
+  'suspended',
+]);
 
 export const artistProfiles = pgTable('artist_profiles', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -51,8 +60,11 @@ export const artistProfiles = pgTable('artist_profiles', {
   bankAccount: jsonb('bank_account'),
   taxId: text('tax_id'),
   isAcceptingBookings: boolean('is_accepting_bookings').default(true),
-  verificationStatus: varchar('verification_status', { length: 20 }).default('pending'),
+  verificationStatus: artistVerificationStatus('verification_status').default('pending_review'),
   accountStatus: varchar('account_status', { length: 20 }).default('active'),
+  reviewedBy: uuid('reviewed_by').references(() => users.id),
+  reviewNotes: text('review_notes'),
+  reviewedAt: timestamp('reviewed_at'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
   verifiedAt: timestamp('verified_at'),

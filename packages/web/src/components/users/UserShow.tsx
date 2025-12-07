@@ -2,6 +2,7 @@ import {
   BooleanField,
   DateField,
   EmailField,
+  FunctionField,
   Show,
   SimpleShowLayout,
   TextField,
@@ -15,7 +16,10 @@ const UserShow = () => (
       <EmailField source="email" label="Email" />
       <TextField source="phoneNumber" label="Phone Number" />
       <BooleanField source="phoneVerified" label="Phone Verified" />
-      <TextField source="role" label="Role" />
+      <FunctionField
+        label="Roles"
+        render={(record) => (Array.isArray(record.roles) ? record.roles.join(', ') : '')}
+      />
       <BooleanField source="isActive" label="Active" />
       <BooleanField source="isVerified" label="Verified" />
       <DateField source="createdAt" label="Created At" showTime />

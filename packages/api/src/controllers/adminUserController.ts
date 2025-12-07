@@ -28,7 +28,7 @@ export const AdminUserController = {
         (req.query.sortOrder as 'ASC' | 'DESC' | undefined) ??
         (req.query._order as 'ASC' | 'DESC' | undefined) ??
         'DESC';
-      const role = req.query.role as 'customer' | 'artist' | 'admin' | undefined;
+      const role = req.query.role as 'customer' | 'artist' | 'admin' | 'support' | undefined;
       const search = req.query.search as string | undefined;
 
       const result = await userService.getUsers({

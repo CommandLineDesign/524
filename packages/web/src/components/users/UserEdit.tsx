@@ -15,7 +15,13 @@ const UserEdit = () => {
         <TextInput source="email" label="Email" type="email" fullWidth />
         <TextInput source="phoneNumber" label="Phone Number" fullWidth />
         <BooleanInput source="phoneVerified" label="Phone Verified" disabled />
-        <TextInput source="role" label="Role" disabled fullWidth />
+        <TextInput
+          source="roles"
+          label="Roles"
+          disabled
+          fullWidth
+          format={(value) => (Array.isArray(value) ? value.join(', ') : (value ?? ''))}
+        />
         <BooleanInput source="isActive" label="Active" />
         <BooleanInput source="isVerified" label="Verified" />
       </SimpleForm>

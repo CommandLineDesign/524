@@ -17,7 +17,7 @@ export interface ArtistProfile {
   serviceRadiusKm: number;
   primaryLocation: ArtistLocation;
   isAcceptingBookings: boolean;
-  verificationStatus: 'pending' | 'verified' | 'rejected';
+  verificationStatus: 'pending_review' | 'in_review' | 'verified' | 'rejected' | 'suspended';
   averageRating: number;
   totalReviews: number;
   totalServices: number;
