@@ -40,7 +40,20 @@ router.post('/login', async (req, res) => {
     return res.json(result);
   } catch (error) {
     console.error('Login error:', error);
-    return res.status(500).json({
+    const status =
+      typeof (error as { status?: number }).status === 'number'
+        ? (error as { status: number }).status
+        : 500;
+
+    if (status === 403 && (error as { code?: string }).code === 'ACCOUNT_BANNED') {
+      return res.status(403).json({
+        error: 'Account banned',
+        reason: (error as { reason?: string }).reason ?? null,
+        bannedAt: (error as { bannedAt?: Date }).bannedAt ?? null,
+      });
+    }
+
+    return res.status(status).json({
       error: 'Login failed',
       message: error instanceof Error ? error.message : 'Unknown error',
     });

@@ -31,6 +31,7 @@ interface TokenPayload {
   role: 'customer' | 'artist' | 'admin' | 'support';
   roles?: string[];
   phone_number: string;
+  token_version?: number;
   mock?: boolean;
 }
 
@@ -107,6 +108,10 @@ export function requireAuth(allowedRoles?: ('customer' | 'artist' | 'admin' | 's
             email: users.email,
             name: users.name,
             phoneNumber: users.phoneNumber,
+            isBanned: users.isBanned,
+            banReason: users.banReason,
+            bannedAt: users.bannedAt,
+            tokenVersion: users.tokenVersion,
             roles: sql<
               string[]
             >`coalesce(array_agg(distinct ${userRoles.role})::text[], ARRAY[]::text[])`,
@@ -119,6 +124,24 @@ export function requireAuth(allowedRoles?: ('customer' | 'artist' | 'admin' | 's
         if (!user) {
           return res.status(401).json({ error: 'User not found' });
         }
+
+        if (user.isBanned) {
+          return res.status(403).json({
+            error: 'Account banned',
+            reason: user.banReason,
+            bannedAt: user.bannedAt,
+          });
+        }
+
+        const tokenVersionFromToken = decoded.token_version ?? 1;
+        const tokenVersionFromDb = user.tokenVersion ?? 1;
+        if (tokenVersionFromToken !== tokenVersionFromDb) {
+          return res.status(401).json({
+            error: 'Session invalidated',
+            message: 'Please log in again.',
+          });
+        }
+
         const roles = user.roles ?? [];
         req.user = {
           id: user.id,

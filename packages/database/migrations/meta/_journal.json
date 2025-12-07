@@ -29,6 +29,13 @@
       "when": 1763450000000,
       "tag": "0003_user_roles_and_artist_status",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1763490000000,
+      "tag": "0004_ban_user_account",
+      "breakpoints": true
     }
   ]
 }

@@ -22,5 +22,7 @@ router.post(
 router.get('/users', requireAdmin(), AdminUserController.listUsers);
 router.get('/users/:id', requireAdmin(), AdminUserController.getUser);
 router.put('/users/:id', requireAdmin(), AdminUserController.updateUser);
+router.post('/users/:id/ban', requireAdmin(), AdminUserController.banUser);
+router.post('/users/:id/unban', requireAdmin(), AdminUserController.unbanUser);
 
 export const adminRouter: ExpressRouter = router;

@@ -94,4 +94,40 @@ export const AdminUserController = {
       next(error);
     }
   },
+
+  async banUser(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) {
+        res.status(401).json({ error: 'Unauthorized' });
+        return;
+      }
+
+      const reason = typeof req.body.reason === 'string' ? req.body.reason.trim() : '';
+      if (!reason) {
+        res.status(400).json({ error: 'Ban reason is required' });
+        return;
+      }
+
+      const updated = await userService.banUser(req.params.id, reason, req.user.id);
+
+      res.json({ data: updated });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async unbanUser(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) {
+        res.status(401).json({ error: 'Unauthorized' });
+        return;
+      }
+
+      const updated = await userService.unbanUser(req.params.id, req.user.id);
+
+      res.json({ data: updated });
+    } catch (error) {
+      next(error);
+    }
+  },
 };
