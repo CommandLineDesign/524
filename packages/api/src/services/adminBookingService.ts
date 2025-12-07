@@ -1,4 +1,4 @@
-import type { AdminBookingDetail, AdminBookingListItem } from '@524/shared/bookings';
+import type { AdminBookingDetail, AdminBookingListItem } from '@524/shared';
 
 import {
   type AdminBookingListQuery,

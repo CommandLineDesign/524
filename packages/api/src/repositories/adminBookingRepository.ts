@@ -14,8 +14,8 @@ import type {
   AdminBookingListItem,
   BookedService,
   BookingStatusHistoryEntry,
-} from '@524/shared/bookings';
-import type { ChatMessage } from '@524/shared/messaging';
+  ChatMessage,
+} from '@524/shared';
 
 import { db } from '../db/client.js';
 
@@ -30,13 +30,32 @@ export interface AdminBookingListQuery {
   dateTo?: Date;
 }
 
-type BookingRow = typeof bookings.$inferSelect & {
+type BookingRow = {
+  id: string;
+  bookingNumber: string;
+  status: string;
+  paymentStatus: string;
+  scheduledDate: Date;
+  scheduledStartTime: Date;
+  scheduledEndTime: Date;
+  totalAmount: string | number;
+  customerId: string;
   customerName: string | null;
   customerEmail: string | null;
   customerPhone: string | null;
+  artistId: string;
   artistName: string | null;
   artistEmail: string | null;
   artistPhone: string | null;
+  createdAt: Date;
+  occasion: string;
+  services: unknown;
+  statusHistory: unknown;
+  breakdown: unknown;
+  serviceLocation: unknown;
+  address: unknown;
+  locationType: string | null;
+  locationNotes: string | null;
 };
 
 function mapStatusHistory(history: unknown): BookingStatusHistoryEntry[] {
@@ -157,14 +176,18 @@ export class AdminBookingRepository {
 
     const whereClause = conditions.length ? and(...conditions) : undefined;
 
-    let sortColumn = bookings.createdAt;
-    if (query.sortField === 'scheduledDate') {
-      sortColumn = bookings.scheduledDate;
-    } else if (query.sortField === 'bookingNumber') {
-      sortColumn = bookings.bookingNumber;
-    }
-
-    const sortDirection = query.sortOrder === 'ASC' ? asc(sortColumn) : desc(sortColumn);
+    const orderByClause =
+      query.sortField === 'scheduledDate'
+        ? query.sortOrder === 'ASC'
+          ? asc(bookings.scheduledDate)
+          : desc(bookings.scheduledDate)
+        : query.sortField === 'bookingNumber'
+          ? query.sortOrder === 'ASC'
+            ? asc(bookings.bookingNumber)
+            : desc(bookings.bookingNumber)
+          : query.sortOrder === 'ASC'
+            ? asc(bookings.createdAt)
+            : desc(bookings.createdAt);
 
     const rows = await db
       .select({
@@ -198,7 +221,7 @@ export class AdminBookingRepository {
       .leftJoin(customer, eq(bookings.customerId, customer.id))
       .leftJoin(artist, eq(bookings.artistId, artist.id))
       .where(whereClause ?? sql`true`)
-      .orderBy(sortDirection)
+      .orderBy(orderByClause)
       .limit(query.perPage)
       .offset(offset);
 
@@ -210,7 +233,7 @@ export class AdminBookingRepository {
       .where(whereClause ?? sql`true`);
 
     return {
-      items: rows.map(mapListRow),
+      items: rows.map((row) => mapListRow(row as BookingRow)),
       total: Number(countRow?.count ?? 0),
     };
   }
@@ -275,6 +298,6 @@ export class AdminBookingRepository {
 
     const mappedMessages = mapMessages(bookingId, conversation ?? null, messageRows);
 
-    return mapDetailRow(row, mappedMessages);
+    return mapDetailRow(row as BookingRow, mappedMessages);
   }
 }
