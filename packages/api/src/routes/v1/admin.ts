@@ -13,6 +13,11 @@ router.patch(
   requireAdmin(),
   AdminArtistController.updatePendingArtist
 );
+router.post(
+  '/pending-artists/:artistId/activate',
+  requireAdmin(),
+  AdminArtistController.activatePendingArtist
+);
 
 router.get('/users', requireAdmin(), AdminUserController.listUsers);
 router.get('/users/:id', requireAdmin(), AdminUserController.getUser);

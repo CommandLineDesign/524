@@ -7,6 +7,10 @@ const resourceToEndpoint = {
   users: `${API_BASE_URL}/admin/users`,
 } as const;
 
+export type AdminDataProvider = DataProvider & {
+  activatePendingArtist: (artistId: string) => Promise<{ data: unknown }>;
+};
+
 async function httpClient(url: string, options: fetchUtils.Options = {}) {
   const token = getStoredToken();
   const headers = new Headers(options.headers || {});
@@ -22,7 +26,7 @@ async function httpClient(url: string, options: fetchUtils.Options = {}) {
   return fetchUtils.fetchJson(url, { ...options, headers });
 }
 
-export const adminDataProvider: DataProvider = {
+export const adminDataProvider: AdminDataProvider = {
   async getList(resource, params) {
     const endpoint = resourceToEndpoint[resource as keyof typeof resourceToEndpoint];
     if (!endpoint) {
@@ -105,5 +109,18 @@ export const adminDataProvider: DataProvider = {
 
   async deleteMany() {
     return Promise.reject(new Error('Delete many not implemented'));
+  },
+
+  async activatePendingArtist(artistId: string) {
+    const endpoint = resourceToEndpoint['pending-artists'];
+    if (!endpoint) {
+      return Promise.reject(new Error('Activation endpoint not configured'));
+    }
+
+    const { json } = await httpClient(`${endpoint}/${artistId}/activate`, {
+      method: 'POST',
+    });
+
+    return { data: json.data };
   },
 };

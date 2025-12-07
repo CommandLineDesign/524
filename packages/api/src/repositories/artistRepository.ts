@@ -208,4 +208,29 @@ export class ArtistRepository {
 
     return mapPendingRow(row as PendingArtistRow);
   }
+
+  async activatePendingArtist(artistId: string, reviewerId?: string): Promise<ArtistProfile> {
+    const [updated] = await db
+      .update(artistProfiles)
+      .set({
+        verificationStatus: 'verified',
+        isAcceptingBookings: true,
+        reviewedBy: reviewerId,
+        reviewedAt: new Date(),
+        verifiedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(artistProfiles.id, artistId),
+          eq(artistProfiles.verificationStatus, 'pending_review')
+        )
+      )
+      .returning();
+
+    if (!updated) {
+      throw Object.assign(new Error('Artist not found or already activated'), { status: 400 });
+    }
+
+    return mapRowToProfile(updated);
+  }
 }

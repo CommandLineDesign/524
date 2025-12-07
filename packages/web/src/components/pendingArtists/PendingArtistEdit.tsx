@@ -11,6 +11,8 @@ import {
   required,
 } from 'react-admin';
 
+import ActivateArtistButton from './ActivateArtistButton';
+
 const specialtiesChoices = [
   { id: 'makeup', name: 'Makeup' },
   { id: 'hair', name: 'Hair' },
@@ -21,6 +23,7 @@ const specialtiesChoices = [
 const ArtistEditToolbar = () => (
   <Toolbar>
     <SaveButton alwaysEnable />
+    <ActivateArtistButton />
   </Toolbar>
 );
 

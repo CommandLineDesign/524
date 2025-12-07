@@ -29,4 +29,8 @@ export class ArtistService {
   getPendingArtistById(artistId: string): Promise<PendingArtistDetail | null> {
     return this.repository.findPendingById(artistId);
   }
+
+  activatePendingArtist(artistId: string, reviewerId?: string) {
+    return this.repository.activatePendingArtist(artistId, reviewerId);
+  }
 }

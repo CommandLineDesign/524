@@ -3,7 +3,7 @@
 **Epic**: [Admin Dashboard](../epics/admin-dashboard.md)
 **Role**: Admin
 **Priority**: Medium
-**Status**: ⏳ Not Started
+**Status**: ✅ Completed
 **Dependencies**:
 
 - None
