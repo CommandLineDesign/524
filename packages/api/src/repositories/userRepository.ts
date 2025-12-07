@@ -22,6 +22,12 @@ export interface UserListItem {
   roles: string[];
   isActive: boolean;
   isVerified: boolean;
+  isBanned: boolean;
+  banReason: string | null;
+  bannedAt: Date | null;
+  bannedBy: string | null;
+  tokenVersion: number;
+  sessionVersion: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -35,6 +41,12 @@ function mapRowToUserListItem(row: {
   roles: string[] | null;
   isActive: boolean | null;
   isVerified: boolean | null;
+  isBanned: boolean | null;
+  banReason: string | null;
+  bannedAt: Date | null;
+  bannedBy: string | null;
+  tokenVersion: number | null;
+  sessionVersion: number | null;
   createdAt: Date;
   updatedAt: Date;
 }): UserListItem {
@@ -47,6 +59,12 @@ function mapRowToUserListItem(row: {
     roles: row.roles ?? [],
     isActive: row.isActive ?? true,
     isVerified: row.isVerified ?? false,
+    isBanned: row.isBanned ?? false,
+    banReason: row.banReason ?? null,
+    bannedAt: row.bannedAt ?? null,
+    bannedBy: row.bannedBy ?? null,
+    tokenVersion: row.tokenVersion ?? 1,
+    sessionVersion: row.sessionVersion ?? 1,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
@@ -66,6 +84,12 @@ export class UserRepository {
         >`coalesce(array_agg(distinct ${userRoles.role})::text[], ARRAY[]::text[])`,
         isActive: users.isActive,
         isVerified: users.isVerified,
+        isBanned: users.isBanned,
+        banReason: users.banReason,
+        bannedAt: users.bannedAt,
+        bannedBy: users.bannedBy,
+        tokenVersion: users.tokenVersion,
+        sessionVersion: users.sessionVersion,
         createdAt: users.createdAt,
         updatedAt: users.updatedAt,
       })
@@ -80,6 +104,12 @@ export class UserRepository {
         users.phoneVerified,
         users.isActive,
         users.isVerified,
+        users.isBanned,
+        users.banReason,
+        users.bannedAt,
+        users.bannedBy,
+        users.tokenVersion,
+        users.sessionVersion,
         users.createdAt,
         users.updatedAt
       )
@@ -139,6 +169,12 @@ export class UserRepository {
         >`coalesce(array_agg(distinct ${userRoles.role})::text[], ARRAY[]::text[])`,
         isActive: users.isActive,
         isVerified: users.isVerified,
+        isBanned: users.isBanned,
+        banReason: users.banReason,
+        bannedAt: users.bannedAt,
+        bannedBy: users.bannedBy,
+        tokenVersion: users.tokenVersion,
+        sessionVersion: users.sessionVersion,
         createdAt: users.createdAt,
         updatedAt: users.updatedAt,
       })
@@ -153,6 +189,12 @@ export class UserRepository {
         users.phoneVerified,
         users.isActive,
         users.isVerified,
+        users.isBanned,
+        users.banReason,
+        users.bannedAt,
+        users.bannedBy,
+        users.tokenVersion,
+        users.sessionVersion,
         users.createdAt,
         users.updatedAt
       )
@@ -190,6 +232,50 @@ export class UserRepository {
     }
 
     // Return with roles populated
+    return this.findById(userId);
+  }
+
+  async banUser(userId: string, reason: string, adminId: string) {
+    const [updated] = await db
+      .update(users)
+      .set({
+        isBanned: true,
+        banReason: reason,
+        bannedAt: new Date(),
+        bannedBy: adminId,
+        tokenVersion: sql`coalesce(${users.tokenVersion}, 1) + 1`,
+        sessionVersion: sql`coalesce(${users.sessionVersion}, 1) + 1`,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId))
+      .returning();
+
+    if (!updated) {
+      throw Object.assign(new Error('User not found'), { status: 404 });
+    }
+
+    return this.findById(userId);
+  }
+
+  async unbanUser(userId: string, adminId: string) {
+    const [updated] = await db
+      .update(users)
+      .set({
+        isBanned: false,
+        banReason: null,
+        bannedAt: null,
+        bannedBy: null,
+        tokenVersion: sql`coalesce(${users.tokenVersion}, 1) + 1`,
+        sessionVersion: sql`coalesce(${users.sessionVersion}, 1) + 1`,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId))
+      .returning();
+
+    if (!updated) {
+      throw Object.assign(new Error('User not found'), { status: 404 });
+    }
+
     return this.findById(userId);
   }
 }

@@ -60,6 +60,7 @@ const UsersList = () => (
         render={(record) => (Array.isArray(record.roles) ? record.roles.join(', ') : '')}
         sortable={false}
       />
+      <BooleanField source="isBanned" label="Banned" sortable={false} />
       <BooleanField source="isActive" label="Active" sortable={false} />
       <BooleanField source="isVerified" label="Verified" sortable={false} />
       <DateField source="createdAt" label="Created" showTime sortBy="createdAt" />

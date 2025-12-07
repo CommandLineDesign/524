@@ -9,6 +9,8 @@ const resourceToEndpoint = {
 
 export type AdminDataProvider = DataProvider & {
   activatePendingArtist: (artistId: string) => Promise<{ data: unknown }>;
+  banUser: (resource: string, params: { id: string; reason: string }) => Promise<{ data: unknown }>;
+  unbanUser: (resource: string, params: { id: string }) => Promise<{ data: unknown }>;
 };
 
 async function httpClient(url: string, options: fetchUtils.Options = {}) {
@@ -118,6 +120,33 @@ export const adminDataProvider: AdminDataProvider = {
     }
 
     const { json } = await httpClient(`${endpoint}/${artistId}/activate`, {
+      method: 'POST',
+    });
+
+    return { data: json.data };
+  },
+
+  async banUser(_resource: string, params: { id: string; reason: string }) {
+    const endpoint = resourceToEndpoint.users;
+    if (!endpoint) {
+      return Promise.reject(new Error('User endpoint not configured'));
+    }
+
+    const { json } = await httpClient(`${endpoint}/${params.id}/ban`, {
+      method: 'POST',
+      body: JSON.stringify({ reason: params.reason }),
+    });
+
+    return { data: json.data };
+  },
+
+  async unbanUser(_resource: string, params: { id: string }) {
+    const endpoint = resourceToEndpoint.users;
+    if (!endpoint) {
+      return Promise.reject(new Error('User endpoint not configured'));
+    }
+
+    const { json } = await httpClient(`${endpoint}/${params.id}/unban`, {
       method: 'POST',
     });
 

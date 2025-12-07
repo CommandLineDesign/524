@@ -33,6 +33,10 @@ export class AuthService {
         name: users.name,
         phoneNumber: users.phoneNumber,
         passwordHash: users.passwordHash,
+        isBanned: users.isBanned,
+        banReason: users.banReason,
+        bannedAt: users.bannedAt,
+        tokenVersion: users.tokenVersion,
         roles: sql<
           string[]
         >`coalesce(array_agg(distinct ${userRoles.role})::text[], ARRAY[]::text[])`,
@@ -46,6 +50,16 @@ export class AuthService {
     if (!user) {
       console.warn('[AuthService] Login failed - user not found', { email });
       return null;
+    }
+
+    if (user.isBanned) {
+      const error = Object.assign(new Error('Account banned'), {
+        status: 403,
+        code: 'ACCOUNT_BANNED',
+        reason: user.banReason,
+        bannedAt: user.bannedAt,
+      });
+      throw error;
     }
 
     // Check if user has a password hash
@@ -69,6 +83,7 @@ export class AuthService {
         role: primaryRole,
         roles: user.roles ?? [],
         phone_number: user.phoneNumber,
+        token_version: user.tokenVersion ?? 1,
       },
       env.JWT_SECRET || 'dev-secret',
       { expiresIn: '24h' }
@@ -102,6 +117,10 @@ export class AuthService {
         email: users.email,
         name: users.name,
         phoneNumber: users.phoneNumber,
+        isBanned: users.isBanned,
+        banReason: users.banReason,
+        bannedAt: users.bannedAt,
+        tokenVersion: users.tokenVersion,
         roles: sql<
           string[]
         >`coalesce(array_agg(distinct ${userRoles.role})::text[], ARRAY[]::text[])`,

@@ -67,4 +67,49 @@ export class UserService {
 
     return updated;
   }
+
+  async banUser(userId: string, reason: string, adminId: string) {
+    const currentUser = await this.repository.findById(userId);
+    if (!currentUser) {
+      throw Object.assign(new Error('User not found'), { status: 404 });
+    }
+
+    const updated = await this.repository.banUser(userId, reason, adminId);
+
+    await this.auditLogRepository.create({
+      adminId,
+      entityType: 'user',
+      entityId: userId,
+      action: 'ban',
+      metadata: {
+        reason,
+        previousBanReason: currentUser.banReason,
+        previousBannedAt: currentUser.bannedAt,
+      },
+    });
+
+    return updated;
+  }
+
+  async unbanUser(userId: string, adminId: string) {
+    const currentUser = await this.repository.findById(userId);
+    if (!currentUser) {
+      throw Object.assign(new Error('User not found'), { status: 404 });
+    }
+
+    const updated = await this.repository.unbanUser(userId, adminId);
+
+    await this.auditLogRepository.create({
+      adminId,
+      entityType: 'user',
+      entityId: userId,
+      action: 'unban',
+      metadata: {
+        previousBanReason: currentUser.banReason,
+        previousBannedAt: currentUser.bannedAt,
+      },
+    });
+
+    return updated;
+  }
 }
