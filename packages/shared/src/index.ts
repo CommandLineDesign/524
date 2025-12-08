@@ -7,3 +7,5 @@ export * from './i18n.js';
 export * from './messaging.js';
 export * from './payments.js';
 export * from './dev.js';
+export * from './onboarding';
+export * from './onboardingConfig';

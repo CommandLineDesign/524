@@ -18,6 +18,7 @@ interface AuthState {
   signUpArtist: (payload: SignupPayload) => Promise<void>;
   logout: () => Promise<void>;
   loadSession: () => Promise<void>;
+  setUserOnboardingComplete: (completed: boolean) => Promise<void>;
 }
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:5240';
@@ -91,6 +92,19 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ user: null, token: null, isLoading: false });
   },
 
+  setUserOnboardingComplete: async (completed: boolean) => {
+    let nextUser: AuthUser | null = null;
+    set((state) => {
+      if (!state.user) return state;
+      nextUser = { ...state.user, onboardingCompleted: completed };
+      return { ...state, user: nextUser };
+    });
+
+    if (nextUser) {
+      await AsyncStorage.setItem('user', JSON.stringify(nextUser));
+    }
+  },
+
   loadSession: async () => {
     try {
       const token = await AsyncStorage.getItem('auth_token');
@@ -98,7 +112,11 @@ export const useAuthStore = create<AuthState>((set) => ({
 
       if (token && userStr) {
         const user = JSON.parse(userStr);
-        set({ user, token, isLoading: false });
+        set({
+          user: { ...user, onboardingCompleted: Boolean(user.onboardingCompleted) },
+          token,
+          isLoading: false,
+        });
       } else {
         set({ isLoading: false });
       }
