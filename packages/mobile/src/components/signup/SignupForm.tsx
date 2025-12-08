@@ -4,13 +4,13 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { theme } from '../../theme/colors';
+import { FormField } from './FormField';
 import { HelperStatus } from './validation';
 
 type LinkProps = {
@@ -19,62 +19,48 @@ type LinkProps = {
   disabled?: boolean;
 };
 
+type FieldConfig = {
+  value: string;
+  onChangeText: (value: string) => void;
+  onBlur?: () => void;
+  placeholder?: string;
+  helper?: string;
+  status?: HelperStatus;
+  secureTextEntry?: boolean;
+  keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad';
+  autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
+  editable?: boolean;
+};
+
 type SignupFormProps = {
   title: string;
   subtitle: string;
-  email: string;
-  onEmailChange: (value: string) => void;
-  emailError?: string;
-  emailPlaceholder?: string;
-  onEmailBlur?: () => void;
-  password: string;
-  onPasswordChange: (value: string) => void;
-  passwordHelper?: string;
-  passwordStatus?: HelperStatus;
-  onPasswordBlur?: () => void;
-  confirmPassword: string;
-  onConfirmPasswordChange: (value: string) => void;
-  confirmHelper?: string;
-  confirmStatus?: HelperStatus;
-  onConfirmBlur?: () => void;
+  fields: {
+    email: FieldConfig;
+    password: FieldConfig;
+    confirmPassword: FieldConfig;
+  };
   onSubmit: () => void;
   submitLabel: string;
   isLoading?: boolean;
-  primaryLink?: LinkProps;
-  secondaryLink?: LinkProps;
+  links?: {
+    primary?: LinkProps;
+    secondary?: LinkProps;
+  };
   children?: ReactNode;
 };
 
 export function SignupForm({
   title,
   subtitle,
-  email,
-  onEmailChange,
-  emailError,
-  emailPlaceholder = 'you@example.com',
-  onEmailBlur,
-  password,
-  onPasswordChange,
-  passwordHelper,
-  passwordStatus,
-  onPasswordBlur,
-  confirmPassword,
-  onConfirmPasswordChange,
-  confirmHelper,
-  confirmStatus,
-  onConfirmBlur,
+  fields,
   onSubmit,
   submitLabel,
   isLoading = false,
-  primaryLink,
-  secondaryLink,
+  links,
   children,
 }: SignupFormProps) {
-  const renderHelper = (message?: string, status?: HelperStatus) => {
-    if (!message) return null;
-    const style = status === 'success' ? styles.helperSuccess : styles.helperError;
-    return <Text style={style}>{message}</Text>;
-  };
+  const { email, password, confirmPassword } = fields;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -84,42 +70,31 @@ export function SignupForm({
           <Text style={styles.subtitle}>{subtitle}</Text>
 
           <View style={styles.form}>
-            <Text style={styles.label}>이메일</Text>
-            <TextInput
-              style={styles.input}
-              value={email}
-              onChangeText={onEmailChange}
-              placeholder={emailPlaceholder}
+            <FormField
+              label="이메일"
               keyboardType="email-address"
               autoCapitalize="none"
-              editable={!isLoading}
-              onBlur={onEmailBlur}
+              {...email}
+              editable={email.editable ?? !isLoading}
+              helper={email.helper}
+              status={email.status ?? (email.helper ? 'error' : '')}
             />
-            {renderHelper(emailError, emailError ? 'error' : '')}
 
-            <Text style={styles.label}>비밀번호</Text>
-            <TextInput
-              style={styles.input}
-              value={password}
-              onChangeText={onPasswordChange}
+            <FormField
+              label="비밀번호"
+              secureTextEntry
               placeholder="8자 이상, 문자+숫자 포함"
-              secureTextEntry
-              editable={!isLoading}
-              onBlur={onPasswordBlur}
+              {...password}
+              editable={password.editable ?? !isLoading}
             />
-            {renderHelper(passwordHelper, passwordStatus)}
 
-            <Text style={styles.label}>비밀번호 확인</Text>
-            <TextInput
-              style={styles.input}
-              value={confirmPassword}
-              onChangeText={onConfirmPasswordChange}
-              placeholder="비밀번호를 다시 입력"
+            <FormField
+              label="비밀번호 확인"
               secureTextEntry
-              editable={!isLoading}
-              onBlur={onConfirmBlur}
+              placeholder="비밀번호를 다시 입력"
+              {...confirmPassword}
+              editable={confirmPassword.editable ?? !isLoading}
             />
-            {renderHelper(confirmHelper, confirmStatus)}
 
             {children}
 
@@ -135,23 +110,23 @@ export function SignupForm({
               )}
             </TouchableOpacity>
 
-            {primaryLink ? (
+            {links?.primary ? (
               <TouchableOpacity
                 style={styles.linkButton}
-                onPress={primaryLink.onPress}
-                disabled={isLoading || primaryLink.disabled}
+                onPress={links.primary.onPress}
+                disabled={isLoading || links.primary.disabled}
               >
-                <Text style={styles.linkText}>{primaryLink.label}</Text>
+                <Text style={styles.linkText}>{links.primary.label}</Text>
               </TouchableOpacity>
             ) : null}
 
-            {secondaryLink ? (
+            {links?.secondary ? (
               <TouchableOpacity
                 style={styles.linkButton}
-                onPress={secondaryLink.onPress}
-                disabled={isLoading || secondaryLink.disabled}
+                onPress={links.secondary.onPress}
+                disabled={isLoading || links.secondary.disabled}
               >
-                <Text style={styles.linkText}>{secondaryLink.label}</Text>
+                <Text style={styles.linkText}>{links.secondary.label}</Text>
               </TouchableOpacity>
             ) : null}
           </View>
@@ -187,22 +162,6 @@ const styles = StyleSheet.create({
   },
   form: {
     marginBottom: theme.spacing.xl,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: theme.colors.text,
-    marginBottom: theme.spacing.xs,
-  },
-  input: {
-    height: 50,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: 8,
-    paddingHorizontal: theme.spacing.md,
-    marginBottom: theme.spacing.md,
-    fontSize: 16,
-    backgroundColor: '#fff',
   },
   button: {
     height: 50,

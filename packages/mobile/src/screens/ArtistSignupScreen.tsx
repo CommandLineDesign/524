@@ -85,31 +85,42 @@ export function ArtistSignupScreen() {
     <SignupForm
       title="아티스트 가입"
       subtitle="계정을 만들고 심사 대기 상태로 시작합니다."
-      email={email}
-      onEmailChange={setEmail}
-      emailError={emailError}
-      emailPlaceholder="artist@example.com"
-      onEmailBlur={() => setEmailTouched(true)}
-      password={password}
-      onPasswordChange={setPassword}
-      passwordHelper={passwordInfo.message}
-      passwordStatus={passwordInfo.status}
-      onPasswordBlur={() => setPasswordTouched(true)}
-      confirmPassword={confirmPassword}
-      onConfirmPasswordChange={setConfirmPassword}
-      confirmHelper={confirmInfo.message}
-      confirmStatus={confirmInfo.status}
-      onConfirmBlur={() => setConfirmTouched(true)}
+      fields={{
+        email: {
+          value: email,
+          onChangeText: setEmail,
+          onBlur: () => setEmailTouched(true),
+          helper: emailError,
+          placeholder: 'artist@example.com',
+          status: emailError ? 'error' : '',
+        },
+        password: {
+          value: password,
+          onChangeText: setPassword,
+          onBlur: () => setPasswordTouched(true),
+          helper: passwordInfo.message,
+          status: passwordInfo.status,
+        },
+        confirmPassword: {
+          value: confirmPassword,
+          onChangeText: setConfirmPassword,
+          onBlur: () => setConfirmTouched(true),
+          helper: confirmInfo.message,
+          status: confirmInfo.status,
+        },
+      }}
       onSubmit={handleSubmit}
       submitLabel="아티스트로 가입하기"
       isLoading={isLoading}
-      primaryLink={{
-        label: '고객으로 가입하기',
-        onPress: () => navigation.navigate('Signup'),
-      }}
-      secondaryLink={{
-        label: '이미 계정이 있으신가요? 로그인',
-        onPress: () => navigation.navigate('Login'),
+      links={{
+        primary: {
+          label: '고객으로 가입하기',
+          onPress: () => navigation.navigate('Signup'),
+        },
+        secondary: {
+          label: '이미 계정이 있으신가요? 로그인',
+          onPress: () => navigation.navigate('Login'),
+        },
       }}
     />
   );

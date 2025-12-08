@@ -77,30 +77,42 @@ export function SignupScreen() {
     <SignupForm
       title="회원가입"
       subtitle="이메일로 고객 계정을 만들어주세요."
-      email={email}
-      onEmailChange={setEmail}
-      emailError={emailError}
-      onEmailBlur={() => setEmailTouched(true)}
-      password={password}
-      onPasswordChange={setPassword}
-      passwordHelper={passwordInfo.message}
-      passwordStatus={passwordInfo.status}
-      onPasswordBlur={() => setPasswordTouched(true)}
-      confirmPassword={confirmPassword}
-      onConfirmPasswordChange={setConfirmPassword}
-      confirmHelper={confirmInfo.message}
-      confirmStatus={confirmInfo.status}
-      onConfirmBlur={() => setConfirmTouched(true)}
+      fields={{
+        email: {
+          value: email,
+          onChangeText: setEmail,
+          onBlur: () => setEmailTouched(true),
+          helper: emailError,
+          placeholder: 'you@example.com',
+          status: emailError ? 'error' : '',
+        },
+        password: {
+          value: password,
+          onChangeText: setPassword,
+          onBlur: () => setPasswordTouched(true),
+          helper: passwordInfo.message,
+          status: passwordInfo.status,
+        },
+        confirmPassword: {
+          value: confirmPassword,
+          onChangeText: setConfirmPassword,
+          onBlur: () => setConfirmTouched(true),
+          helper: confirmInfo.message,
+          status: confirmInfo.status,
+        },
+      }}
       onSubmit={handleSubmit}
       submitLabel="가입하기"
       isLoading={isLoading}
-      primaryLink={{
-        label: '아티스트로 가입하기',
-        onPress: () => navigation.navigate('ArtistSignup'),
-      }}
-      secondaryLink={{
-        label: '이미 계정이 있으신가요? 로그인',
-        onPress: () => navigation.navigate('Login'),
+      links={{
+        primary: {
+          label: '아티스트로 가입하기',
+          onPress: () => navigation.navigate('ArtistSignup'),
+        },
+        secondary: {
+          label: '이미 계정이 있으신가요? 로그인',
+          onPress: () => navigation.navigate('Login'),
+        },
       }}
     />
   );
