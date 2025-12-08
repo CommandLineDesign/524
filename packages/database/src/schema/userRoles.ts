@@ -1,6 +1,6 @@
 import { pgEnum, pgTable, primaryKey, timestamp, uuid } from 'drizzle-orm/pg-core';
 
-import { users } from './users';
+import { users } from './users.js';
 
 export const userRoleType = pgEnum('user_role_type', ['customer', 'artist', 'admin', 'support']);
 

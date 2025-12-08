@@ -33,7 +33,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export function AppNavigator() {
   const { user, isLoading, loadSession } = useAuthStore();
-  const { data: onboarding, isLoading: onboardingLoading } = useOnboardingState(Boolean(user));
+  const { data: onboarding, isLoading: onboardingLoading } = useOnboardingState(user?.id);
 
   useEffect(() => {
     loadSession();

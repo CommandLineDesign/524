@@ -11,7 +11,7 @@ import {
   varchar,
 } from 'drizzle-orm/pg-core';
 
-import { users } from './users';
+import { users } from './users.js';
 
 export const artistVerificationStatus = pgEnum('artist_verification_status', [
   'pending_review',
