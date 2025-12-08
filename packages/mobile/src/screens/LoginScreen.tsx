@@ -1,4 +1,4 @@
-import { useNavigation } from '@react-navigation/native';
+import { NavigationProp, useNavigation } from '@react-navigation/native';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
@@ -11,6 +11,8 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { RootStackParamList } from '../navigation/AppNavigator';
 import { useAuthStore } from '../store/authStore';
 import { theme } from '../theme/colors';
 
@@ -29,7 +31,7 @@ const TEST_ACCOUNTS = [
 const TEST_PASSWORD = 'password@1234';
 
 export function LoginScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const login = useAuthStore((state) => state.login);
   const [email, setEmail] = useState('demo-customer@524.app');
   const [password, setPassword] = useState(TEST_PASSWORD);
@@ -100,6 +102,23 @@ export function LoginScreen() {
                 <Text style={styles.buttonText}>로그인</Text>
               )}
             </TouchableOpacity>
+
+            <View style={styles.linksRow}>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('Signup')}
+                disabled={isLoading}
+                style={styles.linkButton}
+              >
+                <Text style={styles.linkText}>회원가입</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('ArtistSignup')}
+                disabled={isLoading}
+                style={styles.linkButton}
+              >
+                <Text style={styles.linkText}>아티스트 가입</Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
           <View style={styles.testUsers}>
@@ -187,6 +206,19 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#fff',
     fontSize: 16,
+    fontWeight: '600',
+  },
+  linksRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: theme.spacing.sm,
+  },
+  linkButton: {
+    paddingVertical: theme.spacing.xs,
+  },
+  linkText: {
+    color: theme.colors.primary,
+    fontSize: 14,
     fontWeight: '600',
   },
   testUsers: {

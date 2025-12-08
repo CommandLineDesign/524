@@ -2,7 +2,7 @@ import * as bcrypt from 'bcryptjs';
 import { eq, sql } from 'drizzle-orm';
 import jwt from 'jsonwebtoken';
 
-import { userRoles, users } from '@524/database';
+import { artistProfiles, userRoles, users } from '@524/database';
 import { env } from '../config/env.js';
 import { db } from '../db/client.js';
 
@@ -22,9 +22,120 @@ export interface LoginResponse {
 
 export class AuthService {
   /**
+   * Register a user with email + password
+   */
+  async registerWithEmail(params: {
+    email: string;
+    password: string;
+    role: 'customer' | 'artist';
+    name?: string;
+    phoneNumber?: string | null;
+  }): Promise<LoginResponse> {
+    const email = params.email.trim().toLowerCase();
+    const password = params.password;
+    const role = params.role;
+
+    if (!this.isValidEmail(email)) {
+      throw Object.assign(new Error('Invalid email'), { status: 400 });
+    }
+
+    if (!this.isValidPassword(password)) {
+      throw Object.assign(
+        new Error('Password must be at least 8 characters and include a letter and number'),
+        {
+          status: 400,
+        }
+      );
+    }
+
+    // Ensure email is unique
+    const [existing] = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.email, email))
+      .limit(1);
+    if (existing) {
+      throw Object.assign(new Error('Email already in use'), { status: 409 });
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+    const name = params.name?.trim() || email.split('@')[0] || 'New user';
+
+    const newUser: Partial<typeof users.$inferInsert> = {
+      email,
+      passwordHash,
+      name,
+      role,
+      phoneVerified: false,
+      isActive: true,
+      isVerified: false,
+    };
+
+    if (params.phoneNumber?.trim()) {
+      newUser.phoneNumber = params.phoneNumber.trim();
+    }
+
+    const createdUserId = await db.transaction(async (tx) => {
+      const [createdUser] = await tx
+        .insert(users)
+        .values(newUser as typeof users.$inferInsert)
+        .returning({
+          id: users.id,
+        });
+
+      if (!createdUser) {
+        throw Object.assign(new Error('Failed to create user'), { status: 500 });
+      }
+
+      await tx
+        .insert(userRoles)
+        .values({
+          userId: createdUser.id,
+          role,
+        })
+        .onConflictDoNothing();
+
+      if (role === 'artist') {
+        const safeStageName = name || 'New Artist';
+        await tx.insert(artistProfiles).values({
+          userId: createdUser.id,
+          stageName: safeStageName,
+          yearsExperience: 0,
+          serviceRadiusKm: '0',
+          primaryLocation: {
+            latitude: 0,
+            longitude: 0,
+          },
+          verificationStatus: 'pending_review',
+          isAcceptingBookings: false,
+        });
+      }
+
+      return createdUser.id;
+    });
+
+    // Reuse login flow to issue token
+    const loginResult = await this.loginWithEmail(email, password);
+    if (!loginResult) {
+      throw Object.assign(new Error('Login failed after signup'), { status: 500 });
+    }
+    return loginResult;
+  }
+
+  private isValidEmail(email: string) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+  }
+
+  private isValidPassword(password: string) {
+    return password.length >= 8 && /[A-Za-z]/.test(password) && /\d/.test(password);
+  }
+
+  /**
    * Login with email and password
    */
   async loginWithEmail(email: string, password: string): Promise<LoginResponse | null> {
+    const normalizedEmail = email.trim().toLowerCase();
+
     // Find user by email with roles
     const [user] = await db
       .select({
@@ -43,12 +154,12 @@ export class AuthService {
       })
       .from(users)
       .leftJoin(userRoles, eq(users.id, userRoles.userId))
-      .where(eq(users.email, email))
+      .where(eq(users.email, normalizedEmail))
       .groupBy(users.id)
       .limit(1);
 
     if (!user) {
-      console.warn('[AuthService] Login failed - user not found', { email });
+      console.warn('[AuthService] Login failed - user not found', { email: normalizedEmail });
       return null;
     }
 
@@ -70,7 +181,7 @@ export class AuthService {
     // Verify password
     const isValid = await bcrypt.compare(password, user.passwordHash);
     if (!isValid) {
-      console.warn('[AuthService] Login failed - invalid password', { email });
+      console.warn('[AuthService] Login failed - invalid password', { email: normalizedEmail });
       return null;
     }
 
@@ -82,7 +193,7 @@ export class AuthService {
         user_id: user.id,
         role: primaryRole,
         roles: user.roles ?? [],
-        phone_number: user.phoneNumber,
+        phone_number: user.phoneNumber ?? '',
         token_version: user.tokenVersion ?? 1,
       },
       env.JWT_SECRET || 'dev-secret',
@@ -101,7 +212,7 @@ export class AuthService {
         name: user.name,
         roles: user.roles ?? [],
         primaryRole,
-        phoneNumber: user.phoneNumber,
+        phoneNumber: user.phoneNumber ?? '',
       },
       token,
     };

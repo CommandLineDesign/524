@@ -3,15 +3,19 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React, { useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 
+import { ArtistSignupScreen } from '../screens/ArtistSignupScreen';
 import { BookingSummaryScreen } from '../screens/BookingSummaryScreen';
 import { LoginScreen } from '../screens/LoginScreen';
 import { OccasionSelectionScreen } from '../screens/OccasionSelectionScreen';
 import { ServiceSelectionScreen } from '../screens/ServiceSelectionScreen';
+import { SignupScreen } from '../screens/SignupScreen';
 import { WelcomeScreen } from '../screens/WelcomeScreen';
 import { useAuthStore } from '../store/authStore';
 
 export type RootStackParamList = {
   Login: undefined;
+  Signup: undefined;
+  ArtistSignup: undefined;
   Welcome: undefined;
   ServiceSelection: undefined;
   OccasionSelection: undefined;
@@ -41,7 +45,15 @@ export function AppNavigator() {
     <NavigationContainer>
       <Stack.Navigator initialRouteName={user ? 'Welcome' : 'Login'}>
         {!user ? (
-          <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
+          <>
+            <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="Signup" component={SignupScreen} options={{ headerShown: false }} />
+            <Stack.Screen
+              name="ArtistSignup"
+              component={ArtistSignupScreen}
+              options={{ headerShown: false }}
+            />
+          </>
         ) : (
           <>
             <Stack.Screen
