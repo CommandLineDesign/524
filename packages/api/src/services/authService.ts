@@ -75,42 +75,44 @@ export class AuthService {
       newUser.phoneNumber = params.phoneNumber.trim();
     }
 
-    const [createdUser] = await db
-      .insert(users)
-      .values(newUser as typeof users.$inferInsert)
-      .returning({
-        id: users.id,
-      });
+    const createdUserId = await db.transaction(async (tx) => {
+      const [createdUser] = await tx
+        .insert(users)
+        .values(newUser as typeof users.$inferInsert)
+        .returning({
+          id: users.id,
+        });
 
-    if (!createdUser) {
-      throw Object.assign(new Error('Failed to create user'), { status: 500 });
-    }
+      if (!createdUser) {
+        throw Object.assign(new Error('Failed to create user'), { status: 500 });
+      }
 
-    // Assign role in user_roles
-    await db
-      .insert(userRoles)
-      .values({
-        userId: createdUser.id,
-        role,
-      })
-      .onConflictDoNothing();
+      await tx
+        .insert(userRoles)
+        .values({
+          userId: createdUser.id,
+          role,
+        })
+        .onConflictDoNothing();
 
-    // For artist signups, create a minimal pending profile
-    if (role === 'artist') {
-      const safeStageName = name || 'New Artist';
-      await db.insert(artistProfiles).values({
-        userId: createdUser.id,
-        stageName: safeStageName,
-        yearsExperience: 0,
-        serviceRadiusKm: '0',
-        primaryLocation: {
-          latitude: 0,
-          longitude: 0,
-        },
-        verificationStatus: 'pending_review',
-        isAcceptingBookings: false,
-      });
-    }
+      if (role === 'artist') {
+        const safeStageName = name || 'New Artist';
+        await tx.insert(artistProfiles).values({
+          userId: createdUser.id,
+          stageName: safeStageName,
+          yearsExperience: 0,
+          serviceRadiusKm: '0',
+          primaryLocation: {
+            latitude: 0,
+            longitude: 0,
+          },
+          verificationStatus: 'pending_review',
+          isAcceptingBookings: false,
+        });
+      }
+
+      return createdUser.id;
+    });
 
     // Reuse login flow to issue token
     const loginResult = await this.loginWithEmail(email, password);

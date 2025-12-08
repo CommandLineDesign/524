@@ -147,7 +147,7 @@ router.get('/me', requireAuth(), async (req: AuthRequest, res) => {
       name: user.name,
       roles: user.roles ?? [],
       primaryRole: user.roles?.[0] ?? 'customer',
-      phoneNumber: user.phoneNumber,
+      phoneNumber: user.phoneNumber ?? '',
     });
   } catch (error) {
     console.error('Get user error:', error);
