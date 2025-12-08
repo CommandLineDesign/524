@@ -9,6 +9,8 @@ import { BookingSummaryScreen } from '../screens/BookingSummaryScreen';
 import { LoginScreen } from '../screens/LoginScreen';
 import { OccasionSelectionScreen } from '../screens/OccasionSelectionScreen';
 import { OnboardingFlowScreen } from '../screens/OnboardingFlowScreen';
+import { OnboardingLookalikeScreen } from '../screens/OnboardingLookalikeScreen';
+import { OnboardingServicesScreen } from '../screens/OnboardingServicesScreen';
 import { ServiceSelectionScreen } from '../screens/ServiceSelectionScreen';
 import { SignupScreen } from '../screens/SignupScreen';
 import { WelcomeScreen } from '../screens/WelcomeScreen';
@@ -23,6 +25,8 @@ export type RootStackParamList = {
   OccasionSelection: undefined;
   BookingSummary: undefined;
   OnboardingFlow: undefined;
+  OnboardingLookalike: undefined;
+  OnboardingServices: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -66,11 +70,23 @@ export function AppNavigator() {
         ) : (
           <>
             {shouldShowOnboarding ? (
-              <Stack.Screen
-                name="OnboardingFlow"
-                component={OnboardingFlowScreen}
-                options={{ headerShown: false }}
-              />
+              <>
+                <Stack.Screen
+                  name="OnboardingFlow"
+                  component={OnboardingFlowScreen}
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="OnboardingLookalike"
+                  component={OnboardingLookalikeScreen}
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="OnboardingServices"
+                  component={OnboardingServicesScreen}
+                  options={{ headerShown: false }}
+                />
+              </>
             ) : (
               <>
                 <Stack.Screen
