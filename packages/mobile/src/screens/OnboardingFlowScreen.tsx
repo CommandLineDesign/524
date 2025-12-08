@@ -361,9 +361,11 @@ const STEP_RENDERERS: Record<OnboardingStepKey, React.FC<StepRendererProps>> = {
 export function OnboardingFlowScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { user, loadSession } = useAuthStore();
-  const { data, isLoading, refetch } = useOnboardingState(Boolean(user));
-  const { mutateAsync: saveResponse, isPending: saving } = useSaveOnboardingResponse();
-  const { mutateAsync: completeOnboarding, isPending: completing } = useCompleteOnboarding();
+  const { data, isLoading, refetch } = useOnboardingState(user?.id);
+  const { mutateAsync: saveResponse, isPending: saving } = useSaveOnboardingResponse(user?.id);
+  const { mutateAsync: completeOnboarding, isPending: completing } = useCompleteOnboarding(
+    user?.id
+  );
   const { setUserOnboardingComplete } = useAuthStore();
 
   const steps = data?.steps ?? [];
