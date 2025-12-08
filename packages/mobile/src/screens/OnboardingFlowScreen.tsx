@@ -84,8 +84,9 @@ function KpopLookalikeStep({
   submitting,
 }: StepRendererProps) {
   const screenWidth = Dimensions.get('window').width;
-  const cardWidth = Math.min(320, screenWidth * 0.85);
-  const itemSpacing = 20;
+  // Keep the card fully visible within common device widths and layout padding
+  const cardWidth = Math.min(320, screenWidth - 32);
+  const itemSpacing = 0; // hide neighboring cards; spacing handled inside card padding
   const interval = cardWidth + itemSpacing;
 
   const initialSelectionId =
@@ -115,11 +116,12 @@ function KpopLookalikeStep({
     loopIndexRef.current = loopIndex;
   }, [loopIndex]);
 
-  const animatedValue = useRef(new Animated.Value(0)).current;
-  const isAnimating = useRef(false);
+  // Calculate offset to center the current card; container width is cardWidth
+  const centerOffset = (cardWidth - interval) / 2;
+  const initialTranslate = -(initialIndex + 1) * interval + centerOffset;
 
-  // Calculate offset to center the current card
-  const centerOffset = (screenWidth - cardWidth) / 2;
+  const animatedValue = useRef(new Animated.Value(initialTranslate)).current;
+  const isAnimating = useRef(false);
 
   // Get the actual data index from loop index
   const getActualIndex = (index: number) => {
@@ -129,11 +131,6 @@ function KpopLookalikeStep({
   };
 
   const currentIndex = getActualIndex(loopIndex);
-
-  // Initialize position on mount (only once)
-  useEffect(() => {
-    animatedValue.setValue(-loopIndex * interval + centerOffset);
-  }, [animatedValue, loopIndex, interval, centerOffset]);
 
   const handleContinue = async () => {
     const selectedStar = KPOP_STARS[currentIndex];
@@ -245,10 +242,11 @@ function KpopLookalikeStep({
       <View
         {...panResponder.panHandlers}
         style={{
-          width: screenWidth,
+          width: cardWidth,
           height: 450,
           justifyContent: 'center',
           overflow: 'hidden',
+          alignSelf: 'center',
         }}
       >
         <Animated.View
