@@ -149,7 +149,7 @@ export function requireAuth(allowedRoles?: ('customer' | 'artist' | 'admin' | 's
           name: user.name,
           roles,
           primaryRole: selectPrimaryRole(roles),
-          phoneNumber: user.phoneNumber,
+          phoneNumber: user.phoneNumber ?? '',
         };
       }
 

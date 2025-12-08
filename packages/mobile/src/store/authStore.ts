@@ -1,19 +1,21 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 
-interface User {
-  id: string;
-  email: string;
-  name: string;
-  role: string;
-  phoneNumber: string;
-}
+import {
+  type AuthResponse,
+  type AuthUser,
+  type SignupPayload,
+  signUpArtist,
+  signUpUser,
+} from '../api/client';
 
 interface AuthState {
-  user: User | null;
+  user: AuthUser | null;
   token: string | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
+  signUpUser: (payload: SignupPayload) => Promise<void>;
+  signUpArtist: (payload: SignupPayload) => Promise<void>;
   logout: () => Promise<void>;
   loadSession: () => Promise<void>;
 }
@@ -40,23 +42,53 @@ export const useAuthStore = create<AuthState>((set) => ({
         throw new Error(error.error || 'Login failed');
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as AuthResponse;
 
       // Save to async storage
       await AsyncStorage.setItem('auth_token', data.token);
       await AsyncStorage.setItem('user', JSON.stringify(data.user));
 
-      set({ user: data.user, token: data.token });
+      set({ user: data.user, token: data.token, isLoading: false });
     } catch (error) {
       console.error('Login error:', error);
       throw error;
+    } finally {
+      set((state) => ({ ...state, isLoading: false }));
+    }
+  },
+
+  signUpUser: async (payload: SignupPayload) => {
+    try {
+      const data = await signUpUser(payload);
+      await AsyncStorage.setItem('auth_token', data.token);
+      await AsyncStorage.setItem('user', JSON.stringify(data.user));
+      set({ user: data.user, token: data.token, isLoading: false });
+    } catch (error) {
+      console.error('Signup user error:', error);
+      throw error;
+    } finally {
+      set((state) => ({ ...state, isLoading: false }));
+    }
+  },
+
+  signUpArtist: async (payload: SignupPayload) => {
+    try {
+      const data = await signUpArtist(payload);
+      await AsyncStorage.setItem('auth_token', data.token);
+      await AsyncStorage.setItem('user', JSON.stringify(data.user));
+      set({ user: data.user, token: data.token, isLoading: false });
+    } catch (error) {
+      console.error('Signup artist error:', error);
+      throw error;
+    } finally {
+      set((state) => ({ ...state, isLoading: false }));
     }
   },
 
   logout: async () => {
     await AsyncStorage.removeItem('auth_token');
     await AsyncStorage.removeItem('user');
-    set({ user: null, token: null });
+    set({ user: null, token: null, isLoading: false });
   },
 
   loadSession: async () => {

@@ -18,7 +18,7 @@ export const users = pgTable(
     kakaoId: varchar('kakao_id', { length: 128 }).unique(),
     naverId: varchar('naver_id', { length: 128 }).unique(),
     appleId: varchar('apple_id', { length: 128 }).unique(),
-    phoneNumber: varchar('phone_number', { length: 20 }).notNull().unique(),
+    phoneNumber: varchar('phone_number', { length: 20 }).unique(),
     phoneVerified: boolean('phone_verified').default(false),
     email: varchar('email', { length: 255 }).unique(),
     passwordHash: varchar('password_hash', { length: 255 }), // For dev/testing with email/password

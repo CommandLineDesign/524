@@ -60,6 +60,72 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// User signup (customer)
+router.post('/signup/user', async (req, res) => {
+  try {
+    const { email, password, confirmPassword, name } = req.body;
+
+    if (!email || !password || !confirmPassword) {
+      return res.status(400).json({ error: 'Email, password, and confirmPassword are required' });
+    }
+    if (password !== confirmPassword) {
+      return res.status(400).json({ error: 'Passwords do not match' });
+    }
+
+    const result = await authService.registerWithEmail({
+      email,
+      password,
+      role: 'customer',
+      name,
+    });
+
+    return res.status(201).json(result);
+  } catch (error) {
+    console.error('Signup/user error:', error);
+    const status =
+      typeof (error as { status?: number }).status === 'number'
+        ? (error as { status: number }).status
+        : 500;
+    return res.status(status).json({
+      error: 'Signup failed',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+// Artist signup
+router.post('/signup/artist', async (req, res) => {
+  try {
+    const { email, password, confirmPassword, name } = req.body;
+
+    if (!email || !password || !confirmPassword) {
+      return res.status(400).json({ error: 'Email, password, and confirmPassword are required' });
+    }
+    if (password !== confirmPassword) {
+      return res.status(400).json({ error: 'Passwords do not match' });
+    }
+
+    const result = await authService.registerWithEmail({
+      email,
+      password,
+      role: 'artist',
+      name,
+    });
+
+    return res.status(201).json(result);
+  } catch (error) {
+    console.error('Signup/artist error:', error);
+    const status =
+      typeof (error as { status?: number }).status === 'number'
+        ? (error as { status: number }).status
+        : 500;
+    return res.status(status).json({
+      error: 'Signup failed',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
 // Get current user (works with email/password or mock auth)
 router.get('/me', requireAuth(), async (req: AuthRequest, res) => {
   try {
@@ -81,7 +147,7 @@ router.get('/me', requireAuth(), async (req: AuthRequest, res) => {
       name: user.name,
       roles: user.roles ?? [],
       primaryRole: user.roles?.[0] ?? 'customer',
-      phoneNumber: user.phoneNumber,
+      phoneNumber: user.phoneNumber ?? '',
     });
   } catch (error) {
     console.error('Get user error:', error);

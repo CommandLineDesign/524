@@ -44,7 +44,12 @@ npm run seed
 **File:** `packages/api/src/routes/v1/auth.ts`
 - Added `POST /api/v1/auth/login` endpoint for email/password login
 - Added `GET /api/v1/auth/me` endpoint to get current user info
+- Added `POST /api/v1/auth/signup/user` endpoint for customer signup (email/password/confirmPassword)
+- Added `POST /api/v1/auth/signup/artist` endpoint for artist signup (creates artist role only and a pending artist profile)
 - Works alongside existing mock auth endpoints
+
+**Notes**
+- Phone numbers are optional for signup; we no longer generate placeholder phone values. Future phone verification can supply this field when ready.
 
 **Login Request:**
 ```json
