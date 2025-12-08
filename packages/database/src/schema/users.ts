@@ -38,6 +38,7 @@ export const users = pgTable(
     bannedBy: uuid('banned_by'),
     tokenVersion: integer('token_version').default(1),
     sessionVersion: integer('session_version').default(1),
+    onboardingCompleted: boolean('onboarding_completed').notNull().default(false),
     deactivatedAt: timestamp('deactivated_at'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),

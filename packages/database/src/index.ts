@@ -9,3 +9,4 @@ export * from './schema/payments.js';
 export * from './schema/reviews.js';
 export * from './schema/userRoles.js';
 export * from './schema/users.js';
+export * from './schema/onboardingResponses.js';

@@ -16,6 +16,7 @@ export interface LoginResponse {
     roles: string[];
     primaryRole: string;
     phoneNumber: string;
+    onboardingCompleted: boolean;
   };
   token: string;
 }
@@ -144,6 +145,7 @@ export class AuthService {
         name: users.name,
         phoneNumber: users.phoneNumber,
         passwordHash: users.passwordHash,
+        onboardingCompleted: users.onboardingCompleted,
         isBanned: users.isBanned,
         banReason: users.banReason,
         bannedAt: users.bannedAt,
@@ -213,6 +215,7 @@ export class AuthService {
         roles: user.roles ?? [],
         primaryRole,
         phoneNumber: user.phoneNumber ?? '',
+        onboardingCompleted: Boolean(user.onboardingCompleted),
       },
       token,
     };

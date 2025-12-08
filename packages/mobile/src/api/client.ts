@@ -1,4 +1,9 @@
-import type { ArtistSearchResult, CreateBookingPayload } from '@524/shared';
+import type {
+  ArtistSearchResult,
+  CreateBookingPayload,
+  OnboardingResponseInput,
+  OnboardingState,
+} from '@524/shared';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:5240';
@@ -39,6 +44,7 @@ export interface AuthUser {
   roles: string[];
   primaryRole: string;
   phoneNumber: string;
+  onboardingCompleted: boolean;
 }
 
 export interface AuthResponse {
@@ -64,6 +70,28 @@ export async function signUpArtist(payload: SignupPayload): Promise<AuthResponse
   return request<AuthResponse>('/api/v1/auth/signup/artist', {
     method: 'POST',
     body: JSON.stringify(payload),
+  });
+}
+
+export async function getOnboardingState(): Promise<OnboardingState> {
+  return request<OnboardingState>('/api/v1/onboarding/state', {
+    method: 'GET',
+  });
+}
+
+export async function submitOnboardingResponse(
+  payload: OnboardingResponseInput
+): Promise<OnboardingState> {
+  return request<OnboardingState>('/api/v1/onboarding/responses', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function completeOnboarding(): Promise<OnboardingState> {
+  return request<OnboardingState>('/api/v1/onboarding/complete', {
+    method: 'POST',
+    body: JSON.stringify({}),
   });
 }
 
