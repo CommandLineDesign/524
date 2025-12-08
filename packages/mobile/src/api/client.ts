@@ -25,13 +25,6 @@ async function request<T>(path: string, options: RequestInit): Promise<T> {
   return (await response.json()) as T;
 }
 
-export async function createBooking(payload: CreateBookingPayload) {
-  return request('/api/v1/bookings', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  });
-}
-
 export interface SignupPayload {
   email: string;
   password: string;
@@ -39,15 +32,36 @@ export interface SignupPayload {
   name?: string;
 }
 
-export async function signUpUser(payload: SignupPayload) {
-  return request('/api/v1/auth/signup/user', {
+export interface AuthUser {
+  id: string;
+  email: string;
+  name: string;
+  roles: string[];
+  primaryRole: string;
+  phoneNumber: string;
+}
+
+export interface AuthResponse {
+  user: AuthUser;
+  token: string;
+}
+
+export async function createBooking(payload: CreateBookingPayload) {
+  return request('/api/v1/bookings', {
     method: 'POST',
     body: JSON.stringify(payload),
   });
 }
 
-export async function signUpArtist(payload: SignupPayload) {
-  return request('/api/v1/auth/signup/artist', {
+export async function signUpUser(payload: SignupPayload): Promise<AuthResponse> {
+  return request<AuthResponse>('/api/v1/auth/signup/user', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function signUpArtist(payload: SignupPayload): Promise<AuthResponse> {
+  return request<AuthResponse>('/api/v1/auth/signup/artist', {
     method: 'POST',
     body: JSON.stringify(payload),
   });

@@ -17,7 +17,7 @@ export interface UserListItem {
   id: string;
   name: string;
   email: string | null;
-  phoneNumber: string;
+  phoneNumber: string | null;
   phoneVerified: boolean;
   roles: string[];
   isActive: boolean;
@@ -36,7 +36,7 @@ function mapRowToUserListItem(row: {
   id: string;
   name: string;
   email: string | null;
-  phoneNumber: string;
+  phoneNumber: string | null;
   phoneVerified: boolean | null;
   roles: string[] | null;
   isActive: boolean | null;
@@ -54,7 +54,7 @@ function mapRowToUserListItem(row: {
     id: row.id,
     name: row.name,
     email: row.email ?? null,
-    phoneNumber: row.phoneNumber,
+    phoneNumber: row.phoneNumber ?? null,
     phoneVerified: row.phoneVerified ?? false,
     roles: row.roles ?? [],
     isActive: row.isActive ?? true,
