@@ -1,6 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 
+import { type SignupPayload, signUpArtist, signUpUser } from '../api/client';
+
 interface User {
   id: string;
   email: string;
@@ -14,6 +16,8 @@ interface AuthState {
   token: string | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
+  signUpUser: (payload: SignupPayload) => Promise<void>;
+  signUpArtist: (payload: SignupPayload) => Promise<void>;
   logout: () => Promise<void>;
   loadSession: () => Promise<void>;
 }
@@ -51,6 +55,20 @@ export const useAuthStore = create<AuthState>((set) => ({
       console.error('Login error:', error);
       throw error;
     }
+  },
+
+  signUpUser: async (payload: SignupPayload) => {
+    const data = await signUpUser(payload);
+    await AsyncStorage.setItem('auth_token', data.token);
+    await AsyncStorage.setItem('user', JSON.stringify(data.user));
+    set({ user: data.user, token: data.token });
+  },
+
+  signUpArtist: async (payload: SignupPayload) => {
+    const data = await signUpArtist(payload);
+    await AsyncStorage.setItem('auth_token', data.token);
+    await AsyncStorage.setItem('user', JSON.stringify(data.user));
+    set({ user: data.user, token: data.token });
   },
 
   logout: async () => {

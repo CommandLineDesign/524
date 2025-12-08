@@ -32,6 +32,27 @@ export async function createBooking(payload: CreateBookingPayload) {
   });
 }
 
+export interface SignupPayload {
+  email: string;
+  password: string;
+  confirmPassword: string;
+  name?: string;
+}
+
+export async function signUpUser(payload: SignupPayload) {
+  return request('/api/v1/auth/signup/user', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function signUpArtist(payload: SignupPayload) {
+  return request('/api/v1/auth/signup/artist', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
 export interface ArtistSearchParams {
   query?: string;
   occasion?: string;
