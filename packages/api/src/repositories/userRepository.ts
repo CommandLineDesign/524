@@ -17,7 +17,7 @@ export interface UserListItem {
   id: string;
   name: string;
   email: string | null;
-  phoneNumber: string | null;
+  phoneNumber: string;
   phoneVerified: boolean;
   roles: string[];
   isActive: boolean;
@@ -54,7 +54,7 @@ function mapRowToUserListItem(row: {
     id: row.id,
     name: row.name,
     email: row.email ?? null,
-    phoneNumber: row.phoneNumber ?? null,
+    phoneNumber: row.phoneNumber ?? '',
     phoneVerified: row.phoneVerified ?? false,
     roles: row.roles ?? [],
     isActive: row.isActive ?? true,
@@ -133,8 +133,8 @@ export class UserRepository {
       const searchTerm = `%${query.search}%`;
       const searchCondition = or(
         ilike(users.name, searchTerm),
-        ilike(users.email ?? sql`''`, searchTerm),
-        ilike(users.phoneNumber, searchTerm)
+        ilike(sql`coalesce(${users.email}, '')`, searchTerm),
+        ilike(sql`coalesce(${users.phoneNumber}, '')`, searchTerm)
       );
 
       if (searchCondition) {

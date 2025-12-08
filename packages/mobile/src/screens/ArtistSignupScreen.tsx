@@ -1,5 +1,5 @@
 import { NavigationProp, useNavigation } from '@react-navigation/native';
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -32,6 +32,14 @@ export function ArtistSignupScreen() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const isMountedRef = useRef(true);
+
+  useEffect(
+    () => () => {
+      isMountedRef.current = false;
+    },
+    []
+  );
 
   const handleSubmit = async () => {
     if (!isValidEmail(email)) {
@@ -50,13 +58,20 @@ export function ArtistSignupScreen() {
     try {
       setIsLoading(true);
       await signUpArtist({ email: email.trim(), password, confirmPassword });
+      // Ensure we land on the authenticated stack explicitly after signup
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Welcome' }],
+      });
     } catch (error) {
       Alert.alert(
         '회원가입 실패',
         error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.'
       );
     } finally {
-      setIsLoading(false);
+      if (isMountedRef.current) {
+        setIsLoading(false);
+      }
     }
   };
 

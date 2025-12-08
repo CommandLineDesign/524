@@ -1,5 +1,5 @@
 import { NavigationProp, useNavigation } from '@react-navigation/native';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -35,6 +35,14 @@ export function SignupScreen() {
   const [passwordTouched, setPasswordTouched] = useState(false);
   const [confirmTouched, setConfirmTouched] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const isMountedRef = useRef(true);
+
+  useEffect(
+    () => () => {
+      isMountedRef.current = false;
+    },
+    []
+  );
 
   const emailError = useMemo(() => {
     if (!emailTouched) return '';
@@ -71,13 +79,20 @@ export function SignupScreen() {
     try {
       setIsLoading(true);
       await signUpUser({ email: email.trim(), password, confirmPassword });
+      // Ensure we land on the authenticated stack explicitly after signup
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Welcome' }],
+      });
     } catch (error) {
       Alert.alert(
         '회원가입 실패',
         error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.'
       );
     } finally {
-      setIsLoading(false);
+      if (isMountedRef.current) {
+        setIsLoading(false);
+      }
     }
   };
 

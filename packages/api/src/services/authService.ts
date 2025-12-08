@@ -134,6 +134,8 @@ export class AuthService {
    * Login with email and password
    */
   async loginWithEmail(email: string, password: string): Promise<LoginResponse | null> {
+    const normalizedEmail = email.trim().toLowerCase();
+
     // Find user by email with roles
     const [user] = await db
       .select({
@@ -152,12 +154,12 @@ export class AuthService {
       })
       .from(users)
       .leftJoin(userRoles, eq(users.id, userRoles.userId))
-      .where(eq(users.email, email))
+      .where(eq(users.email, normalizedEmail))
       .groupBy(users.id)
       .limit(1);
 
     if (!user) {
-      console.warn('[AuthService] Login failed - user not found', { email });
+      console.warn('[AuthService] Login failed - user not found', { email: normalizedEmail });
       return null;
     }
 
@@ -179,7 +181,7 @@ export class AuthService {
     // Verify password
     const isValid = await bcrypt.compare(password, user.passwordHash);
     if (!isValid) {
-      console.warn('[AuthService] Login failed - invalid password', { email });
+      console.warn('[AuthService] Login failed - invalid password', { email: normalizedEmail });
       return null;
     }
 

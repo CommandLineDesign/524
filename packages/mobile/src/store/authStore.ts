@@ -48,31 +48,47 @@ export const useAuthStore = create<AuthState>((set) => ({
       await AsyncStorage.setItem('auth_token', data.token);
       await AsyncStorage.setItem('user', JSON.stringify(data.user));
 
-      set({ user: data.user, token: data.token });
+      set({ user: data.user, token: data.token, isLoading: false });
     } catch (error) {
       console.error('Login error:', error);
       throw error;
+    } finally {
+      set((state) => ({ ...state, isLoading: false }));
     }
   },
 
   signUpUser: async (payload: SignupPayload) => {
-    const data = await signUpUser(payload);
-    await AsyncStorage.setItem('auth_token', data.token);
-    await AsyncStorage.setItem('user', JSON.stringify(data.user));
-    set({ user: data.user, token: data.token });
+    try {
+      const data = await signUpUser(payload);
+      await AsyncStorage.setItem('auth_token', data.token);
+      await AsyncStorage.setItem('user', JSON.stringify(data.user));
+      set({ user: data.user, token: data.token, isLoading: false });
+    } catch (error) {
+      console.error('Signup user error:', error);
+      throw error;
+    } finally {
+      set((state) => ({ ...state, isLoading: false }));
+    }
   },
 
   signUpArtist: async (payload: SignupPayload) => {
-    const data = await signUpArtist(payload);
-    await AsyncStorage.setItem('auth_token', data.token);
-    await AsyncStorage.setItem('user', JSON.stringify(data.user));
-    set({ user: data.user, token: data.token });
+    try {
+      const data = await signUpArtist(payload);
+      await AsyncStorage.setItem('auth_token', data.token);
+      await AsyncStorage.setItem('user', JSON.stringify(data.user));
+      set({ user: data.user, token: data.token, isLoading: false });
+    } catch (error) {
+      console.error('Signup artist error:', error);
+      throw error;
+    } finally {
+      set((state) => ({ ...state, isLoading: false }));
+    }
   },
 
   logout: async () => {
     await AsyncStorage.removeItem('auth_token');
     await AsyncStorage.removeItem('user');
-    set({ user: null, token: null });
+    set({ user: null, token: null, isLoading: false });
   },
 
   loadSession: async () => {
