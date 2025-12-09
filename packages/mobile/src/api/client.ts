@@ -1,4 +1,5 @@
 import type {
+  ArtistProfile,
   ArtistSearchResult,
   CreateBookingPayload,
   OnboardingResponseInput,
@@ -12,13 +13,21 @@ async function request<T>(path: string, options: RequestInit): Promise<T> {
   // Get auth token from storage
   const token = await AsyncStorage.getItem('auth_token');
 
+  // Merge headers safely so Authorization is not dropped when custom headers are provided
+  const headers = new Headers({ 'Content-Type': 'application/json' });
+
+  if (token) {
+    headers.set('Authorization', `Bearer ${token}`);
+  }
+
+  if (options.headers) {
+    const incoming = new Headers(options.headers as HeadersInit);
+    incoming.forEach((value, key) => headers.set(key, value));
+  }
+
   const response = await fetch(`${API_BASE_URL}${path}`, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(options.headers ?? {}),
-    },
     ...options,
+    headers,
   });
 
   if (!response.ok) {
@@ -120,5 +129,31 @@ export async function searchArtists(params: ArtistSearchParams = {}) {
 
   return request<ArtistSearchResult[]>(searchPath, {
     method: 'GET',
+  });
+}
+
+export async function getArtistProfile(): Promise<ArtistProfile> {
+  return request('/api/v1/artists/me/profile', { method: 'GET' });
+}
+
+export async function updateArtistProfile(payload: Partial<ArtistProfile>) {
+  return request('/api/v1/artists/me/profile', {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+}
+
+export interface PresignUploadResponse {
+  uploadUrl: string;
+  key: string;
+  bucket: string;
+  publicUrl: string;
+}
+
+export async function presignProfilePhoto(contentType: string): Promise<PresignUploadResponse> {
+  return request('/api/v1/uploads/profile-photo/presign', {
+    method: 'POST',
+    headers: { 'X-Upload-Content-Type': contentType },
+    body: JSON.stringify({ contentType }),
   });
 }

@@ -1,8 +1,12 @@
 import { type Router as ExpressRouter, Router } from 'express';
 
 import { ArtistController } from '../../controllers/artistController.js';
+import { requireArtist } from '../../middleware/auth.js';
 
 const router: ExpressRouter = Router();
+
+router.get('/me/profile', requireArtist(), ArtistController.getMyProfile);
+router.patch('/me/profile', requireArtist(), ArtistController.updateMyProfile);
 
 router.get('/:artistId', ArtistController.getArtistProfile);
 router.patch('/:artistId', ArtistController.updateArtistProfile);

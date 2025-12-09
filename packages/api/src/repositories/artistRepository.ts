@@ -6,7 +6,7 @@ import type { ArtistProfile } from '@524/shared/artists';
 
 import { db } from '../db/client.js';
 
-type ArtistProfileRow = typeof artistProfiles.$inferSelect;
+type ArtistProfileRow = typeof artistProfiles.$inferSelect & { profileImageUrl?: string | null };
 type PendingArtistRow = {
   id: string;
   userId: string;
@@ -65,6 +65,7 @@ function mapRowToProfile(row: ArtistProfileRow): ArtistProfile {
     totalServices: row.totalServices ?? 0,
     portfolioImages: (row.portfolioImages as ArtistProfile['portfolioImages']) ?? [],
     services: (row.services as ArtistProfile['services']) ?? [],
+    profileImageUrl: row.profileImageUrl ?? undefined,
   };
 }
 
@@ -97,14 +98,31 @@ function mapPendingRow(row: PendingArtistRow): PendingArtistDetail {
 export class ArtistRepository {
   async findById(artistId: string): Promise<ArtistProfile | null> {
     const [record] = await db
-      .select()
+      .select({
+        ...artistProfiles,
+        profileImageUrl: users.profileImageUrl,
+      })
       .from(artistProfiles)
+      .leftJoin(users, eq(users.id, artistProfiles.userId))
       .where(eq(artistProfiles.id, artistId))
       .limit(1);
     return record ? mapRowToProfile(record) : null;
   }
 
-  async update(artistId: string, updates: Partial<ArtistProfile>): Promise<ArtistProfile> {
+  async update(
+    artistId: string,
+    updates: Partial<ArtistProfile> & { profileImageUrl?: string }
+  ): Promise<ArtistProfile> {
+    const [current] = await db
+      .select({ userId: artistProfiles.userId })
+      .from(artistProfiles)
+      .where(eq(artistProfiles.id, artistId))
+      .limit(1);
+
+    if (!current) {
+      throw Object.assign(new Error('Artist not found'), { status: 404 });
+    }
+
     const [updated] = await db
       .update(artistProfiles)
       .set({
@@ -122,6 +140,7 @@ export class ArtistRepository {
         totalServices: updates.totalServices,
         portfolioImages: updates.portfolioImages,
         services: updates.services,
+        updatedAt: new Date(),
       })
       .where(eq(artistProfiles.id, artistId))
       .returning();
@@ -130,7 +149,28 @@ export class ArtistRepository {
       throw Object.assign(new Error('Artist not found'), { status: 404 });
     }
 
-    return mapRowToProfile(updated);
+    if (updates.profileImageUrl) {
+      await db
+        .update(users)
+        .set({ profileImageUrl: updates.profileImageUrl, updatedAt: new Date() })
+        .where(eq(users.id, current.userId));
+    }
+
+    const [record] = await db
+      .select({
+        ...artistProfiles,
+        profileImageUrl: users.profileImageUrl,
+      })
+      .from(artistProfiles)
+      .leftJoin(users, eq(users.id, artistProfiles.userId))
+      .where(eq(artistProfiles.id, artistId))
+      .limit(1);
+
+    if (!record) {
+      throw Object.assign(new Error('Artist not found'), { status: 404 });
+    }
+
+    return mapRowToProfile(record);
   }
 
   async findPending({ page, perPage, sortField: _sortField, sortOrder }: PendingArtistQuery) {
