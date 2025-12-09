@@ -10,6 +10,7 @@ import { MultiSelectButtons } from '../components/onboarding/MultiSelectButtons'
 import { OnboardingLayout } from '../components/onboarding/OnboardingLayout';
 import type { RootStackParamList } from '../navigation/AppNavigator';
 import { useUpdateArtistProfile } from '../query/artist';
+import { useAuthStore } from '../store/authStore';
 import { theme } from '../theme/colors';
 
 type StepKey = 'basic' | 'specialties' | 'service_area' | 'photo';
@@ -35,12 +36,25 @@ const EMPTY_PROFILE: DraftProfile = {
   profileImageUrl: undefined,
 };
 
+function inferContentType(asset: ImagePicker.ImagePickerAsset) {
+  if (asset.mimeType?.includes('/')) {
+    return asset.mimeType;
+  }
+
+  const ext = asset.uri?.split('.').pop()?.toLowerCase();
+  if (ext === 'png') return 'image/png';
+  if (ext === 'jpg' || ext === 'jpeg') return 'image/jpeg';
+
+  return 'image/jpeg';
+}
+
 export function ArtistOnboardingFlowScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [stepIndex, setStepIndex] = useState(0);
   const [draft, setDraft] = useState<DraftProfile>(EMPTY_PROFILE);
   const [uploading, setUploading] = useState(false);
-  const { mutateAsync: saveProfile, isPending } = useUpdateArtistProfile();
+  const userId = useAuthStore((state) => state.user?.id);
+  const { mutateAsync: saveProfile, isPending } = useUpdateArtistProfile(userId);
 
   const steps: StepKey[] = useMemo(() => ['basic', 'specialties', 'service_area', 'photo'], []);
   const currentStep = steps[stepIndex];
@@ -70,21 +84,29 @@ export function ArtistOnboardingFlowScreen() {
       return;
     }
 
-    await saveProfile({
-      stageName: draft.stageName.trim(),
-      bio: draft.bio.trim(),
-      specialties: draft.specialties,
-      yearsExperience: draft.yearsExperience,
-      primaryLocation: draft.primaryLocation,
-      serviceRadiusKm: draft.serviceRadiusKm,
-      profileImageUrl: draft.profileImageUrl,
-      verificationStatus: 'pending_review',
-    });
+    try {
+      await saveProfile({
+        stageName: draft.stageName.trim(),
+        bio: draft.bio.trim(),
+        specialties: draft.specialties,
+        yearsExperience: draft.yearsExperience,
+        primaryLocation: draft.primaryLocation,
+        serviceRadiusKm: draft.serviceRadiusKm,
+        profileImageUrl: draft.profileImageUrl,
+        verificationStatus: 'pending_review',
+      });
 
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'ArtistPending' }],
-    });
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'ArtistPending' }],
+      });
+    } catch (error) {
+      console.error(error);
+      Alert.alert(
+        'Save failed',
+        'Could not save your profile. Please check your connection and try again.'
+      );
+    }
   };
 
   const pickImage = async () => {
@@ -112,19 +134,23 @@ export function ArtistOnboardingFlowScreen() {
 
     try {
       setUploading(true);
-      const contentType = asset.type === 'video' ? 'image/jpeg' : (asset.type ?? 'image/jpeg');
+      const contentType = inferContentType(asset);
       const presign = await presignProfilePhoto(contentType);
 
       const response = await fetch(asset.uri);
       const blob = await response.blob();
 
-      await fetch(presign.uploadUrl, {
+      const uploadResponse = await fetch(presign.uploadUrl, {
         method: 'PUT',
         headers: {
           'Content-Type': contentType,
         },
         body: blob,
       });
+
+      if (!uploadResponse.ok) {
+        throw new Error(`Upload failed with status ${uploadResponse.status}`);
+      }
 
       const publicUrl = presign.publicUrl ?? presign.uploadUrl.split('?')[0];
       updateField({ profileImageUrl: publicUrl });

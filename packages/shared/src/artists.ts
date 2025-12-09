@@ -14,6 +14,7 @@ export interface ArtistProfile {
   specialties: ServiceType[] | string[];
   yearsExperience: number;
   businessVerified: boolean;
+  businessRegistrationNumber?: string | null;
   serviceRadiusKm: number;
   primaryLocation: ArtistLocation;
   isAcceptingBookings: boolean;

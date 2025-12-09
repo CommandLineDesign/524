@@ -45,6 +45,24 @@ type PendingArtistRow = {
   yearsExperience: number | null;
 };
 
+export type ArtistProfileUpdateInput = Partial<
+  Pick<
+    ArtistProfile,
+    | 'stageName'
+    | 'bio'
+    | 'specialties'
+    | 'yearsExperience'
+    | 'businessRegistrationNumber'
+    | 'serviceRadiusKm'
+    | 'primaryLocation'
+    | 'isAcceptingBookings'
+    | 'portfolioImages'
+    | 'services'
+  >
+> & {
+  profileImageUrl?: string;
+};
+
 export interface PendingArtistQuery {
   page: number;
   perPage: number;
@@ -74,6 +92,7 @@ function mapRowToProfile(row: ArtistProfileRow): ArtistProfile {
     specialties: (row.specialties as string[] | null) ?? [],
     yearsExperience: row.yearsExperience,
     businessVerified: row.businessVerified ?? false,
+    businessRegistrationNumber: row.businessRegistrationNumber ?? null,
     serviceRadiusKm: toNumber(row.serviceRadiusKm, 0),
     primaryLocation: (row.primaryLocation as ArtistProfile['primaryLocation']) ?? {
       latitude: 0,
@@ -117,32 +136,34 @@ function mapPendingRow(row: PendingArtistRow): PendingArtistDetail {
   };
 }
 
+const artistProfileSelect = {
+  id: artistProfiles.id,
+  createdAt: artistProfiles.createdAt,
+  updatedAt: artistProfiles.updatedAt,
+  userId: artistProfiles.userId,
+  stageName: artistProfiles.stageName,
+  bio: artistProfiles.bio,
+  specialties: artistProfiles.specialties,
+  yearsExperience: artistProfiles.yearsExperience,
+  businessRegistrationNumber: artistProfiles.businessRegistrationNumber,
+  businessVerified: artistProfiles.businessVerified,
+  serviceRadiusKm: artistProfiles.serviceRadiusKm,
+  primaryLocation: artistProfiles.primaryLocation,
+  isAcceptingBookings: artistProfiles.isAcceptingBookings,
+  verificationStatus: artistProfiles.verificationStatus,
+  averageRating: artistProfiles.averageRating,
+  totalReviews: artistProfiles.totalReviews,
+  totalServices: artistProfiles.totalServices,
+  portfolioImages: artistProfiles.portfolioImages,
+  services: artistProfiles.services,
+  profileImageUrl: users.profileImageUrl,
+  verifiedAt: artistProfiles.verifiedAt,
+};
+
 export class ArtistRepository {
   async findById(artistId: string): Promise<ArtistProfile | null> {
     const [record] = await db
-      .select({
-        id: artistProfiles.id,
-        createdAt: artistProfiles.createdAt,
-        updatedAt: artistProfiles.updatedAt,
-        userId: artistProfiles.userId,
-        stageName: artistProfiles.stageName,
-        bio: artistProfiles.bio,
-        specialties: artistProfiles.specialties,
-        yearsExperience: artistProfiles.yearsExperience,
-        businessRegistrationNumber: artistProfiles.businessRegistrationNumber,
-        businessVerified: artistProfiles.businessVerified,
-        serviceRadiusKm: artistProfiles.serviceRadiusKm,
-        primaryLocation: artistProfiles.primaryLocation,
-        isAcceptingBookings: artistProfiles.isAcceptingBookings,
-        verificationStatus: artistProfiles.verificationStatus,
-        averageRating: artistProfiles.averageRating,
-        totalReviews: artistProfiles.totalReviews,
-        totalServices: artistProfiles.totalServices,
-        portfolioImages: artistProfiles.portfolioImages,
-        services: artistProfiles.services,
-        profileImageUrl: users.profileImageUrl,
-        verifiedAt: artistProfiles.verifiedAt,
-      })
+      .select(artistProfileSelect)
       .from(artistProfiles)
       .leftJoin(users, eq(users.id, artistProfiles.userId))
       .where(eq(artistProfiles.id, artistId))
@@ -150,10 +171,18 @@ export class ArtistRepository {
     return record ? mapRowToProfile(record) : null;
   }
 
-  async update(
-    artistId: string,
-    updates: Partial<ArtistProfile> & { profileImageUrl?: string }
-  ): Promise<ArtistProfile> {
+  async findByUserId(userId: string): Promise<ArtistProfile | null> {
+    const [record] = await db
+      .select(artistProfileSelect)
+      .from(artistProfiles)
+      .leftJoin(users, eq(users.id, artistProfiles.userId))
+      .where(eq(artistProfiles.userId, userId))
+      .limit(1);
+
+    return record ? mapRowToProfile(record) : null;
+  }
+
+  async update(artistId: string, updates: ArtistProfileUpdateInput): Promise<ArtistProfile> {
     const [current] = await db
       .select({ userId: artistProfiles.userId })
       .from(artistProfiles)
@@ -164,25 +193,44 @@ export class ArtistRepository {
       throw Object.assign(new Error('Artist not found'), { status: 404 });
     }
 
+    const updatePayload: Partial<typeof artistProfiles.$inferInsert> = {
+      updatedAt: new Date(),
+    };
+
+    if (updates.stageName !== undefined) {
+      updatePayload.stageName = updates.stageName;
+    }
+    if (updates.bio !== undefined) {
+      updatePayload.bio = updates.bio;
+    }
+    if (updates.specialties !== undefined) {
+      updatePayload.specialties = updates.specialties;
+    }
+    if (updates.yearsExperience !== undefined) {
+      updatePayload.yearsExperience = updates.yearsExperience;
+    }
+    if (updates.businessRegistrationNumber !== undefined) {
+      updatePayload.businessRegistrationNumber = updates.businessRegistrationNumber;
+    }
+    if (updates.serviceRadiusKm !== undefined) {
+      updatePayload.serviceRadiusKm = updates.serviceRadiusKm.toString();
+    }
+    if (updates.primaryLocation !== undefined) {
+      updatePayload.primaryLocation = updates.primaryLocation;
+    }
+    if (updates.isAcceptingBookings !== undefined) {
+      updatePayload.isAcceptingBookings = updates.isAcceptingBookings;
+    }
+    if (updates.portfolioImages !== undefined) {
+      updatePayload.portfolioImages = updates.portfolioImages;
+    }
+    if (updates.services !== undefined) {
+      updatePayload.services = updates.services;
+    }
+
     const [updated] = await db
       .update(artistProfiles)
-      .set({
-        stageName: updates.stageName,
-        bio: updates.bio,
-        specialties: updates.specialties,
-        yearsExperience: updates.yearsExperience,
-        businessVerified: updates.businessVerified,
-        serviceRadiusKm: updates.serviceRadiusKm?.toString(),
-        primaryLocation: updates.primaryLocation,
-        isAcceptingBookings: updates.isAcceptingBookings,
-        verificationStatus: updates.verificationStatus,
-        averageRating: updates.averageRating?.toString(),
-        totalReviews: updates.totalReviews,
-        totalServices: updates.totalServices,
-        portfolioImages: updates.portfolioImages,
-        services: updates.services,
-        updatedAt: new Date(),
-      })
+      .set(updatePayload)
       .where(eq(artistProfiles.id, artistId))
       .returning();
 
@@ -198,29 +246,7 @@ export class ArtistRepository {
     }
 
     const [record] = await db
-      .select({
-        id: artistProfiles.id,
-        createdAt: artistProfiles.createdAt,
-        updatedAt: artistProfiles.updatedAt,
-        userId: artistProfiles.userId,
-        stageName: artistProfiles.stageName,
-        bio: artistProfiles.bio,
-        specialties: artistProfiles.specialties,
-        yearsExperience: artistProfiles.yearsExperience,
-        businessRegistrationNumber: artistProfiles.businessRegistrationNumber,
-        businessVerified: artistProfiles.businessVerified,
-        serviceRadiusKm: artistProfiles.serviceRadiusKm,
-        primaryLocation: artistProfiles.primaryLocation,
-        isAcceptingBookings: artistProfiles.isAcceptingBookings,
-        verificationStatus: artistProfiles.verificationStatus,
-        averageRating: artistProfiles.averageRating,
-        totalReviews: artistProfiles.totalReviews,
-        totalServices: artistProfiles.totalServices,
-        portfolioImages: artistProfiles.portfolioImages,
-        services: artistProfiles.services,
-        profileImageUrl: users.profileImageUrl,
-        verifiedAt: artistProfiles.verifiedAt,
-      })
+      .select(artistProfileSelect)
       .from(artistProfiles)
       .leftJoin(users, eq(users.id, artistProfiles.userId))
       .where(eq(artistProfiles.id, artistId))
@@ -231,6 +257,20 @@ export class ArtistRepository {
     }
 
     return mapRowToProfile(record);
+  }
+
+  async updateByUserId(userId: string, updates: ArtistProfileUpdateInput): Promise<ArtistProfile> {
+    const [artist] = await db
+      .select({ id: artistProfiles.id })
+      .from(artistProfiles)
+      .where(eq(artistProfiles.userId, userId))
+      .limit(1);
+
+    if (!artist) {
+      throw Object.assign(new Error('Artist not found'), { status: 404 });
+    }
+
+    return this.update(artist.id, updates);
   }
 
   async findPending({ page, perPage, sortField: _sortField, sortOrder }: PendingArtistQuery) {

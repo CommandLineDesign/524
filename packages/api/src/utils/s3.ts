@@ -21,19 +21,42 @@ export function getS3Client() {
   });
 }
 
+const DEFAULT_ALLOWED_UPLOAD_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const DEFAULT_MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5 MB cap for profile photos
+
 export interface PresignedUpload {
   uploadUrl: string;
   key: string;
   bucket: string;
   publicUrl: string;
+  contentType: string;
+  maxBytes: number;
 }
 
 export async function createPresignedUploadUrl(params: {
   userId: string;
   folder: string;
   contentType: string;
+  contentLength: number;
   expiresInSeconds?: number;
+  allowedContentTypes?: string[];
+  maxBytes?: number;
 }): Promise<PresignedUpload> {
+  const allowedTypes = params.allowedContentTypes ?? DEFAULT_ALLOWED_UPLOAD_TYPES;
+  const maxBytes = params.maxBytes ?? DEFAULT_MAX_UPLOAD_BYTES;
+
+  if (!allowedTypes.includes(params.contentType)) {
+    throw Object.assign(new Error('Unsupported content type'), { status: 400 });
+  }
+
+  if (!Number.isFinite(params.contentLength) || params.contentLength <= 0) {
+    throw Object.assign(new Error('Missing or invalid content length'), { status: 400 });
+  }
+
+  if (params.contentLength > maxBytes) {
+    throw Object.assign(new Error('File too large'), { status: 400, maxBytes });
+  }
+
   const client = getS3Client();
   const expiresIn = params.expiresInSeconds ?? 300;
   const key = `${params.folder}/${params.userId}/${randomUUID()}`;
@@ -42,7 +65,7 @@ export async function createPresignedUploadUrl(params: {
     Bucket: env.S3_BUCKET as string,
     Key: key,
     ContentType: params.contentType,
-    ACL: 'public-read', // Profile photos are safe to be public; public URL avoids expiring links
+    ContentLength: params.contentLength,
   });
 
   const uploadUrl = await getSignedUrl(client, command, { expiresIn });
@@ -59,5 +82,7 @@ export async function createPresignedUploadUrl(params: {
     key,
     bucket: env.S3_BUCKET as string,
     publicUrl: publicUrlBase ? `${publicUrlBase}/${key}` : key,
+    contentType: params.contentType,
+    maxBytes,
   };
 }
