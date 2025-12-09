@@ -6,7 +6,29 @@ import type { ArtistProfile } from '@524/shared/artists';
 
 import { db } from '../db/client.js';
 
-type ArtistProfileRow = typeof artistProfiles.$inferSelect & { profileImageUrl?: string | null };
+type ArtistProfileRow = {
+  id: string;
+  createdAt: Date;
+  updatedAt: Date;
+  userId: string;
+  stageName: string;
+  bio: string | null;
+  specialties: unknown;
+  yearsExperience: number;
+  businessRegistrationNumber: string | null;
+  businessVerified: boolean | null;
+  serviceRadiusKm: number;
+  primaryLocation: unknown;
+  isAcceptingBookings: boolean;
+  verificationStatus: string;
+  averageRating: string | null;
+  totalReviews: number;
+  totalServices: number;
+  portfolioImages: unknown | null;
+  services: unknown | null;
+  profileImageUrl?: string | null;
+  verifiedAt: Date | null;
+};
 type PendingArtistRow = {
   id: string;
   userId: string;
@@ -99,8 +121,27 @@ export class ArtistRepository {
   async findById(artistId: string): Promise<ArtistProfile | null> {
     const [record] = await db
       .select({
-        ...artistProfiles,
+        id: artistProfiles.id,
+        createdAt: artistProfiles.createdAt,
+        updatedAt: artistProfiles.updatedAt,
+        userId: artistProfiles.userId,
+        stageName: artistProfiles.stageName,
+        bio: artistProfiles.bio,
+        specialties: artistProfiles.specialties,
+        yearsExperience: artistProfiles.yearsExperience,
+        businessRegistrationNumber: artistProfiles.businessRegistrationNumber,
+        businessVerified: artistProfiles.businessVerified,
+        serviceRadiusKm: artistProfiles.serviceRadiusKm,
+        primaryLocation: artistProfiles.primaryLocation,
+        isAcceptingBookings: artistProfiles.isAcceptingBookings,
+        verificationStatus: artistProfiles.verificationStatus,
+        averageRating: artistProfiles.averageRating,
+        totalReviews: artistProfiles.totalReviews,
+        totalServices: artistProfiles.totalServices,
+        portfolioImages: artistProfiles.portfolioImages,
+        services: artistProfiles.services,
         profileImageUrl: users.profileImageUrl,
+        verifiedAt: artistProfiles.verifiedAt,
       })
       .from(artistProfiles)
       .leftJoin(users, eq(users.id, artistProfiles.userId))
@@ -158,8 +199,27 @@ export class ArtistRepository {
 
     const [record] = await db
       .select({
-        ...artistProfiles,
+        id: artistProfiles.id,
+        createdAt: artistProfiles.createdAt,
+        updatedAt: artistProfiles.updatedAt,
+        userId: artistProfiles.userId,
+        stageName: artistProfiles.stageName,
+        bio: artistProfiles.bio,
+        specialties: artistProfiles.specialties,
+        yearsExperience: artistProfiles.yearsExperience,
+        businessRegistrationNumber: artistProfiles.businessRegistrationNumber,
+        businessVerified: artistProfiles.businessVerified,
+        serviceRadiusKm: artistProfiles.serviceRadiusKm,
+        primaryLocation: artistProfiles.primaryLocation,
+        isAcceptingBookings: artistProfiles.isAcceptingBookings,
+        verificationStatus: artistProfiles.verificationStatus,
+        averageRating: artistProfiles.averageRating,
+        totalReviews: artistProfiles.totalReviews,
+        totalServices: artistProfiles.totalServices,
+        portfolioImages: artistProfiles.portfolioImages,
+        services: artistProfiles.services,
         profileImageUrl: users.profileImageUrl,
+        verifiedAt: artistProfiles.verifiedAt,
       })
       .from(artistProfiles)
       .leftJoin(users, eq(users.id, artistProfiles.userId))

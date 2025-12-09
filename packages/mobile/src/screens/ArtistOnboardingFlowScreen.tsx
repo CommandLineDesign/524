@@ -237,9 +237,10 @@ export function ArtistOnboardingFlowScreen() {
             options={SPECIALTY_OPTIONS}
             selected={draft.specialties as string[]}
             onToggle={(id) => {
-              const next = draft.specialties.includes(id)
-                ? draft.specialties.filter((x) => x !== id)
-                : [...draft.specialties, id];
+              const serviceId = id as 'hair' | 'makeup' | 'combo';
+              const next = draft.specialties.includes(serviceId)
+                ? draft.specialties.filter((x) => x !== serviceId)
+                : [...draft.specialties, serviceId];
               updateField({ specialties: next });
             }}
           />
@@ -393,7 +394,7 @@ export function ArtistOnboardingFlowScreen() {
               backgroundColor: '#fafafa',
             }}
           >
-            <Text style={{ color: theme.colors.textMuted }}>No photo selected</Text>
+            <Text style={{ color: theme.colors.textSecondary }}>No photo selected</Text>
           </View>
         )}
         <TouchableOpacity
@@ -410,7 +411,7 @@ export function ArtistOnboardingFlowScreen() {
             {uploading ? 'Uploading...' : 'Choose photo'}
           </Text>
         </TouchableOpacity>
-        <Text style={{ color: theme.colors.textMuted, textAlign: 'center' }}>
+        <Text style={{ color: theme.colors.textSecondary, textAlign: 'center' }}>
           We store your photo securely in S3 using a time-limited upload link.
         </Text>
       </View>
