@@ -10,6 +10,10 @@ export interface BookedService {
   durationMinutes: number;
   price: number;
 }
+export interface BookingStatusHistoryEntry {
+  status: BookingStatus | string;
+  timestamp: string;
+}
 export interface CreateBookingPayload {
   customerId: string;
   artistId: string;
@@ -28,6 +32,7 @@ export interface BookingSummary {
   bookingNumber: string;
   customerId: string;
   artistId: string;
+  artistName?: string;
   occasion: string;
   services: BookedService[];
   scheduledDate: string;
@@ -35,6 +40,11 @@ export interface BookingSummary {
   scheduledEndTime: string;
   totalAmount: number;
   status: BookingStatus;
+  location?: ServiceLocation;
+  createdAt?: string;
+  paymentStatus?: string;
+  statusHistory?: BookingStatusHistoryEntry[];
+  timezone?: string;
 }
 export interface UpdateBookingStatusPayload {
   status: BookingStatus;

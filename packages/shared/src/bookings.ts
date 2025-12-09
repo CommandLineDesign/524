@@ -33,6 +33,7 @@ export interface BookingSummary {
   bookingNumber: string;
   customerId: string;
   artistId: string;
+  artistName?: string;
   occasion: string;
   services: BookedService[];
   scheduledDate: string;
@@ -40,6 +41,11 @@ export interface BookingSummary {
   scheduledEndTime: string;
   totalAmount: number;
   status: BookingStatus;
+  location?: ServiceLocation;
+  createdAt?: string;
+  paymentStatus?: string;
+  statusHistory?: BookingStatusHistoryEntry[];
+  timezone?: string;
 }
 
 export interface UpdateBookingStatusPayload {

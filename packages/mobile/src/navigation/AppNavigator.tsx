@@ -8,7 +8,9 @@ import { useOnboardingState } from '../query/onboarding';
 import { ArtistOnboardingFlowScreen } from '../screens/ArtistOnboardingFlowScreen';
 import { ArtistPendingScreen } from '../screens/ArtistPendingScreen';
 import { ArtistSignupScreen } from '../screens/ArtistSignupScreen';
+import { BookingDetailScreen } from '../screens/BookingDetailScreen';
 import { BookingSummaryScreen } from '../screens/BookingSummaryScreen';
+import { BookingsListScreen } from '../screens/BookingsListScreen';
 import { LoginScreen } from '../screens/LoginScreen';
 import { OccasionSelectionScreen } from '../screens/OccasionSelectionScreen';
 import { OnboardingFlowScreen } from '../screens/OnboardingFlowScreen';
@@ -30,6 +32,8 @@ export type RootStackParamList = {
   OnboardingFlow: undefined;
   OnboardingLookalike: undefined;
   OnboardingServices: undefined;
+  BookingsList: undefined;
+  BookingDetail: { bookingId: string };
   ArtistOnboarding: undefined;
   ArtistPending: undefined;
 };
@@ -152,6 +156,16 @@ export function AppNavigator() {
                   name="BookingSummary"
                   component={BookingSummaryScreen}
                   options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="BookingsList"
+                  component={BookingsListScreen}
+                  options={{ title: '내 예약' }}
+                />
+                <Stack.Screen
+                  name="BookingDetail"
+                  component={BookingDetailScreen}
+                  options={{ title: '예약 상세' }}
                 />
               </>
             )}

@@ -1,6 +1,8 @@
 import type {
   ArtistProfile,
   ArtistSearchResult,
+  BookingStatus,
+  BookingSummary,
   CreateBookingPayload,
   OnboardingResponseInput,
   OnboardingState,
@@ -61,10 +63,33 @@ export interface AuthResponse {
   token: string;
 }
 
+export interface GetBookingsParams {
+  status?: BookingStatus;
+}
+
 export async function createBooking(payload: CreateBookingPayload) {
   return request('/api/v1/bookings', {
     method: 'POST',
     body: JSON.stringify(payload),
+  });
+}
+
+export async function getBookings(params: GetBookingsParams = {}) {
+  const query = new URLSearchParams();
+  if (params.status) {
+    query.append('status', params.status);
+  }
+
+  const path = query.size ? `/api/v1/bookings?${query.toString()}` : '/api/v1/bookings';
+
+  return request<BookingSummary[]>(path, {
+    method: 'GET',
+  });
+}
+
+export async function getBookingDetail(bookingId: string) {
+  return request<BookingSummary>(`/api/v1/bookings/${bookingId}`, {
+    method: 'GET',
   });
 }
 

@@ -5,6 +5,9 @@ import { requireArtist, requireAuth, requireCustomer } from '../../middleware/au
 
 const router: ExpressRouter = Router();
 
+// List bookings for authenticated customer
+router.get('/', requireCustomer(), BookingController.listCustomerBookings);
+
 // Create booking (customers only)
 router.post('/', requireCustomer(), BookingController.createBooking);
 
