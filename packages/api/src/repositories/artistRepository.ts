@@ -92,6 +92,7 @@ function mapRowToProfile(row: ArtistProfileRow): ArtistProfile {
     specialties: (row.specialties as string[] | null) ?? [],
     yearsExperience: row.yearsExperience,
     businessVerified: row.businessVerified ?? false,
+    businessRegistrationNumber: row.businessRegistrationNumber ?? null,
     serviceRadiusKm: toNumber(row.serviceRadiusKm, 0),
     primaryLocation: (row.primaryLocation as ArtistProfile['primaryLocation']) ?? {
       latitude: 0,
