@@ -17,13 +17,13 @@ type ArtistProfileRow = {
   yearsExperience: number;
   businessRegistrationNumber: string | null;
   businessVerified: boolean | null;
-  serviceRadiusKm: number;
+  serviceRadiusKm: string;
   primaryLocation: unknown;
-  isAcceptingBookings: boolean;
-  verificationStatus: string;
+  isAcceptingBookings: boolean | null;
+  verificationStatus: string | null;
   averageRating: string | null;
-  totalReviews: number;
-  totalServices: number;
+  totalReviews: number | null;
+  totalServices: number | null;
   portfolioImages: unknown | null;
   services: unknown | null;
   profileImageUrl?: string | null;
