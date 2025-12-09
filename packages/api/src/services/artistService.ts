@@ -1,7 +1,11 @@
 import type { PendingArtistDetail } from '@524/shared/admin';
 import type { ArtistProfile, ArtistSearchFilters, ArtistSearchResult } from '@524/shared/artists';
 
-import { ArtistRepository, type PendingArtistQuery } from '../repositories/artistRepository.js';
+import {
+  type ArtistProfileUpdateInput,
+  ArtistRepository,
+  type PendingArtistQuery,
+} from '../repositories/artistRepository.js';
 import { SearchService } from './searchService.js';
 
 export class ArtistService {
@@ -14,8 +18,16 @@ export class ArtistService {
     return this.repository.findById(artistId);
   }
 
-  updateArtistProfile(artistId: string, updates: Partial<ArtistProfile>): Promise<ArtistProfile> {
+  getArtistProfileByUserId(userId: string): Promise<ArtistProfile | null> {
+    return this.repository.findByUserId(userId);
+  }
+
+  updateArtistProfile(artistId: string, updates: ArtistProfileUpdateInput): Promise<ArtistProfile> {
     return this.repository.update(artistId, updates);
+  }
+
+  updateMyArtistProfile(userId: string, updates: ArtistProfileUpdateInput): Promise<ArtistProfile> {
+    return this.repository.updateByUserId(userId, updates);
   }
 
   searchArtists(filters: ArtistSearchFilters): Promise<ArtistSearchResult[]> {

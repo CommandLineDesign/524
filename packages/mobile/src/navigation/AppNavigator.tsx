@@ -43,6 +43,7 @@ export function AppNavigator() {
     isArtist ? undefined : user?.id
   );
   const { data: artistProfile, isLoading: artistProfileLoading } = useArtistProfile(
+    user?.id,
     Boolean(user && isArtist)
   );
 
