@@ -3,7 +3,10 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React, { useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 
+import { useArtistProfile } from '../query/artist';
 import { useOnboardingState } from '../query/onboarding';
+import { ArtistOnboardingFlowScreen } from '../screens/ArtistOnboardingFlowScreen';
+import { ArtistPendingScreen } from '../screens/ArtistPendingScreen';
 import { ArtistSignupScreen } from '../screens/ArtistSignupScreen';
 import { BookingSummaryScreen } from '../screens/BookingSummaryScreen';
 import { LoginScreen } from '../screens/LoginScreen';
@@ -27,22 +30,38 @@ export type RootStackParamList = {
   OnboardingFlow: undefined;
   OnboardingLookalike: undefined;
   OnboardingServices: undefined;
+  ArtistOnboarding: undefined;
+  ArtistPending: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export function AppNavigator() {
   const { user, isLoading, loadSession } = useAuthStore();
-  const { data: onboarding, isLoading: onboardingLoading } = useOnboardingState(user?.id);
+  const isArtist = Boolean(user?.primaryRole === 'artist' || user?.roles?.includes('artist'));
+  const { data: onboarding, isLoading: onboardingLoading } = useOnboardingState(
+    isArtist ? undefined : user?.id
+  );
+  const { data: artistProfile, isLoading: artistProfileLoading } = useArtistProfile(
+    Boolean(user && isArtist)
+  );
 
   useEffect(() => {
     loadSession();
   }, [loadSession]);
 
-  const shouldShowOnboarding =
+  const shouldShowCustomerOnboarding =
     Boolean(user) && !(user?.onboardingCompleted || onboarding?.completed);
+  const requiresArtistProfile =
+    isArtist &&
+    (!artistProfile ||
+      !artistProfile.stageName ||
+      !artistProfile.primaryLocation ||
+      !artistProfile.profileImageUrl);
+  const artistPendingReview =
+    isArtist && !requiresArtistProfile && artistProfile?.verificationStatus === 'pending_review';
 
-  if (isLoading || (user && onboardingLoading)) {
+  if (isLoading || (user && (onboardingLoading || artistProfileLoading))) {
     return (
       <View
         style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}
@@ -55,7 +74,17 @@ export function AppNavigator() {
   return (
     <NavigationContainer>
       <Stack.Navigator
-        initialRouteName={user ? (shouldShowOnboarding ? 'OnboardingFlow' : 'Welcome') : 'Login'}
+        initialRouteName={
+          user
+            ? requiresArtistProfile
+              ? 'ArtistOnboarding'
+              : artistPendingReview
+                ? 'ArtistPending'
+                : shouldShowCustomerOnboarding
+                  ? 'OnboardingFlow'
+                  : 'Welcome'
+            : 'Login'
+        }
       >
         {!user ? (
           <>
@@ -69,7 +98,21 @@ export function AppNavigator() {
           </>
         ) : (
           <>
-            {shouldShowOnboarding ? (
+            {requiresArtistProfile ? (
+              <>
+                <Stack.Screen
+                  name="ArtistOnboarding"
+                  component={ArtistOnboardingFlowScreen}
+                  options={{ headerShown: false }}
+                />
+              </>
+            ) : artistPendingReview ? (
+              <Stack.Screen
+                name="ArtistPending"
+                component={ArtistPendingScreen}
+                options={{ headerShown: false }}
+              />
+            ) : shouldShowCustomerOnboarding ? (
               <>
                 <Stack.Screen
                   name="OnboardingFlow"
@@ -112,7 +155,7 @@ export function AppNavigator() {
               </>
             )}
             {/* Ensure Welcome is available even while onboarding to avoid reset race */}
-            {shouldShowOnboarding ? (
+            {shouldShowCustomerOnboarding ? (
               <Stack.Screen
                 name="Welcome"
                 component={WelcomeScreen}

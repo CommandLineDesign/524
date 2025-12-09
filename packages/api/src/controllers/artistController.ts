@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 
+import type { AuthRequest } from '../middleware/auth.js';
 import { ArtistService } from '../services/artistService.js';
 
 const artistService = new ArtistService();
@@ -13,6 +14,36 @@ export const ArtistController = {
         return;
       }
 
+      res.json(profile);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async getMyProfile(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) {
+        res.status(401).json({ error: 'Unauthorized' });
+        return;
+      }
+      const profile = await artistService.getArtistProfile(req.user.id);
+      if (!profile) {
+        res.status(404).json({ error: 'Artist profile not found' });
+        return;
+      }
+      res.json(profile);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async updateMyProfile(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) {
+        res.status(401).json({ error: 'Unauthorized' });
+        return;
+      }
+      const profile = await artistService.updateArtistProfile(req.user.id, req.body);
       res.json(profile);
     } catch (error) {
       next(error);

@@ -23,6 +23,7 @@ export interface ArtistProfile {
   totalServices: number;
   portfolioImages?: PortfolioImage[];
   services?: ArtistServiceOffering[];
+  profileImageUrl?: string;
 }
 
 export interface ArtistSearchFilters {
