@@ -148,8 +148,6 @@ export function ArtistOnboardingFlowScreen() {
         uploadUrl: presign.uploadUrl,
         bucket: presign.bucket,
         publicUrl: presign.publicUrl,
-        contentType: presign.contentType,
-        maxBytes: presign.maxBytes,
       });
 
       const uploadResponse = await fetch(presign.uploadUrl, {

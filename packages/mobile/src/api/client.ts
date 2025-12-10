@@ -173,6 +173,8 @@ export interface PresignUploadResponse {
   key: string;
   bucket: string;
   publicUrl: string;
+  contentType: string;
+  maxBytes: number;
 }
 
 export async function presignProfilePhoto(
