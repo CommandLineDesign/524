@@ -22,8 +22,11 @@ const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().default(5240),
   DATABASE_URL: z.string(),
-  // Canonical local origins: admin (5241) + api (5240)
-  CORS_ORIGIN: z.string().optional().default('http://localhost:5241,http://localhost:5240'),
+  // Canonical local origins: admin (5241) + api (5240) + Expo Metro (5242)
+  CORS_ORIGIN: z
+    .string()
+    .optional()
+    .default('http://localhost:5241,http://localhost:5240,http://localhost:5242'),
   TRUST_PROXY: z.union([z.boolean(), z.string()]).default(false),
   REDIS_URL: z.string().optional(),
   JWT_SECRET: z.string().optional(),
@@ -46,7 +49,13 @@ const mergedEnv = {
     process.env.S3_ACCESS_KEY ?? process.env.AWS_S3_ACCESS_KEY ?? process.env.AWS_ACCESS_KEY_ID,
   S3_SECRET_KEY:
     process.env.S3_SECRET_KEY ?? process.env.AWS_S3_SECRET_KEY ?? process.env.AWS_SECRET_ACCESS_KEY,
-  S3_PUBLIC_BASE_URL: process.env.S3_PUBLIC_BASE_URL ?? process.env.AWS_S3_PUBLIC_BASE_URL,
+  S3_PUBLIC_BASE_URL:
+    process.env.S3_PUBLIC_BASE_URL ??
+    process.env.AWS_S3_PUBLIC_BASE_URL ??
+    process.env.CLOUDFRONT_BASE_URL ??
+    process.env.CLOUDFRONT_PUBLIC_BASE_URL ??
+    process.env.AWS_CLOUDFRONT_URL ??
+    process.env.CDN_PUBLIC_BASE_URL,
 };
 
 export const env = envSchema.parse(mergedEnv);

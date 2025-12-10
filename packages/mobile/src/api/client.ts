@@ -175,10 +175,16 @@ export interface PresignUploadResponse {
   publicUrl: string;
 }
 
-export async function presignProfilePhoto(contentType: string): Promise<PresignUploadResponse> {
+export async function presignProfilePhoto(
+  contentType: string,
+  contentLength: number
+): Promise<PresignUploadResponse> {
   return request('/api/v1/uploads/profile-photo/presign', {
     method: 'POST',
-    headers: { 'X-Upload-Content-Type': contentType },
-    body: JSON.stringify({ contentType }),
+    headers: {
+      'X-Upload-Content-Type': contentType,
+      'X-Upload-Content-Length': String(contentLength),
+    },
+    body: JSON.stringify({ contentType, contentLength }),
   });
 }
