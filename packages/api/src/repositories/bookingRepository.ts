@@ -1,8 +1,8 @@
 import crypto from 'node:crypto';
 
-import { eq } from 'drizzle-orm';
+import { and, desc, eq } from 'drizzle-orm';
 
-import { bookings } from '@524/database';
+import { bookings, users } from '@524/database';
 import type {
   BookedService,
   BookingSummary,
@@ -12,7 +12,9 @@ import type {
 
 import { db } from '../db/client.js';
 
-type BookingRow = typeof bookings.$inferSelect;
+type BookingRow = typeof bookings.$inferSelect & {
+  artistName?: string | null;
+};
 
 function mapRowToSummary(row: BookingRow): BookingSummary {
   return {
@@ -20,6 +22,7 @@ function mapRowToSummary(row: BookingRow): BookingSummary {
     bookingNumber: row.bookingNumber,
     customerId: row.customerId,
     artistId: row.artistId,
+    artistName: row.artistName ?? undefined,
     occasion: row.occasion,
     services: (row.services as BookingSummary['services']) ?? [],
     scheduledDate: row.scheduledDate.toISOString(),
@@ -27,6 +30,11 @@ function mapRowToSummary(row: BookingRow): BookingSummary {
     scheduledEndTime: row.scheduledEndTime.toISOString(),
     totalAmount: Number(row.totalAmount),
     status: row.status as BookingSummary['status'],
+    timezone: row.timezone ?? undefined,
+    location: (row.address as BookingSummary['location']) ?? undefined,
+    createdAt: row.createdAt?.toISOString(),
+    paymentStatus: row.paymentStatus as BookingSummary['paymentStatus'],
+    statusHistory: row.statusHistory as BookingSummary['statusHistory'],
   };
 }
 
@@ -83,8 +91,31 @@ export class BookingRepository {
   }
 
   async findById(bookingId: string): Promise<BookingSummary | null> {
-    const [record] = await db.select().from(bookings).where(eq(bookings.id, bookingId)).limit(1);
-    return record ? mapRowToSummary(record) : null;
+    const [record] = await db
+      .select({
+        id: bookings.id,
+        bookingNumber: bookings.bookingNumber,
+        customerId: bookings.customerId,
+        artistId: bookings.artistId,
+        artistName: users.name,
+        occasion: bookings.occasion,
+        services: bookings.services,
+        scheduledDate: bookings.scheduledDate,
+        scheduledStartTime: bookings.scheduledStartTime,
+        scheduledEndTime: bookings.scheduledEndTime,
+        totalAmount: bookings.totalAmount,
+        status: bookings.status,
+        timezone: bookings.timezone,
+        paymentStatus: bookings.paymentStatus,
+        statusHistory: bookings.statusHistory,
+        address: bookings.address,
+        createdAt: bookings.createdAt,
+      })
+      .from(bookings)
+      .leftJoin(users, eq(users.id, bookings.artistId))
+      .where(eq(bookings.id, bookingId))
+      .limit(1);
+    return record ? mapRowToSummary(record as BookingRow) : null;
   }
 
   async updateStatus(
@@ -117,6 +148,53 @@ export class BookingRepository {
       .returning();
 
     return mapRowToSummary(record);
+  }
+
+  async findByCustomerId(
+    customerId: string,
+    status?: BookingSummary['status'],
+    options?: { limit?: number; offset?: number }
+  ): Promise<BookingSummary[]> {
+    const filters = [eq(bookings.customerId, customerId)];
+    if (status) {
+      filters.push(eq(bookings.status, status));
+    }
+
+    const whereClause = filters.length === 1 ? filters[0] : and(...filters);
+    const MAX_LIMIT = 50;
+    const DEFAULT_LIMIT = 20;
+    const requestedLimit = options?.limit ?? DEFAULT_LIMIT;
+    const limit = Math.min(Math.max(requestedLimit, 1), MAX_LIMIT);
+    const offset = Math.max(options?.offset ?? 0, 0);
+
+    const rows = await db
+      .select({
+        id: bookings.id,
+        bookingNumber: bookings.bookingNumber,
+        customerId: bookings.customerId,
+        artistId: bookings.artistId,
+        artistName: users.name,
+        occasion: bookings.occasion,
+        services: bookings.services,
+        scheduledDate: bookings.scheduledDate,
+        scheduledStartTime: bookings.scheduledStartTime,
+        scheduledEndTime: bookings.scheduledEndTime,
+        totalAmount: bookings.totalAmount,
+        status: bookings.status,
+        timezone: bookings.timezone,
+        paymentStatus: bookings.paymentStatus,
+        statusHistory: bookings.statusHistory,
+        address: bookings.address,
+        createdAt: bookings.createdAt,
+      })
+      .from(bookings)
+      .leftJoin(users, eq(users.id, bookings.artistId))
+      .where(whereClause)
+      .orderBy(desc(bookings.scheduledDate), desc(bookings.scheduledStartTime))
+      .limit(limit)
+      .offset(offset);
+
+    return rows.map((row) => mapRowToSummary(row as BookingRow));
   }
 
   private generateBookingNumber() {

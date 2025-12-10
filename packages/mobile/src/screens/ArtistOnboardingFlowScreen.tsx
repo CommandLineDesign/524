@@ -93,7 +93,6 @@ export function ArtistOnboardingFlowScreen() {
         primaryLocation: draft.primaryLocation,
         serviceRadiusKm: draft.serviceRadiusKm,
         profileImageUrl: draft.profileImageUrl,
-        verificationStatus: 'pending_review',
       });
 
       navigation.reset({
@@ -134,11 +133,22 @@ export function ArtistOnboardingFlowScreen() {
 
     try {
       setUploading(true);
-      const contentType = inferContentType(asset);
-      const presign = await presignProfilePhoto(contentType);
-
       const response = await fetch(asset.uri);
       const blob = await response.blob();
+      const contentType = inferContentType(asset);
+      console.debug('[upload-debug] inferred content type', contentType, { uri: asset.uri });
+      console.debug('[upload-debug] picked image blob', {
+        size: blob.size,
+        type: blob.type,
+        uri: asset.uri,
+      });
+
+      const presign = await presignProfilePhoto(contentType, blob.size);
+      console.debug('[upload-debug] presign response', {
+        uploadUrl: presign.uploadUrl,
+        bucket: presign.bucket,
+        publicUrl: presign.publicUrl,
+      });
 
       const uploadResponse = await fetch(presign.uploadUrl, {
         method: 'PUT',
@@ -149,6 +159,13 @@ export function ArtistOnboardingFlowScreen() {
       });
 
       if (!uploadResponse.ok) {
+        const errorBody = await uploadResponse.text().catch(() => '<unreadable body>');
+        console.error('[upload-debug] upload failed', {
+          status: uploadResponse.status,
+          statusText: uploadResponse.statusText,
+          headers: Object.fromEntries(uploadResponse.headers.entries()),
+          body: errorBody?.slice(0, 500),
+        });
         throw new Error(`Upload failed with status ${uploadResponse.status}`);
       }
 

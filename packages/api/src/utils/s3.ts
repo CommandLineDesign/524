@@ -65,17 +65,32 @@ export async function createPresignedUploadUrl(params: {
     Bucket: env.S3_BUCKET as string,
     Key: key,
     ContentType: params.contentType,
-    ContentLength: params.contentLength,
   });
 
   const uploadUrl = await getSignedUrl(client, command, { expiresIn });
+  const presignUrl = new URL(uploadUrl);
+  const signedHeaders = presignUrl.searchParams.get('X-Amz-SignedHeaders');
+  const signedCredential = presignUrl.searchParams.get('X-Amz-Credential');
+  const signedDate = presignUrl.searchParams.get('X-Amz-Date');
   const publicUrlBase =
     env.S3_PUBLIC_BASE_URL ??
     (env.S3_REGION && env.S3_BUCKET
       ? `https://${env.S3_BUCKET}.s3.${env.S3_REGION}.amazonaws.com`
       : undefined);
 
-  logger.debug({ key, bucket: env.S3_BUCKET, expiresIn }, 'Generated presigned upload URL');
+  logger.debug(
+    {
+      key,
+      bucket: env.S3_BUCKET,
+      contentType: params.contentType,
+      contentLength: params.contentLength,
+      expiresIn,
+      signedHeaders,
+      signedCredential,
+      signedDate,
+    },
+    'Generated presigned upload URL'
+  );
 
   return {
     uploadUrl,

@@ -26,6 +26,14 @@ export class BookingService {
     return this.repository.findById(bookingId);
   }
 
+  listCustomerBookings(
+    customerId: string,
+    status?: BookingSummary['status'],
+    options?: { limit?: number; offset?: number }
+  ): Promise<BookingSummary[]> {
+    return this.repository.findByCustomerId(customerId, status, options);
+  }
+
   async updateBookingStatus(
     bookingId: string,
     status: UpdateBookingStatusPayload['status']

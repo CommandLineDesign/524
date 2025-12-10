@@ -7,17 +7,21 @@ import type { RootStackParamList } from '../navigation/AppNavigator';
 import { useAuthStore } from '../store/authStore';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+type SimpleRoute = {
+  [K in keyof RootStackParamList]: RootStackParamList[K] extends undefined ? K : never;
+}[keyof RootStackParamList];
 
 interface NavigationMenuProps {
   visible: boolean;
   onClose: () => void;
 }
 
-const menuItems = [
-  { label: 'Home', screen: 'Welcome' as keyof RootStackParamList },
-  { label: 'Services', screen: 'ServiceSelection' as keyof RootStackParamList },
-  { label: 'Occasions', screen: 'OccasionSelection' as keyof RootStackParamList },
-  { label: 'Booking Summary', screen: 'BookingSummary' as keyof RootStackParamList },
+const menuItems: Array<{ label: string; screen: SimpleRoute }> = [
+  { label: 'Home', screen: 'Welcome' },
+  { label: 'Services', screen: 'ServiceSelection' },
+  { label: 'Occasions', screen: 'OccasionSelection' },
+  { label: 'Booking Summary', screen: 'BookingSummary' },
+  { label: 'My Bookings', screen: 'BookingsList' },
 ];
 
 export function NavigationMenu({ visible, onClose }: NavigationMenuProps) {
@@ -25,7 +29,7 @@ export function NavigationMenu({ visible, onClose }: NavigationMenuProps) {
   const logout = useAuthStore((state) => state.logout);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  const handleNavigate = (screen: keyof RootStackParamList) => {
+  const handleNavigate = (screen: SimpleRoute) => {
     navigation.navigate(screen);
     onClose();
   };
