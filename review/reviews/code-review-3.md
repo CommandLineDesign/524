@@ -21,7 +21,7 @@ This change implements a comprehensive artist booking management system that ena
   **Notes:** Added role-checked accept/decline handling plus validated transitions for other statuses and broadened status endpoint auth to support admin/artist with safeguards.
 
 ### Major
-- [status:story] **File:** `packages/api/src/services/bookingService.ts:56-76`
+- [status:done] **File:** `packages/api/src/services/bookingService.ts:56-76`
   **Issue:** Decline/cancel flows update booking status/history but never void or refund the original payment authorization, leaving paymentStatus unchanged and potential holds in place when a request is rejected
   **Fix:** Invoke PaymentService to void/refund on decline/cancel and persist the resulting paymentStatus (and timestamps) alongside the status change  
   **Story:** [release-payment-holds-on-booking-declines](../stories/release-payment-holds-on-booking-declines.md)
@@ -52,7 +52,7 @@ This change implements a comprehensive artist booking management system that ena
   **Fix:** Add distinct styling for 'declined' status to differentiate from 'cancelled' bookings  
   **Notes:** Added separate declined badge color to distinguish it from cancelled.
 
-- [status:story] **File:** `packages/api/src/controllers/bookingController.ts:10-209`
+- [status:done] **File:** `packages/api/src/controllers/bookingController.ts:10-209`
   **Issue:** Newly added artist list/detail/accept/decline/cancel endpoints and mobile artist booking screens lack automated tests
   **Fix:** Add API tests covering authZ, allowed transitions, payment side-effects, and React Native component/query tests for the artist list/detail flows  
   **Story:** [test-coverage-for-artist-booking-flows](../stories/test-coverage-for-artist-booking-flows.md)
