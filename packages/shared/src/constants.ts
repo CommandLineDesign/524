@@ -8,6 +8,7 @@ export type ServiceType = (typeof SERVICE_TYPES)[number];
 
 export const BOOKING_STATUS = [
   'pending',
+  'declined',
   'confirmed',
   'paid',
   'in_progress',

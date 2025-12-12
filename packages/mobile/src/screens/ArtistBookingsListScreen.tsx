@@ -16,25 +16,23 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { BookingCard } from '../components/bookings/BookingCard';
 import { STATUS_LABELS } from '../components/bookings/bookingDisplay';
 import type { RootStackParamList } from '../navigation/AppNavigator';
-import { useCustomerBookings } from '../query/bookings';
+import { useArtistBookings } from '../query/bookings';
 import { colors } from '../theme/colors';
 
-type BookingsNavProp = NativeStackNavigationProp<RootStackParamList, 'BookingsList'>;
+type ArtistBookingsNavProp = NativeStackNavigationProp<RootStackParamList, 'ArtistBookingsList'>;
 
 const STATUS_CHIPS: Array<{ value: BookingStatus | 'all'; label: string }> = [
-  { value: 'all', label: '전체' },
   { value: 'pending', label: STATUS_LABELS.pending },
-  { value: 'declined', label: STATUS_LABELS.declined },
+  { value: 'all', label: '전체' },
   { value: 'confirmed', label: STATUS_LABELS.confirmed },
-  { value: 'paid', label: STATUS_LABELS.paid },
-  { value: 'in_progress', label: STATUS_LABELS.in_progress },
-  { value: 'completed', label: STATUS_LABELS.completed },
+  { value: 'declined', label: STATUS_LABELS.declined },
   { value: 'cancelled', label: STATUS_LABELS.cancelled },
+  { value: 'completed', label: STATUS_LABELS.completed },
 ];
 
-export function BookingsListScreen() {
-  const navigation = useNavigation<BookingsNavProp>();
-  const [statusFilter, setStatusFilter] = useState<BookingStatus | 'all'>('all');
+export function ArtistBookingsListScreen() {
+  const navigation = useNavigation<ArtistBookingsNavProp>();
+  const [statusFilter, setStatusFilter] = useState<BookingStatus | 'all'>('pending');
 
   const {
     data: bookings,
@@ -42,7 +40,7 @@ export function BookingsListScreen() {
     isError,
     refetch,
     isRefetching,
-  } = useCustomerBookings(statusFilter === 'all' ? undefined : statusFilter);
+  } = useArtistBookings(statusFilter === 'all' ? undefined : statusFilter);
 
   const sortedBookings = useMemo(
     () =>
@@ -55,18 +53,18 @@ export function BookingsListScreen() {
   );
 
   const handleSelectBooking = (bookingId: string) => {
-    navigation.navigate('BookingDetail', { bookingId });
+    navigation.navigate('ArtistBookingDetail', { bookingId });
   };
 
   const renderItem = ({ item }: { item: BookingSummary }) => (
-    <BookingCard booking={item} onPress={() => handleSelectBooking(item.id)} />
+    <BookingCard booking={item} onPress={() => handleSelectBooking(item.id)} hideArtist />
   );
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom', 'left', 'right']}>
       <View style={styles.header}>
-        <Text style={styles.title}>내 예약</Text>
-        <Text style={styles.subtitle}>지난 예약과 예정된 예약을 한 곳에서 확인하세요.</Text>
+        <Text style={styles.title}>예약 요청</Text>
+        <Text style={styles.subtitle}>대기 중인 예약을 확인하고 응답하세요.</Text>
       </View>
 
       <View style={styles.filters}>
@@ -87,21 +85,25 @@ export function BookingsListScreen() {
       </View>
 
       {isLoading ? (
-        <View style={styles.centered}>
+        <View style={styles.centered} testID="loading-indicator">
           <ActivityIndicator color={colors.primary} />
           <Text style={styles.mutedText}>예약을 불러오는 중...</Text>
         </View>
       ) : isError ? (
         <View style={styles.centered}>
           <Text style={styles.errorText}>예약을 불러오지 못했어요. 다시 시도해 주세요.</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
+          <TouchableOpacity
+            style={styles.retryButton}
+            onPress={() => refetch()}
+            testID="retry-button"
+          >
             <Text style={styles.retryText}>다시 시도</Text>
           </TouchableOpacity>
         </View>
       ) : sortedBookings.length === 0 ? (
         <View style={styles.centered}>
           <Text style={styles.mutedText}>표시할 예약이 없어요.</Text>
-          <Text style={styles.mutedTextSmall}>새로운 예약을 진행하면 여기에 표시됩니다.</Text>
+          <Text style={styles.mutedTextSmall}>새로운 예약 요청이 오면 여기에 표시됩니다.</Text>
         </View>
       ) : (
         <FlatList

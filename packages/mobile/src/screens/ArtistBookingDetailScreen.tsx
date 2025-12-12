@@ -3,6 +3,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React from 'react';
 import {
   ActivityIndicator,
+  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -15,18 +16,59 @@ import { BookingStatusBadge } from '../components/bookings/BookingStatusBadge';
 import { BookingStatusHistory } from '../components/bookings/BookingStatusHistory';
 import { formatCurrency, formatSchedule } from '../components/bookings/bookingDisplay';
 import type { RootStackParamList } from '../navigation/AppNavigator';
-import { useBookingDetail } from '../query/bookings';
+import {
+  useAcceptBookingMutation,
+  useBookingDetail,
+  useDeclineBookingMutation,
+} from '../query/bookings';
 import { colors } from '../theme/colors';
 
-type BookingDetailNavProp = NativeStackNavigationProp<RootStackParamList, 'BookingDetail'>;
-type BookingDetailRouteProp = RouteProp<RootStackParamList, 'BookingDetail'>;
+type ArtistBookingDetailNavProp = NativeStackNavigationProp<
+  RootStackParamList,
+  'ArtistBookingDetail'
+>;
+type ArtistBookingDetailRouteProp = RouteProp<RootStackParamList, 'ArtistBookingDetail'>;
 
-export function BookingDetailScreen() {
-  const navigation = useNavigation<BookingDetailNavProp>();
-  const route = useRoute<BookingDetailRouteProp>();
+export function ArtistBookingDetailScreen() {
+  const navigation = useNavigation<ArtistBookingDetailNavProp>();
+  const route = useRoute<ArtistBookingDetailRouteProp>();
   const bookingId = route.params.bookingId;
 
   const { data, isLoading, isError, refetch } = useBookingDetail(bookingId);
+  const acceptMutation = useAcceptBookingMutation();
+  const declineMutation = useDeclineBookingMutation();
+
+  const isPending = data?.status === 'pending';
+
+  const handleAccept = () => {
+    if (!data) return;
+    acceptMutation.mutate(data.id, {
+      onSuccess: () => {
+        Alert.alert('예약을 확정했습니다');
+      },
+      onError: (error) => {
+        const message = error instanceof Error ? error.message : '승인에 실패했습니다.';
+        Alert.alert('승인 실패', message);
+      },
+    });
+  };
+
+  const handleDecline = () => {
+    if (!data) return;
+    declineMutation.mutate(
+      { bookingId: data.id },
+      {
+        onSuccess: () => {
+          Alert.alert('예약을 거절했습니다');
+          navigation.goBack();
+        },
+        onError: (error) => {
+          const message = error instanceof Error ? error.message : '거절에 실패했습니다.';
+          Alert.alert('거절 실패', message);
+        },
+      }
+    );
+  };
 
   if (isLoading) {
     return (
@@ -51,15 +93,15 @@ export function BookingDetailScreen() {
     );
   }
 
-  const timezoneLabel = data.timezone?.trim() || '미지정';
   const paymentStatusLabel = data.paymentStatus?.trim() || '정보 없음';
+
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.headerRow}>
           <View style={styles.headerTextGroup}>
             <Text style={styles.bookingNumber}>{data.bookingNumber}</Text>
-            <Text style={styles.title}>예약 상세</Text>
+            <Text style={styles.title}>예약 요청 상세</Text>
           </View>
           <BookingStatusBadge status={data.status} />
         </View>
@@ -69,13 +111,7 @@ export function BookingDetailScreen() {
           <Text style={styles.primaryText}>
             {formatSchedule(data.scheduledDate, data.scheduledStartTime, data.scheduledEndTime)}
           </Text>
-          <Text style={styles.secondaryText}>타임존: {timezoneLabel}</Text>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>아티스트</Text>
-          <Text style={styles.primaryText}>{data.artistName ?? '아티스트 미정'}</Text>
-          <Text style={styles.secondaryText}>예약 번호: {data.id}</Text>
+          <Text style={styles.secondaryText}>예약 ID: {data.id}</Text>
         </View>
 
         <View style={styles.section}>
@@ -97,30 +133,46 @@ export function BookingDetailScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>이용 장소</Text>
-          <Text style={styles.primaryText}>{data.location?.addressLine ?? '주소 정보 없음'}</Text>
-        </View>
-
-        <View style={styles.section}>
           <Text style={styles.sectionTitle}>진행 상태</Text>
           <Text style={styles.primaryText}>결제 상태: {paymentStatusLabel}</Text>
           <BookingStatusHistory history={data.statusHistory} />
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>추가 동작</Text>
-          <Text style={styles.secondaryText}>
-            취소 및 변경은 곧 제공될 예정입니다. 현재는 확인만 가능합니다.
-          </Text>
-          <View style={styles.actionRow}>
-            <TouchableOpacity style={[styles.disabledButton, styles.halfButton]} disabled>
-              <Text style={styles.disabledText}>예약 취소 (준비 중)</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.disabledButton, styles.halfButton]} disabled>
-              <Text style={styles.disabledText}>일정 변경 (준비 중)</Text>
-            </TouchableOpacity>
+        {isPending ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>응답</Text>
+            <Text style={styles.secondaryText}>예약을 수락하거나 거절할 수 있습니다.</Text>
+            <View style={styles.actionRow}>
+              <TouchableOpacity
+                style={[styles.actionButton, styles.declineButton]}
+                onPress={handleDecline}
+                disabled={declineMutation.isPending}
+              >
+                {declineMutation.isPending ? (
+                  <ActivityIndicator color={colors.text} />
+                ) : (
+                  <Text style={styles.declineText}>거절</Text>
+                )}
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.actionButton, styles.acceptButton]}
+                onPress={handleAccept}
+                disabled={acceptMutation.isPending}
+              >
+                {acceptMutation.isPending ? (
+                  <ActivityIndicator color={colors.background} />
+                ) : (
+                  <Text style={styles.acceptText}>확정</Text>
+                )}
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
+        ) : (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>응답</Text>
+            <Text style={styles.secondaryText}>이 예약은 더 이상 응답이 필요하지 않습니다.</Text>
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -226,20 +278,27 @@ const styles = StyleSheet.create({
     gap: 8,
     marginTop: 8,
   },
-  disabledButton: {
+  actionButton: {
     flex: 1,
     paddingVertical: 12,
     borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  declineButton: {
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: '#f9fafb',
-    alignItems: 'center',
   },
-  halfButton: {
-    flex: 1,
+  acceptButton: {
+    backgroundColor: colors.primary,
   },
-  disabledText: {
-    color: colors.muted,
-    fontWeight: '600',
+  declineText: {
+    color: colors.text,
+    fontWeight: '700',
+  },
+  acceptText: {
+    color: colors.background,
+    fontWeight: '700',
   },
 });

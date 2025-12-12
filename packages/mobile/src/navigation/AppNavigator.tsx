@@ -5,6 +5,8 @@ import { ActivityIndicator, View } from 'react-native';
 
 import { useArtistProfile } from '../query/artist';
 import { useOnboardingState } from '../query/onboarding';
+import { ArtistBookingDetailScreen } from '../screens/ArtistBookingDetailScreen';
+import { ArtistBookingsListScreen } from '../screens/ArtistBookingsListScreen';
 import { ArtistOnboardingFlowScreen } from '../screens/ArtistOnboardingFlowScreen';
 import { ArtistPendingScreen } from '../screens/ArtistPendingScreen';
 import { ArtistSignupScreen } from '../screens/ArtistSignupScreen';
@@ -36,6 +38,8 @@ export type RootStackParamList = {
   BookingDetail: { bookingId: string };
   ArtistOnboarding: undefined;
   ArtistPending: undefined;
+  ArtistBookingsList: undefined;
+  ArtistBookingDetail: { bookingId: string };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -43,28 +47,38 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 export function AppNavigator() {
   const { user, isLoading, loadSession } = useAuthStore();
   const isArtist = Boolean(user?.primaryRole === 'artist' || user?.roles?.includes('artist'));
-  const { data: onboarding, isLoading: onboardingLoading } = useOnboardingState(
-    isArtist ? undefined : user?.id
-  );
-  const { data: artistProfile, isLoading: artistProfileLoading } = useArtistProfile(
-    user?.id,
-    Boolean(user && isArtist)
-  );
+  const {
+    data: artistProfile,
+    isLoading: artistProfileLoading,
+    error: artistProfileError,
+  } = useArtistProfile(user?.id, Boolean(user && isArtist));
 
   useEffect(() => {
     loadSession();
   }, [loadSession]);
 
+  const artistProfileForbidden =
+    (artistProfileError as { response?: { status?: number } } | undefined)?.response?.status ===
+    403;
+  const lostArtistAccess = Boolean(isArtist && artistProfileForbidden);
+  const effectiveIsArtist = isArtist && !lostArtistAccess;
+
+  const { data: onboarding, isLoading: onboardingLoading } = useOnboardingState(
+    effectiveIsArtist ? undefined : user?.id
+  );
+
   const shouldShowCustomerOnboarding =
     Boolean(user) && !(user?.onboardingCompleted || onboarding?.completed);
   const requiresArtistProfile =
-    isArtist &&
+    effectiveIsArtist &&
     (!artistProfile ||
       !artistProfile.stageName ||
       !artistProfile.primaryLocation ||
       !artistProfile.profileImageUrl);
   const artistPendingReview =
-    isArtist && !requiresArtistProfile && artistProfile?.verificationStatus === 'pending_review';
+    effectiveIsArtist &&
+    !requiresArtistProfile &&
+    artistProfile?.verificationStatus === 'pending_review';
 
   if (isLoading || (user && (onboardingLoading || artistProfileLoading))) {
     return (
@@ -81,13 +95,17 @@ export function AppNavigator() {
       <Stack.Navigator
         initialRouteName={
           user
-            ? requiresArtistProfile
-              ? 'ArtistOnboarding'
-              : artistPendingReview
-                ? 'ArtistPending'
-                : shouldShowCustomerOnboarding
-                  ? 'OnboardingFlow'
-                  : 'Welcome'
+            ? lostArtistAccess
+              ? 'Welcome'
+              : requiresArtistProfile
+                ? 'ArtistOnboarding'
+                : artistPendingReview
+                  ? 'ArtistPending'
+                  : effectiveIsArtist
+                    ? 'ArtistBookingsList'
+                    : shouldShowCustomerOnboarding
+                      ? 'OnboardingFlow'
+                      : 'Welcome'
             : 'Login'
         }
       >
@@ -141,6 +159,16 @@ export function AppNavigator() {
                   name="Welcome"
                   component={WelcomeScreen}
                   options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="ArtistBookingsList"
+                  component={ArtistBookingsListScreen}
+                  options={{ title: '예약 요청' }}
+                />
+                <Stack.Screen
+                  name="ArtistBookingDetail"
+                  component={ArtistBookingDetailScreen}
+                  options={{ title: '예약 요청 상세' }}
                 />
                 <Stack.Screen
                   name="ServiceSelection"

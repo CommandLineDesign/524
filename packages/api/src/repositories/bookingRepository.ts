@@ -11,6 +11,7 @@ import type {
 } from '@524/shared/bookings';
 
 import { db } from '../db/client.js';
+import { buildStatusHistory } from './statusHistory.js';
 
 type BookingRow = typeof bookings.$inferSelect & {
   artistName?: string | null;
@@ -118,6 +119,53 @@ export class BookingRepository {
     return record ? mapRowToSummary(record as BookingRow) : null;
   }
 
+  async findByArtistId(
+    artistId: string,
+    status?: BookingSummary['status'],
+    options?: { limit?: number; offset?: number }
+  ): Promise<BookingSummary[]> {
+    const filters = [eq(bookings.artistId, artistId)];
+    if (status) {
+      filters.push(eq(bookings.status, status));
+    }
+
+    const whereClause = filters.length === 1 ? filters[0] : and(...filters);
+    const MAX_LIMIT = 50;
+    const DEFAULT_LIMIT = 20;
+    const requestedLimit = options?.limit ?? DEFAULT_LIMIT;
+    const limit = Math.min(Math.max(requestedLimit, 1), MAX_LIMIT);
+    const offset = Math.max(options?.offset ?? 0, 0);
+
+    const rows = await db
+      .select({
+        id: bookings.id,
+        bookingNumber: bookings.bookingNumber,
+        customerId: bookings.customerId,
+        artistId: bookings.artistId,
+        artistName: users.name,
+        occasion: bookings.occasion,
+        services: bookings.services,
+        scheduledDate: bookings.scheduledDate,
+        scheduledStartTime: bookings.scheduledStartTime,
+        scheduledEndTime: bookings.scheduledEndTime,
+        totalAmount: bookings.totalAmount,
+        status: bookings.status,
+        timezone: bookings.timezone,
+        paymentStatus: bookings.paymentStatus,
+        statusHistory: bookings.statusHistory,
+        address: bookings.address,
+        createdAt: bookings.createdAt,
+      })
+      .from(bookings)
+      .leftJoin(users, eq(users.id, bookings.artistId))
+      .where(whereClause)
+      .orderBy(desc(bookings.scheduledDate), desc(bookings.scheduledStartTime))
+      .limit(limit)
+      .offset(offset);
+
+    return rows.map((row) => mapRowToSummary(row as BookingRow));
+  }
+
   async updateStatus(
     bookingId: string,
     status: UpdateBookingStatusPayload['status']
@@ -127,27 +175,7 @@ export class BookingRepository {
       throw Object.assign(new Error('Booking not found'), { status: 404 });
     }
 
-    const historyResult = await db
-      .select({ statusHistory: bookings.statusHistory })
-      .from(bookings)
-      .where(eq(bookings.id, bookingId))
-      .limit(1);
-
-    const normalizedHistory =
-      (historyResult[0]?.statusHistory as Array<{ status: string; timestamp: string }> | null) ??
-      [];
-    const updatedHistory = [...normalizedHistory, { status, timestamp: new Date().toISOString() }];
-
-    const [record] = await db
-      .update(bookings)
-      .set({
-        status,
-        statusHistory: updatedHistory,
-      })
-      .where(eq(bookings.id, bookingId))
-      .returning();
-
-    return mapRowToSummary(record);
+    return this.setStatusWithHistory(bookingId, status);
   }
 
   async findByCustomerId(
@@ -195,6 +223,127 @@ export class BookingRepository {
       .offset(offset);
 
     return rows.map((row) => mapRowToSummary(row as BookingRow));
+  }
+
+  async acceptBooking(bookingId: string, artistId: string): Promise<BookingSummary> {
+    const existing = await this.findById(bookingId);
+    if (!existing) {
+      throw Object.assign(new Error('Booking not found'), { status: 404 });
+    }
+    if (existing.artistId !== artistId) {
+      throw Object.assign(new Error('Forbidden'), { status: 403 });
+    }
+    if (existing.status !== 'pending') {
+      throw Object.assign(new Error('Only pending bookings can be accepted'), { status: 409 });
+    }
+
+    const [record] = await db
+      .update(bookings)
+      .set({
+        status: 'confirmed',
+        statusHistory: buildStatusHistory(
+          existing.statusHistory as Array<{ status: string; timestamp: string }> | null,
+          'confirmed'
+        ),
+        confirmedAt: new Date(),
+      })
+      .where(eq(bookings.id, bookingId))
+      .returning();
+
+    return mapRowToSummary(record);
+  }
+
+  async declineBooking(
+    bookingId: string,
+    artistId: string,
+    reason = 'artist_declined'
+  ): Promise<BookingSummary> {
+    const existing = await this.findById(bookingId);
+    if (!existing) {
+      throw Object.assign(new Error('Booking not found'), { status: 404 });
+    }
+    if (existing.artistId !== artistId) {
+      throw Object.assign(new Error('Forbidden'), { status: 403 });
+    }
+    if (existing.status !== 'pending') {
+      throw Object.assign(new Error('Only pending bookings can be declined'), { status: 409 });
+    }
+
+    const [record] = await db
+      .update(bookings)
+      .set({
+        status: 'declined',
+        cancelledBy: 'artist',
+        cancellationReason: reason,
+        cancelledAt: new Date(),
+        statusHistory: buildStatusHistory(
+          existing.statusHistory as Array<{ status: string; timestamp: string }> | null,
+          'declined'
+        ),
+      })
+      .where(eq(bookings.id, bookingId))
+      .returning();
+
+    return mapRowToSummary(record);
+  }
+
+  async cancelPendingBooking(bookingId: string, customerId: string): Promise<BookingSummary> {
+    const existing = await this.findById(bookingId);
+    if (!existing) {
+      throw Object.assign(new Error('Booking not found'), { status: 404 });
+    }
+    if (existing.customerId !== customerId) {
+      throw Object.assign(new Error('Forbidden'), { status: 403 });
+    }
+    if (existing.status !== 'pending') {
+      throw Object.assign(new Error('Only pending bookings can be cancelled by the customer'), {
+        status: 409,
+      });
+    }
+
+    const [record] = await db
+      .update(bookings)
+      .set({
+        status: 'cancelled',
+        cancelledBy: 'customer',
+        cancellationReason: 'customer_cancelled_pending',
+        cancelledAt: new Date(),
+        statusHistory: buildStatusHistory(
+          existing.statusHistory as Array<{ status: string; timestamp: string }> | null,
+          'cancelled'
+        ),
+      })
+      .where(eq(bookings.id, bookingId))
+      .returning();
+
+    return mapRowToSummary(record);
+  }
+
+  private async setStatusWithHistory(
+    bookingId: string,
+    status: UpdateBookingStatusPayload['status']
+  ): Promise<BookingSummary> {
+    const historyResult = await db
+      .select({ statusHistory: bookings.statusHistory })
+      .from(bookings)
+      .where(eq(bookings.id, bookingId))
+      .limit(1);
+
+    const updatedHistory = buildStatusHistory(
+      historyResult[0]?.statusHistory as Array<{ status: string; timestamp: string }> | null,
+      status
+    );
+
+    const [record] = await db
+      .update(bookings)
+      .set({
+        status,
+        statusHistory: updatedHistory,
+      })
+      .where(eq(bookings.id, bookingId))
+      .returning();
+
+    return mapRowToSummary(record);
   }
 
   private generateBookingNumber() {
