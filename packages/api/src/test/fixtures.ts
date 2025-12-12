@@ -218,7 +218,7 @@ export function createTestRequest(overrides: Partial<Request> = {}): Partial<Req
 /**
  * Test response factory for Express middleware testing
  */
-interface MockResponse extends Partial<Response> {
+interface MockResponse {
   status: (code: number) => MockResponse;
   json: (data: unknown) => MockResponse;
   send: (data: unknown) => MockResponse;

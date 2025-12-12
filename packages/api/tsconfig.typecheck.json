@@ -15,5 +15,6 @@
       "@524/notifications": ["packages/notifications/src/index.ts"],
       "@524/notifications/*": ["packages/notifications/src/*.ts"]
     }
-  }
+  },
+  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx", "src/**/*.spec.ts", "src/**/*.spec.tsx"]
 }
