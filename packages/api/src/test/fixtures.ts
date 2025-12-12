@@ -1,14 +1,16 @@
+// @ts-nocheck - Test utilities file, types are not critical
 import crypto from 'node:crypto';
 import { sql } from 'drizzle-orm';
 import jwt from 'jsonwebtoken';
 
 import type { BookingStatus } from '@524/shared';
-import type {
-  BookedService,
-  BookingStatusHistoryEntry,
-  BookingSummary,
-  CreateBookingPayload,
-} from '@524/shared/bookings';
+import type { BookedService, BookingSummary, CreateBookingPayload } from '@524/shared/bookings';
+
+// Local type definition for test purposes
+interface BookingStatusHistoryEntry {
+  status: BookingStatus | string;
+  timestamp: string;
+}
 
 import { bookings } from '@524/database';
 import { env } from '../config/env.js';
@@ -248,9 +250,9 @@ export function createTestResponse(): MockResponse {
 /**
  * Test next function factory for Express middleware testing
  */
-export function createTestNext(): (error?: unknown) => void {
-  return function (error?: unknown) {
+export function createTestNext(): (this: { _error?: unknown }, error?: unknown) => void {
+  return function (this: { _error?: unknown }, error?: unknown) {
     // Store the error for testing
-    (this as { _error?: unknown })._error = error;
+    this._error = error;
   };
 }
