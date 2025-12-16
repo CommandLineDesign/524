@@ -112,8 +112,10 @@ export function AppNavigator() {
   const { user, isLoading, loadSession } = useAuthStore();
   const isArtist = Boolean(user?.primaryRole === 'artist' || user?.roles?.includes('artist'));
 
-  // Initialize offline queue processor
-  useOfflineQueueProcessor();
+  // Initialize offline queue processor only for authenticated users
+  if (user) {
+    useOfflineQueueProcessor();
+  }
   const {
     data: artistProfile,
     isLoading: artistProfileLoading,

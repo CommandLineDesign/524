@@ -1,14 +1,29 @@
-import { type Router as ExpressRouter, Request, Response, Router } from 'express';
+import { type Router as ExpressRouter, Response, Router } from 'express';
 
-import { authenticate } from '../../middleware/auth.js';
+import { type AuthRequest, requireAuth } from '../../middleware/auth.js';
 import { ConversationService } from '../../services/conversationService.js';
 import { MessageService } from '../../services/messageService.js';
 import { uploadMessageImage } from '../../services/uploadService.js';
 
+/**
+ * Type guard to check if user has primaryRole (ensured by auth middleware)
+ */
+function hasPrimaryRole(
+  user: AuthRequest['user']
+): user is NonNullable<AuthRequest['user']> & { primaryRole: string } {
+  return user !== undefined && 'primaryRole' in user && typeof user.primaryRole === 'string';
+}
+
 const router: ExpressRouter = Router();
 
+// Pagination constants
+const CONVERSATIONS_DEFAULT_LIMIT = 20;
+const CONVERSATIONS_MAX_LIMIT = 50;
+const MESSAGES_DEFAULT_LIMIT = 50;
+const MESSAGES_MAX_LIMIT = 100;
+
 // Apply authentication to all messaging routes
-router.use(authenticate);
+router.use(requireAuth());
 
 // Initialize services
 const conversationService = new ConversationService();
@@ -20,15 +35,18 @@ const messageService = new MessageService();
  * GET /api/v1/conversations
  * Get user's conversations with pagination
  */
-router.get('/conversations', async (req: Request, res: Response) => {
+router.get('/conversations', async (req: AuthRequest, res: Response) => {
   try {
-    if (!req.user) {
+    if (!req.user || !hasPrimaryRole(req.user)) {
       return res.status(401).json({ error: 'Authentication required' });
     }
     const userId = req.user.id;
-    const userRole = req.user.primaryRole || 'customer';
+    const userRole = req.user.primaryRole;
 
-    const limit = Math.min(Number.parseInt(req.query.limit as string) || 20, 50); // Max 50
+    const limit = Math.min(
+      Number.parseInt(req.query.limit as string) || CONVERSATIONS_DEFAULT_LIMIT,
+      CONVERSATIONS_MAX_LIMIT
+    );
     const offset = Number.parseInt(req.query.offset as string) || 0;
 
     const result = await conversationService.getUserConversations(
@@ -60,7 +78,7 @@ router.get('/conversations', async (req: Request, res: Response) => {
  * GET /api/v1/conversations/:id
  * Get conversation details
  */
-router.get('/conversations/:id', async (req: Request, res: Response) => {
+router.get('/conversations/:id', async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user) {
       return res.status(401).json({ error: 'Authentication required' });
@@ -94,7 +112,7 @@ router.get('/conversations/:id', async (req: Request, res: Response) => {
  * POST /api/v1/conversations
  * Create or get existing conversation
  */
-router.post('/conversations', async (req: Request, res: Response) => {
+router.post('/conversations', async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user) {
       return res.status(401).json({ error: 'Authentication required' });
@@ -139,14 +157,14 @@ router.post('/conversations', async (req: Request, res: Response) => {
  * PUT /api/v1/conversations/:id/read
  * Mark messages as read in conversation
  */
-router.put('/conversations/:id/read', async (req: Request, res: Response) => {
+router.put('/conversations/:id/read', async (req: AuthRequest, res: Response) => {
   try {
-    if (!req.user) {
+    if (!req.user || !hasPrimaryRole(req.user)) {
       return res.status(401).json({ error: 'Authentication required' });
     }
     const conversationId = req.params.id;
     const userId = req.user.id;
-    const userRole = req.user.primaryRole || 'customer';
+    const userRole = req.user.primaryRole;
 
     const conversation = await conversationService.markAsRead(
       conversationId,
@@ -171,7 +189,7 @@ router.put('/conversations/:id/read', async (req: Request, res: Response) => {
  * POST /api/v1/conversations/:id/archive
  * Archive conversation
  */
-router.post('/conversations/:id/archive', async (req: Request, res: Response) => {
+router.post('/conversations/:id/archive', async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user) {
       return res.status(401).json({ error: 'Authentication required' });
@@ -200,7 +218,7 @@ router.post('/conversations/:id/archive', async (req: Request, res: Response) =>
  * GET /api/v1/conversations/:id/messages
  * Get messages for a conversation
  */
-router.get('/conversations/:id/messages', async (req: Request, res: Response) => {
+router.get('/conversations/:id/messages', async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user) {
       return res.status(401).json({ error: 'Authentication required' });
@@ -208,7 +226,10 @@ router.get('/conversations/:id/messages', async (req: Request, res: Response) =>
     const conversationId = req.params.id;
     const userId = req.user.id;
 
-    const limit = Math.min(Number.parseInt(req.query.limit as string) || 50, 100); // Max 100
+    const limit = Math.min(
+      Number.parseInt(req.query.limit as string) || MESSAGES_DEFAULT_LIMIT,
+      MESSAGES_MAX_LIMIT
+    );
     const offset = Number.parseInt(req.query.offset as string) || 0;
 
     const result = await messageService.getMessages(conversationId, userId, { limit, offset });
@@ -235,14 +256,14 @@ router.get('/conversations/:id/messages', async (req: Request, res: Response) =>
  * POST /api/v1/conversations/:id/messages
  * Send a message
  */
-router.post('/conversations/:id/messages', async (req: Request, res: Response) => {
+router.post('/conversations/:id/messages', async (req: AuthRequest, res: Response) => {
   try {
-    if (!req.user) {
+    if (!req.user || !hasPrimaryRole(req.user)) {
       return res.status(401).json({ error: 'Authentication required' });
     }
     const conversationId = req.params.id;
     const userId = req.user.id;
-    const userRole = req.user.primaryRole || 'customer';
+    const userRole = req.user.primaryRole;
 
     const { messageType, content, images, bookingId } = req.body;
 
@@ -287,7 +308,7 @@ router.post('/conversations/:id/messages', async (req: Request, res: Response) =
  * PUT /api/v1/messages/:id/read
  * Mark a specific message as read
  */
-router.put('/messages/:id/read', async (req: Request, res: Response) => {
+router.put('/messages/:id/read', async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user) {
       return res.status(401).json({ error: 'Authentication required' });
@@ -321,13 +342,14 @@ router.put('/messages/:id/read', async (req: Request, res: Response) => {
  * GET /api/v1/messages/unread-count
  * Get total unread message count for user
  */
-router.get('/messages/unread-count', async (req: Request, res: Response) => {
+router.get('/messages/unread-count', async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user) {
       return res.status(401).json({ error: 'Authentication required' });
     }
     const userId = req.user.id;
-    const userRole = req.user.primaryRole || 'customer';
+    // biome-ignore lint/suspicious/noExplicitAny: AuthRequest union type requires runtime check
+    const userRole = (req.user as any).primaryRole || 'customer';
 
     const count = await messageService.getTotalUnreadCount(
       userId,
@@ -353,17 +375,35 @@ router.get('/messages/unread-count', async (req: Request, res: Response) => {
  * POST /api/v1/messaging/upload-image
  * Upload image for messaging
  */
-router.post('/upload-image', async (req: Request, res: Response) => {
+router.post('/upload-image', async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user) {
       return res.status(401).json({ error: 'Authentication required' });
     }
-    const { fileName, fileType, conversationId } = req.body;
+    const { fileName, fileType, fileSize, conversationId } = req.body;
 
     if (!fileName || !fileType || !conversationId) {
       return res.status(400).json({
         success: false,
         error: 'fileName, fileType, and conversationId are required',
+      });
+    }
+
+    // Validate file size (max 10MB)
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
+    if (!fileSize || typeof fileSize !== 'number' || fileSize <= 0 || fileSize > MAX_FILE_SIZE) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid file size. Maximum allowed size is 10MB.',
+      });
+    }
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(fileType.toLowerCase())) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid file type. Only JPEG, PNG, and WebP images are allowed.',
       });
     }
 
@@ -383,6 +423,7 @@ router.post('/upload-image', async (req: Request, res: Response) => {
     const uploadResult = await uploadMessageImage({
       fileName,
       fileType,
+      fileSize,
       conversationId,
       userId: req.user.id,
     });

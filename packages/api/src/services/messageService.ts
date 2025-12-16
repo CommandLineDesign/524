@@ -1,6 +1,6 @@
 import type { ChatMessage } from '@524/shared/messaging';
 import { MessageRepository, MessageWithSender } from '../repositories/messageRepository.js';
-import { io } from '../websocket/chatSocket.js';
+import { getChatSocket } from '../websocket/chatSocket.js';
 import { ConversationService } from './conversationService.js';
 
 export interface SendMessageOptions {
@@ -54,6 +54,7 @@ export class MessageService {
     await this.conversationService.updateLastMessageAt(conversationId, message.sentAt);
 
     // Emit via WebSocket if available
+    const io = getChatSocket();
     if (io) {
       const chatMessage: ChatMessage = {
         id: message.id,
@@ -61,17 +62,17 @@ export class MessageService {
         senderId: message.senderId,
         senderRole: message.senderRole as 'customer' | 'artist',
         messageType: message.messageType as 'text' | 'image' | 'system',
-        content: message.content || '',
+        content: message.content ?? '',
         images: message.images as string[] | undefined,
-        bookingId: message.bookingId,
+        bookingId: message.bookingId ?? undefined,
         sentAt: message.sentAt.toISOString(),
         readAt: message.readAt?.toISOString(),
       };
 
-      io.to(`conversation:${conversationId}`).emit('message:new', chatMessage);
+      getChatSocket()?.to(`conversation:${conversationId}`).emit('message:new', chatMessage);
 
       // Emit delivery confirmation to sender
-      io.to(`user:${senderId}`).emit('message:delivered', {
+      getChatSocket()?.to(`user:${senderId}`).emit('message:delivered', {
         messageId: message.id,
         deliveredAt: new Date().toISOString(),
       });
@@ -97,16 +98,17 @@ export class MessageService {
       throw new Error('Access denied to conversation');
     }
 
-    const messages = await this.messageRepo.getMessages(conversationId, pagination);
+    const limit = pagination.limit ?? 50;
+    const offset = pagination.offset ?? 0;
+
+    const messages = await this.messageRepo.getMessages(conversationId, { limit, offset });
 
     // Check if there are more messages
     const totalMessages = await this.messageRepo.getMessages(conversationId, {
       limit: 1000,
       offset: 0,
     });
-    const hasMore =
-      messages.length === pagination.limit &&
-      totalMessages.length > (pagination.limit ?? 50) + (pagination.offset ?? 0);
+    const hasMore = messages.length === limit && totalMessages.length > limit + offset;
 
     return {
       messages: messages.reverse(), // Return in chronological order (oldest first)
@@ -124,6 +126,7 @@ export class MessageService {
     }
 
     // Emit read receipt via WebSocket
+    const io = getChatSocket();
     if (io) {
       const context = await this.messageRepo.getMessageWithContext(messageId);
       if (context) {
@@ -132,7 +135,7 @@ export class MessageService {
             ? context.conversation.artistId
             : context.conversation.customerId;
 
-        io.to(`user:${recipientId}`).emit('message:read', {
+        getChatSocket()?.to(`user:${recipientId}`).emit('message:read', {
           messageId,
           readAt: new Date().toISOString(),
           readBy: userId,
@@ -181,7 +184,7 @@ export class MessageService {
     return conversations.conversations.reduce((total, conv) => {
       const unreadCount =
         userRole === 'customer' ? conv.unreadCountCustomer : conv.unreadCountArtist;
-      return total + unreadCount;
+      return total + (unreadCount ?? 0);
     }, 0);
   }
 

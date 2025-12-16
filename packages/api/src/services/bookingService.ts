@@ -7,15 +7,18 @@ import type {
   CreateBookingPayload,
   UpdateBookingStatusPayload,
 } from '@524/shared/bookings';
-import { BOOKING_SYSTEM_MESSAGES, defaultLocale } from '@524/shared/constants';
 
 import { BookingRepository } from '../repositories/bookingRepository.js';
+import { createLogger } from '../utils/logger.js';
 import { ConversationService } from './conversationService.js';
 import { MessageService } from './messageService.js';
+import { MessageTemplateService } from './messageTemplateService.js';
 import { NotificationService } from './notificationService.js';
 import { PaymentService } from './paymentService.js';
 
 type Actor = { id: string; roles?: string[] };
+
+const logger = createLogger('booking-service');
 
 export class BookingService {
   constructor(
@@ -23,7 +26,8 @@ export class BookingService {
     private readonly notificationService = new NotificationService(),
     private readonly paymentService = new PaymentService(),
     private readonly messageService = new MessageService(),
-    private readonly conversationService = new ConversationService()
+    private readonly conversationService = new ConversationService(),
+    private readonly messageTemplateService = new MessageTemplateService()
   ) {}
 
   async createBooking(payload: CreateBookingPayload): Promise<BookingSummary> {
@@ -151,15 +155,28 @@ export class BookingService {
         );
 
         // Generate appropriate system message based on status
-        const systemMessage = this.generateBookingStatusMessage(booking, status);
+        const systemMessage = this.messageTemplateService.generateBookingStatusMessage(
+          booking,
+          status
+        );
 
         if (systemMessage) {
           await this.messageService.sendSystemMessage(conversation.id, systemMessage, booking.id);
         }
       } catch (error) {
         // Don't fail the booking operation if messaging fails
-        // Just log the error
-        console.error('Failed to send booking status system message:', error);
+        // Log the error with context for debugging
+        logger.error(
+          {
+            error,
+            bookingId: booking.id,
+            customerId: booking.customerId,
+            artistId: booking.artistId,
+            status,
+            operation: 'sendBookingStatusSystemMessage',
+          },
+          'Failed to send booking status system message'
+        );
       }
     })();
   }
@@ -167,33 +184,4 @@ export class BookingService {
   /**
    * Generate appropriate system message for booking status changes
    */
-  private generateBookingStatusMessage(
-    booking: BookingSummary,
-    status: BookingSummary['status']
-  ): string | null {
-    const bookingNumber = booking.bookingNumber;
-    const locale = defaultLocale; // Could be made configurable per user in future
-
-    // Format date according to locale
-    const dateOptions = {
-      year: 'numeric' as const,
-      month: 'long' as const,
-      day: 'numeric' as const,
-      weekday: 'long' as const,
-    };
-    const scheduledDate = new Date(booking.scheduledDate).toLocaleDateString(
-      locale === 'ko' ? 'ko-KR' : 'en-US',
-      dateOptions
-    );
-
-    const messageTemplate = BOOKING_SYSTEM_MESSAGES[locale]?.[status];
-    if (!messageTemplate) {
-      return null;
-    }
-
-    // Replace placeholders in the message
-    return messageTemplate
-      .replace('{bookingNumber}', bookingNumber)
-      .replace('{scheduledDate}', scheduledDate);
-  }
 }

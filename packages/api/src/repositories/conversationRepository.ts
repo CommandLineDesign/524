@@ -1,30 +1,25 @@
 import { and, desc, eq, sql } from 'drizzle-orm';
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
 
-import { conversations, messages } from '@524/database/schema';
+import { conversations, messages } from '@524/database';
 
-import { env } from '../config/env.js';
-
-const client = postgres(env.DATABASE_URL);
-const db = drizzle(client);
+import { db } from '../db/client.js';
 
 export interface ConversationWithDetails {
   id: string;
-  bookingId?: string;
+  bookingId: string | null;
   customerId: string;
   artistId: string;
-  status: string;
+  status: string | null;
   lastMessageAt: Date;
-  unreadCountCustomer: number;
-  unreadCountArtist: number;
-  archivedAt?: Date;
+  unreadCountCustomer: number | null;
+  unreadCountArtist: number | null;
+  archivedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
   lastMessage?: {
     id: string;
-    content?: string;
-    messageType: string;
+    content: string | null;
+    messageType: string | null;
     sentAt: Date;
   };
 }

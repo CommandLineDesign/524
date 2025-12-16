@@ -1,25 +1,20 @@
 import { and, desc, eq, sql } from 'drizzle-orm';
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
 
-import { messages } from '@524/database/schema';
+import { messages } from '@524/database';
 
-import { env } from '../config/env.js';
-
-const client = postgres(env.DATABASE_URL);
-const db = drizzle(client);
+import { db } from '../db/client.js';
 
 export interface MessageWithSender {
   id: string;
   conversationId: string;
   senderId: string;
   senderRole: string;
-  messageType: string;
-  content?: string;
-  images?: string[];
-  bookingId?: string;
+  messageType: string | null;
+  content: string | null;
+  images: unknown;
+  bookingId: string | null;
   sentAt: Date;
-  readAt?: Date;
+  readAt: Date | null;
   createdAt: Date;
 }
 
@@ -84,7 +79,9 @@ export class MessageRepository {
     }
 
     const { message: msg, conversation } = message[0];
-    const hasPermission = conversation.customer_id === userId || conversation.artist_id === userId;
+    const hasPermission =
+      // biome-ignore lint/suspicious/noExplicitAny: SQL join result type is dynamic
+      (conversation as any).customer_id === userId || (conversation as any).artist_id === userId;
 
     if (!hasPermission) {
       return null;
@@ -168,6 +165,7 @@ export class MessageRepository {
       return null;
     }
 
-    return result[0];
+    // biome-ignore lint/suspicious/noExplicitAny: SQL join result type is dynamic
+    return result[0] as any;
   }
 }

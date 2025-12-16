@@ -3,15 +3,15 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 import { env } from '../config/env.js';
 
-if (!env.AWS_ACCESS_KEY_ID || !env.AWS_SECRET_ACCESS_KEY) {
-  throw new Error('AWS credentials not configured');
+if (!env.S3_ACCESS_KEY || !env.S3_SECRET_KEY) {
+  throw new Error('S3 credentials not configured');
 }
 
 const s3Client = new S3Client({
-  region: env.AWS_REGION || 'us-east-1',
+  region: env.S3_REGION || 'us-east-1',
   credentials: {
-    accessKeyId: env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: env.AWS_SECRET_ACCESS_KEY,
+    accessKeyId: env.S3_ACCESS_KEY,
+    secretAccessKey: env.S3_SECRET_KEY,
   },
 });
 
@@ -27,10 +27,11 @@ export interface UploadImageResult {
 export async function uploadMessageImage(params: {
   fileName: string;
   fileType: string;
+  fileSize: number;
   conversationId: string;
   userId: string;
 }): Promise<UploadImageResult> {
-  const { fileName, fileType, conversationId, userId } = params;
+  const { fileName, fileType, fileSize, conversationId, userId } = params;
 
   // Validate file type
   const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
@@ -44,7 +45,7 @@ export async function uploadMessageImage(params: {
   const extension = fileName.split('.').pop()?.toLowerCase() || 'jpg';
   const key = `chat/${conversationId}/${timestamp}_${randomId}.${extension}`;
 
-  const bucketName = env.AWS_S3_BUCKET || '524-chat-media';
+  const bucketName = env.S3_BUCKET || '524-chat-media';
 
   // Create the PutObject command
   const putObjectCommand = new PutObjectCommand({
@@ -67,7 +68,7 @@ export async function uploadMessageImage(params: {
   });
 
   // Generate public URL for accessing the uploaded file
-  const publicUrl = `https://${bucketName}.s3.${env.AWS_REGION || 'us-east-1'}.amazonaws.com/${key}`;
+  const publicUrl = `https://${bucketName}.s3.${env.S3_REGION || 'us-east-1'}.amazonaws.com/${key}`;
 
   return {
     uploadUrl,
@@ -80,7 +81,7 @@ export async function uploadMessageImage(params: {
  * Delete an image from S3 (for cleanup or moderation)
  */
 export async function deleteMessageImage(key: string): Promise<void> {
-  const bucketName = env.AWS_S3_BUCKET || '524-chat-media';
+  const bucketName = env.S3_BUCKET || '524-chat-media';
 
   // Note: This would require delete permissions and proper error handling
   // For now, we'll just log the intent
@@ -98,7 +99,7 @@ export async function deleteMessageImage(key: string): Promise<void> {
  * Get a signed URL for viewing a private image (if needed in future)
  */
 export async function getImageViewUrl(key: string, expiresIn = 3600): Promise<string> {
-  const bucketName = env.AWS_S3_BUCKET || '524-chat-media';
+  const bucketName = env.S3_BUCKET || '524-chat-media';
 
   const getObjectCommand = new GetObjectCommand({
     Bucket: bucketName,

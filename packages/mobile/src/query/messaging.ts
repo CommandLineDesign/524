@@ -398,6 +398,32 @@ export function useMarkAsRead() {
 }
 
 /**
+ * Hook to create or get a conversation
+ */
+export function useCreateConversation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: { artistId: string; bookingId?: string }) => {
+      const response = await apiClient.post<{ success: boolean; data: Conversation }>(
+        '/messaging/conversations',
+        params
+      );
+      return response.data;
+    },
+    onSuccess: (newConversation) => {
+      // Add the new conversation to the conversations cache
+      queryClient.invalidateQueries({
+        queryKey: messagingQueryKeys.conversations('customer'),
+      });
+      queryClient.invalidateQueries({
+        queryKey: messagingQueryKeys.conversations('artist'),
+      });
+    },
+  });
+}
+
+/**
  * Hook to get unread message count
  */
 export function useUnreadCount(userRole: 'customer' | 'artist') {

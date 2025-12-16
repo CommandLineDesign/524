@@ -39,18 +39,26 @@ const connectedUsers = new Map<string, Set<string>>(); // userId -> Set of socke
 
 // Rate limiting for message sending (user + conversation -> { count, resetTime })
 const messageRateLimit = new Map<string, { count: number; resetTime: number }>();
-const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
-const RATE_LIMIT_MAX_MESSAGES = 30; // 30 messages per minute per user per conversation
+// Rate limiting constants from environment
+const RATE_LIMIT_WINDOW_MS = env.RATE_LIMIT_WINDOW_MS;
+const RATE_LIMIT_MAX_MESSAGES = env.RATE_LIMIT_MAX_MESSAGES;
 
 const conversationService = new ConversationService();
 
 /**
  * Check if user has exceeded rate limit for messaging in this conversation
+ * Accounts for multiple concurrent connections from the same user
  */
 function checkRateLimit(userId: string, conversationId: string): boolean {
   const key = `${userId}:${conversationId}`;
   const now = Date.now();
   const limit = messageRateLimit.get(key);
+
+  // Get the number of concurrent connections for this user
+  const userConnections = connectedUsers.get(userId);
+  const connectionCount = userConnections ? userConnections.size : 1;
+  // Divide the rate limit by number of connections (minimum 1)
+  const adjustedMaxMessages = Math.max(1, Math.floor(RATE_LIMIT_MAX_MESSAGES / connectionCount));
 
   if (!limit || now > limit.resetTime) {
     // Reset or initialize limit
@@ -58,7 +66,7 @@ function checkRateLimit(userId: string, conversationId: string): boolean {
     return true;
   }
 
-  if (limit.count >= RATE_LIMIT_MAX_MESSAGES) {
+  if (limit.count >= adjustedMaxMessages) {
     return false;
   }
 
@@ -176,8 +184,9 @@ export function initializeChatSocket(server: HttpServer) {
     }
   });
 
-  io.on('connection', (socket: Socket & { userId: string; userRole: string }) => {
-    const { userId, userRole } = socket;
+  io.on('connection', (socket: Socket) => {
+    const authSocket = socket as AuthenticatedSocket;
+    const { userId, userRole } = authSocket;
     logger.info({ socketId: socket.id, userId, userRole }, 'Client connected');
 
     // Track connected user
@@ -247,6 +256,25 @@ export function initializeChatSocket(server: HttpServer) {
           if (!hasAccess) {
             socket.emit('error', { message: 'Access denied to conversation' });
             return;
+          }
+
+          // Validate message content
+          if (messageData.content) {
+            // Check content length (max 2000 characters)
+            if (messageData.content.length > 2000) {
+              socket.emit('error', {
+                message: 'Message content exceeds maximum length of 2000 characters',
+              });
+              return;
+            }
+            // Basic content filtering - reject messages with excessive special characters
+            const specialCharRatio =
+              (messageData.content.match(/[^a-zA-Z0-9\s]/g) || []).length /
+              messageData.content.length;
+            if (specialCharRatio > 0.5) {
+              socket.emit('error', { message: 'Message contains too many special characters' });
+              return;
+            }
           }
 
           // Create the message object

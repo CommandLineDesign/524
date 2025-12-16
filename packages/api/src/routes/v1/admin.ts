@@ -3,6 +3,7 @@ import { type Router as ExpressRouter, Router } from 'express';
 import { AdminArtistController } from '../../controllers/adminArtistController.js';
 import { AdminBookingController } from '../../controllers/adminBookingController.js';
 import { AdminUserController } from '../../controllers/adminUserController.js';
+import { type AuthRequest } from '../../middleware/auth.js';
 import { requireAdmin } from '../../middleware/auth.js';
 import { auditLogRepository } from '../../repositories/auditLogRepository.js';
 import { ConversationService } from '../../services/conversationService.js';
@@ -38,11 +39,11 @@ router.get('/bookings', requireAdmin(), AdminBookingController.listBookings);
 router.get('/bookings/:bookingId', requireAdmin(), AdminBookingController.getBookingDetail);
 
 // Admin messaging endpoints
-router.get('/conversations', requireAdmin(), async (req, res) => {
+router.get('/conversations', requireAdmin(), async (req: AuthRequest, res) => {
   try {
     // Parse pagination parameters
     const MAX_LIMIT = 100;
-    const DEFAULT_LIMIT = 20;
+    const DEFAULT_LIMIT = 50;
     const rawLimit = Number(req.query.limit);
     const rawOffset = Number(req.query.offset);
     const limit = Number.isFinite(rawLimit)
@@ -57,7 +58,7 @@ router.get('/conversations', requireAdmin(), async (req, res) => {
     });
 
     // Audit log admin access
-    await auditLogRepository.createAuditLog({
+    await auditLogRepository.create({
       userId: req.user?.id,
       action: 'VIEW_CONVERSATIONS_LIST',
       resourceType: 'conversation',
@@ -91,7 +92,7 @@ router.get('/conversations', requireAdmin(), async (req, res) => {
   }
 });
 
-router.get('/conversations/:id', requireAdmin(), async (req, res) => {
+router.get('/conversations/:id', requireAdmin(), async (req: AuthRequest, res) => {
   try {
     const conversationId = req.params.id;
 
@@ -115,7 +116,7 @@ router.get('/conversations/:id', requireAdmin(), async (req, res) => {
     }
 
     // Audit log admin access
-    await auditLogRepository.createAuditLog({
+    await auditLogRepository.create({
       userId: req.user?.id,
       action: 'VIEW_CONVERSATION',
       resourceType: 'conversation',
@@ -142,7 +143,7 @@ router.get('/conversations/:id', requireAdmin(), async (req, res) => {
   }
 });
 
-router.get('/conversations/:id/messages', requireAdmin(), async (req, res) => {
+router.get('/conversations/:id/messages', requireAdmin(), async (req: AuthRequest, res) => {
   try {
     const conversationId = req.params.id;
 
@@ -169,7 +170,7 @@ router.get('/conversations/:id/messages', requireAdmin(), async (req, res) => {
     const result = await messageService.getMessages(conversationId, 'admin', { limit, offset });
 
     // Audit log admin access
-    await auditLogRepository.createAuditLog({
+    await auditLogRepository.create({
       userId: req.user?.id,
       action: 'VIEW_CONVERSATION_MESSAGES',
       resourceType: 'conversation',

@@ -25,13 +25,13 @@ importers:
     dependencies:
       '@524/database':
         specifier: file:../database
-        version: link:../database
+        version: file:packages/database(@opentelemetry/api@1.9.0)(postgres@3.4.7)
       '@524/notifications':
         specifier: file:../notifications
-        version: link:../notifications
+        version: file:packages/notifications
       '@524/shared':
         specifier: file:../shared
-        version: link:../shared
+        version: file:packages/shared
       '@aws-sdk/client-s3':
         specifier: ^3.947.0
         version: 3.947.0
@@ -73,7 +73,7 @@ importers:
         version: 16.6.1
       drizzle-orm:
         specifier: ^0.44.7
-        version: 0.44.7(@opentelemetry/api@1.9.0)(@types/pg@8.15.6)(pg@8.16.3)
+        version: 0.44.7(@opentelemetry/api@1.9.0)(@types/pg@8.15.6)(pg@8.16.3)(postgres@3.4.7)
       express:
         specifier: ^4.19.2
         version: 4.22.1
@@ -137,7 +137,7 @@ importers:
         version: 3.0.3
       drizzle-orm:
         specifier: ^0.44.7
-        version: 0.44.7(@opentelemetry/api@1.9.0)(@types/pg@8.15.6)(pg@8.16.3)
+        version: 0.44.7(@opentelemetry/api@1.9.0)(@types/pg@8.15.6)(pg@8.16.3)(postgres@3.4.7)
       pg:
         specifier: ^8.11.5
         version: 8.16.3
@@ -353,6 +353,15 @@ packages:
     peerDependenciesMeta:
       graphql:
         optional: true
+
+  '@524/database@file:packages/database':
+    resolution: {directory: packages/database, type: directory}
+
+  '@524/notifications@file:packages/notifications':
+    resolution: {directory: packages/notifications, type: directory}
+
+  '@524/shared@file:packages/shared':
+    resolution: {directory: packages/shared, type: directory}
 
   '@aws-crypto/crc32@5.2.0':
     resolution: {integrity: sha512-nLbCWqQNgUiwwtFsen1AdzAtvuLRsQS8rYgMuxCrdKf9kOssamGLuPwyTY9wyYblNr9+1XM8v6zoDTPPSIeANg==}
@@ -5722,6 +5731,10 @@ packages:
     resolution: {integrity: sha512-9ZhXKM/rw350N1ovuWHbGxnGh/SNJ4cnxHiM0rxE4VN41wsg8P8zWn9hv/buK00RP4WvlOyr/RBDiptyxVbkZQ==}
     engines: {node: '>=0.10.0'}
 
+  postgres@3.4.7:
+    resolution: {integrity: sha512-Jtc2612XINuBjIl/QTWsV5UvE8UHuNblcO3vVADSrKsrc6RqGX6lOW1cEo3CM2v0XG4Nat8nI+YM7/f26VxXLw==}
+    engines: {node: '>=12'}
+
   pretty-bytes@5.6.0:
     resolution: {integrity: sha512-FFw039TmrBqFK8ma/7OL3sDz/VytdtJr044/QUJtH0wK9lb9jLq9tJyIxUwtQJHwar2BqtiA4iCWSwo9JLkzFg==}
     engines: {node: '>=6'}
@@ -6950,6 +6963,58 @@ packages:
 snapshots:
 
   '@0no-co/graphql.web@1.2.0': {}
+
+  '@524/database@file:packages/database(@opentelemetry/api@1.9.0)(postgres@3.4.7)':
+    dependencies:
+      '@524/shared': file:packages/shared
+      '@types/bcryptjs': 3.0.0
+      '@types/pg': 8.15.6
+      bcryptjs: 3.0.3
+      drizzle-orm: 0.44.7(@opentelemetry/api@1.9.0)(@types/pg@8.15.6)(pg@8.16.3)(postgres@3.4.7)
+      pg: 8.16.3
+      typescript: 5.9.3
+    transitivePeerDependencies:
+      - '@aws-sdk/client-rds-data'
+      - '@cloudflare/workers-types'
+      - '@electric-sql/pglite'
+      - '@libsql/client'
+      - '@libsql/client-wasm'
+      - '@neondatabase/serverless'
+      - '@op-engineering/op-sqlite'
+      - '@opentelemetry/api'
+      - '@planetscale/database'
+      - '@prisma/client'
+      - '@tidbcloud/serverless'
+      - '@types/better-sqlite3'
+      - '@types/sql.js'
+      - '@upstash/redis'
+      - '@vercel/postgres'
+      - '@xata.io/client'
+      - better-sqlite3
+      - bun-types
+      - expo-sqlite
+      - gel
+      - knex
+      - kysely
+      - mysql2
+      - pg-native
+      - postgres
+      - prisma
+      - sql.js
+      - sqlite3
+
+  '@524/notifications@file:packages/notifications':
+    dependencies:
+      '@types/node': 20.19.25
+      firebase-admin: 12.7.0
+      typescript: 5.9.3
+    transitivePeerDependencies:
+      - encoding
+      - supports-color
+
+  '@524/shared@file:packages/shared':
+    dependencies:
+      typescript: 5.9.3
 
   '@aws-crypto/crc32@5.2.0':
     dependencies:
@@ -11022,11 +11087,12 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.44.7(@opentelemetry/api@1.9.0)(@types/pg@8.15.6)(pg@8.16.3):
+  drizzle-orm@0.44.7(@opentelemetry/api@1.9.0)(@types/pg@8.15.6)(pg@8.16.3)(postgres@3.4.7):
     optionalDependencies:
       '@opentelemetry/api': 1.9.0
       '@types/pg': 8.15.6
       pg: 8.16.3
+      postgres: 3.4.7
 
   dunder-proto@1.0.1:
     dependencies:
@@ -13483,6 +13549,9 @@ snapshots:
   postgres-interval@1.2.0:
     dependencies:
       xtend: 4.0.2
+
+  postgres@3.4.7:
+    optional: true
 
   pretty-bytes@5.6.0: {}
 
