@@ -72,6 +72,7 @@ export class BookingRepository {
         scheduledDate: new Date(payload.scheduledDate),
         scheduledStartTime: scheduleStart,
         scheduledEndTime: scheduleEnd,
+        timezone: 'Asia/Seoul',
         serviceLocation: payload.location,
         locationType: 'customer_location',
         address: payload.location,

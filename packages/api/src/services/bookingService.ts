@@ -1,3 +1,7 @@
+import {
+  BOOKING_STATUS_TRANSITIONS,
+  isValidStatusTransition,
+} from '@524/shared/booking-status-transitions';
 import type {
   BookingSummary,
   CreateBookingPayload,
@@ -65,19 +69,8 @@ export class BookingService {
       throw Object.assign(new Error('Booking not found'), { status: 404 });
     }
 
-    const allowedTransitions: Record<BookingSummary['status'], BookingSummary['status'][]> = {
-      pending: ['confirmed', 'declined', 'cancelled'],
-      confirmed: ['paid', 'cancelled', 'in_progress'],
-      paid: ['in_progress', 'completed', 'cancelled'],
-      in_progress: ['completed', 'cancelled'],
-      completed: [],
-      declined: [],
-      cancelled: [],
-    };
-
-    const allowedNext = allowedTransitions[booking.status] ?? [];
     const normalizedStatus = status.trim() as BookingSummary['status'];
-    if (!allowedNext.includes(normalizedStatus as BookingSummary['status'])) {
+    if (!isValidStatusTransition(booking.status, normalizedStatus)) {
       throw Object.assign(new Error('Invalid status transition'), { status: 409 });
     }
 

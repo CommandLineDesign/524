@@ -1,6 +1,6 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 
 import { useArtistProfile } from '../query/artist';
@@ -22,6 +22,60 @@ import { ServiceSelectionScreen } from '../screens/ServiceSelectionScreen';
 import { SignupScreen } from '../screens/SignupScreen';
 import { WelcomeScreen } from '../screens/WelcomeScreen';
 import { useAuthStore } from '../store/authStore';
+
+// Custom hook to determine initial navigation route based on user state
+function useInitialRoute() {
+  const { user } = useAuthStore();
+  const isArtist = Boolean(user?.primaryRole === 'artist' || user?.roles?.includes('artist'));
+
+  const {
+    data: artistProfile,
+    isLoading: artistProfileLoading,
+    error: artistProfileError,
+  } = useArtistProfile(user?.id, Boolean(user && isArtist));
+
+  const artistProfileForbidden =
+    (artistProfileError as { response?: { status?: number } } | undefined)?.response?.status ===
+    403;
+  const lostArtistAccess = Boolean(isArtist && artistProfileForbidden);
+  const effectiveIsArtist = isArtist && !lostArtistAccess;
+
+  const { data: onboarding, isLoading: onboardingLoading } = useOnboardingState(
+    effectiveIsArtist ? undefined : user?.id
+  );
+
+  const requiresArtistProfile =
+    effectiveIsArtist &&
+    (!artistProfile ||
+      !artistProfile.stageName ||
+      !artistProfile.primaryLocation ||
+      !artistProfile.profileImageUrl);
+  const artistPendingReview =
+    effectiveIsArtist &&
+    !requiresArtistProfile &&
+    artistProfile?.verificationStatus === 'pending_review';
+  const shouldShowCustomerOnboarding =
+    Boolean(user) && !effectiveIsArtist && !(user?.onboardingCompleted || onboarding?.completed);
+
+  return useMemo(() => {
+    if (!user) return 'Login';
+
+    if (lostArtistAccess) return 'Welcome';
+    if (requiresArtistProfile) return 'ArtistOnboarding';
+    if (artistPendingReview) return 'ArtistPending';
+    if (effectiveIsArtist) return 'ArtistBookingsList';
+    if (shouldShowCustomerOnboarding) return 'OnboardingFlow';
+
+    return 'Welcome';
+  }, [
+    user,
+    lostArtistAccess,
+    requiresArtistProfile,
+    artistPendingReview,
+    effectiveIsArtist,
+    shouldShowCustomerOnboarding,
+  ]);
+}
 
 export type RootStackParamList = {
   Login: undefined;
@@ -53,22 +107,18 @@ export function AppNavigator() {
     error: artistProfileError,
   } = useArtistProfile(user?.id, Boolean(user && isArtist));
 
-  useEffect(() => {
-    loadSession();
-  }, [loadSession]);
+  const { data: onboarding, isLoading: onboardingLoading } = useOnboardingState(
+    isArtist ? undefined : user?.id
+  );
 
+  const initialRoute = useInitialRoute();
+
+  // Recalculate these for conditional screen rendering
   const artistProfileForbidden =
     (artistProfileError as { response?: { status?: number } } | undefined)?.response?.status ===
     403;
   const lostArtistAccess = Boolean(isArtist && artistProfileForbidden);
   const effectiveIsArtist = isArtist && !lostArtistAccess;
-
-  const { data: onboarding, isLoading: onboardingLoading } = useOnboardingState(
-    effectiveIsArtist ? undefined : user?.id
-  );
-
-  const shouldShowCustomerOnboarding =
-    Boolean(user) && !effectiveIsArtist && !(user?.onboardingCompleted || onboarding?.completed);
   const requiresArtistProfile =
     effectiveIsArtist &&
     (!artistProfile ||
@@ -79,6 +129,12 @@ export function AppNavigator() {
     effectiveIsArtist &&
     !requiresArtistProfile &&
     artistProfile?.verificationStatus === 'pending_review';
+  const shouldShowCustomerOnboarding =
+    Boolean(user) && !effectiveIsArtist && !(user?.onboardingCompleted || onboarding?.completed);
+
+  useEffect(() => {
+    loadSession();
+  }, [loadSession]);
 
   if (isLoading || (user && (onboardingLoading || artistProfileLoading))) {
     return (
@@ -92,23 +148,7 @@ export function AppNavigator() {
 
   return (
     <NavigationContainer>
-      <Stack.Navigator
-        initialRouteName={
-          user
-            ? lostArtistAccess
-              ? 'Welcome'
-              : requiresArtistProfile
-                ? 'ArtistOnboarding'
-                : artistPendingReview
-                  ? 'ArtistPending'
-                  : effectiveIsArtist
-                    ? 'ArtistBookingsList'
-                    : shouldShowCustomerOnboarding
-                      ? 'OnboardingFlow'
-                      : 'Welcome'
-            : 'Login'
-        }
-      >
+      <Stack.Navigator initialRouteName={initialRoute}>
         {!user ? (
           <>
             <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />

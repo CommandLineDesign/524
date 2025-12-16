@@ -7,6 +7,33 @@ import { BookingService } from '../services/bookingService.js';
 
 const bookingService = new BookingService();
 
+// Utility function to extract user roles from request
+function getUserRoles(req: AuthRequest): string[] {
+  return (
+    (Array.isArray((req.user as { roles?: string[] } | undefined)?.roles) &&
+      ((req.user as { roles?: string[] }).roles as string[])) ||
+    []
+  );
+}
+
+// Utility function to check if user can access a booking
+function canAccessBooking(
+  booking: { customerId: string; artistId: string },
+  userId: string,
+  roles: string[]
+): boolean {
+  const isCustomer = roles.includes('customer');
+  const isArtist = roles.includes('artist');
+  const isAdmin = roles.includes('admin');
+
+  if (isAdmin) return true;
+  if (!isCustomer && !isArtist) return false;
+  if (isCustomer && booking.customerId !== userId) return false;
+  if (isArtist && booking.artistId !== userId) return false;
+
+  return true;
+}
+
 export const BookingController = {
   async listCustomerBookings(req: AuthRequest, res: Response, next: NextFunction) {
     try {
@@ -100,29 +127,10 @@ export const BookingController = {
         return;
       }
 
-      const requester = (req as AuthRequest).user;
-      const requesterRoles =
-        (Array.isArray((requester as { roles?: string[] } | undefined)?.roles) &&
-          ((requester as { roles?: string[] }).roles as string[])) ||
-        [];
-      const isCustomer = requesterRoles.includes('customer');
-      const isArtist = requesterRoles.includes('artist');
-      const isAdmin = requesterRoles.includes('admin');
-      if (isAdmin) {
-        res.json(booking);
-        return;
-      }
-      if (requester && !isCustomer && !isArtist) {
-        res.status(403).json({ error: 'Access denied' });
-        return;
-      }
+      const authReq = req as AuthRequest;
+      const requesterRoles = getUserRoles(authReq);
 
-      if (isCustomer && booking.customerId !== requester?.id) {
-        res.status(403).json({ error: 'Access denied' });
-        return;
-      }
-
-      if (isArtist && booking.artistId !== requester?.id) {
+      if (!canAccessBooking(booking, authReq.user?.id || '', requesterRoles)) {
         res.status(403).json({ error: 'Access denied' });
         return;
       }
@@ -146,12 +154,10 @@ export const BookingController = {
         return;
       }
 
-      const requesterRoles =
-        (Array.isArray((req.user as { roles?: string[] } | undefined)?.roles) &&
-          ((req.user as { roles?: string[] }).roles as string[])) ||
-        [];
+      const requesterRoles = getUserRoles(req);
       const isArtist = requesterRoles.includes('artist');
       const isAdmin = requesterRoles.includes('admin');
+
       if ((requestedStatus === 'confirmed' || requestedStatus === 'declined') && isArtist) {
         const booking =
           requestedStatus === 'confirmed'

@@ -40,6 +40,7 @@ export function ArtistBookingsListScreen() {
     isError,
     refetch,
     isRefetching,
+    isFetching,
   } = useArtistBookings(statusFilter === 'all' ? undefined : statusFilter);
 
   const sortedBookings = useMemo(
@@ -84,10 +85,12 @@ export function ArtistBookingsListScreen() {
         })}
       </View>
 
-      {isLoading ? (
+      {isFetching ? (
         <View style={styles.centered} testID="loading-indicator">
           <ActivityIndicator color={colors.primary} />
-          <Text style={styles.mutedText}>예약을 불러오는 중...</Text>
+          <Text style={styles.mutedText}>
+            {isLoading ? '예약을 불러오는 중...' : '필터를 적용하는 중...'}
+          </Text>
         </View>
       ) : isError ? (
         <View style={styles.centered}>

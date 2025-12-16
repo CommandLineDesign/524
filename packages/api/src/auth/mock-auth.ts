@@ -56,6 +56,13 @@ export const MOCK_USERS: Record<string, MockUser> = {
     name: 'Mock Admin',
     role: 'admin',
   },
+  'artist-g': {
+    id: 'b3daace1-85b3-43a4-8f94-a22c1b589213',
+    phone_number: '010-0000-0000',
+    email: 'testartist@tester.com',
+    name: 'testartist',
+    role: 'artist',
+  },
 };
 
 /**

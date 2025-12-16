@@ -23,6 +23,34 @@ import {
 } from '../query/bookings';
 import { colors } from '../theme/colors';
 
+// Helper function to get user-friendly error messages from API errors
+function getBookingErrorMessage(error: unknown, action: 'accept' | 'decline'): string {
+  if (error instanceof Error) {
+    const message = error.message.toLowerCase();
+
+    if (message.includes('not found') || message.includes('404')) {
+      return '예약을 찾을 수 없습니다.';
+    }
+    if (message.includes('forbidden') || message.includes('403')) {
+      return '이 예약을 수정할 권한이 없습니다.';
+    }
+    if (message.includes('only pending') || message.includes('409')) {
+      return '대기 중인 예약만 처리할 수 있습니다.';
+    }
+    if (message.includes('network') || message.includes('fetch')) {
+      return '네트워크 오류가 발생했습니다. 다시 시도해 주세요.';
+    }
+
+    // Return the original message if it's already user-friendly Korean
+    if (message.includes('예약') || message.includes('실패') || message.includes('오류')) {
+      return error.message;
+    }
+  }
+
+  // Fallback messages
+  return action === 'accept' ? '예약 승인에 실패했습니다.' : '예약 거절에 실패했습니다.';
+}
+
 type ArtistBookingDetailNavProp = NativeStackNavigationProp<
   RootStackParamList,
   'ArtistBookingDetail'
@@ -47,7 +75,7 @@ export function ArtistBookingDetailScreen() {
         Alert.alert('예약을 확정했습니다');
       },
       onError: (error) => {
-        const message = error instanceof Error ? error.message : '승인에 실패했습니다.';
+        const message = getBookingErrorMessage(error, 'accept');
         Alert.alert('승인 실패', message);
       },
     });
@@ -63,7 +91,7 @@ export function ArtistBookingDetailScreen() {
           navigation.goBack();
         },
         onError: (error) => {
-          const message = error instanceof Error ? error.message : '거절에 실패했습니다.';
+          const message = getBookingErrorMessage(error, 'decline');
           Alert.alert('거절 실패', message);
         },
       }
