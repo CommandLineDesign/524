@@ -11,6 +11,22 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:5240';
 
+export class ApiError extends Error {
+  status: number;
+  body?: unknown;
+
+  constructor(message: string, status: number, body?: unknown) {
+    super(message);
+    this.status = status;
+    this.body = body;
+  }
+}
+
+function buildError(message: string | string[] | undefined, status: number, body?: unknown) {
+  const normalizedMessage = Array.isArray(message) ? message.join(', ') : message;
+  return new ApiError(normalizedMessage || 'Request failed', status, body);
+}
+
 async function request<T>(path: string, options: RequestInit): Promise<T> {
   // Get auth token from storage
   const token = await AsyncStorage.getItem('auth_token');
@@ -27,15 +43,20 @@ async function request<T>(path: string, options: RequestInit): Promise<T> {
     incoming.forEach((value, key) => headers.set(key, value));
   }
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...options,
-    headers,
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, {
+      ...options,
+      headers,
+    });
+  } catch (error) {
+    throw buildError(error instanceof Error ? error.message : 'Network error', 0);
+  }
 
   if (!response.ok) {
-    const errorBody = await response.json().catch(() => ({}));
-    const message = errorBody?.error ?? response.statusText;
-    throw new Error(Array.isArray(message) ? message.join(', ') : message);
+    const errorBody = await response.json().catch(() => undefined);
+    const message = (errorBody as { error?: string | string[] } | undefined)?.error;
+    throw buildError(message ?? response.statusText, response.status, errorBody);
   }
 
   return (await response.json()) as T;
@@ -90,6 +111,44 @@ export async function getBookings(params: GetBookingsParams = {}) {
 export async function getBookingDetail(bookingId: string) {
   return request<BookingSummary>(`/api/v1/bookings/${bookingId}`, {
     method: 'GET',
+  });
+}
+
+export interface GetArtistBookingsParams {
+  status?: BookingStatus;
+}
+
+export async function getArtistBookings(params: GetArtistBookingsParams = {}) {
+  const query = new URLSearchParams();
+  if (params.status) {
+    query.append('status', params.status);
+  }
+
+  const path = query.size
+    ? `/api/v1/bookings/artist?${query.toString()}`
+    : '/api/v1/bookings/artist';
+
+  return request<BookingSummary[]>(path, { method: 'GET' });
+}
+
+export async function acceptBooking(bookingId: string) {
+  return request<BookingSummary>(`/api/v1/bookings/${bookingId}/accept`, {
+    method: 'POST',
+    body: JSON.stringify({}),
+  });
+}
+
+export async function declineBooking(bookingId: string, reason?: string) {
+  return request<BookingSummary>(`/api/v1/bookings/${bookingId}/decline`, {
+    method: 'POST',
+    body: JSON.stringify(reason ? { reason } : {}),
+  });
+}
+
+export async function cancelBooking(bookingId: string) {
+  return request<BookingSummary>(`/api/v1/bookings/${bookingId}/cancel`, {
+    method: 'POST',
+    body: JSON.stringify({}),
   });
 }
 

@@ -13,59 +13,24 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { BookingCard } from '../components/bookings/BookingCard';
+import { STATUS_LABELS } from '../components/bookings/bookingDisplay';
 import type { RootStackParamList } from '../navigation/AppNavigator';
 import { useCustomerBookings } from '../query/bookings';
 import { colors } from '../theme/colors';
 
 type BookingsNavProp = NativeStackNavigationProp<RootStackParamList, 'BookingsList'>;
 
-const STATUS_LABELS: Record<BookingStatus, string> = {
-  pending: '대기',
-  confirmed: '확정',
-  paid: '결제 완료',
-  in_progress: '진행 중',
-  completed: '완료',
-  cancelled: '취소됨',
-};
-
 const STATUS_CHIPS: Array<{ value: BookingStatus | 'all'; label: string }> = [
   { value: 'all', label: '전체' },
   { value: 'pending', label: STATUS_LABELS.pending },
+  { value: 'declined', label: STATUS_LABELS.declined },
   { value: 'confirmed', label: STATUS_LABELS.confirmed },
   { value: 'paid', label: STATUS_LABELS.paid },
   { value: 'in_progress', label: STATUS_LABELS.in_progress },
   { value: 'completed', label: STATUS_LABELS.completed },
   { value: 'cancelled', label: STATUS_LABELS.cancelled },
 ];
-
-function formatCurrency(amount?: number) {
-  if (typeof amount !== 'number') return '-';
-  return `${amount.toLocaleString('ko-KR')}원`;
-}
-
-function formatSchedule(dateIso?: string, startIso?: string) {
-  if (!dateIso && !startIso) return '일정 미정';
-
-  const base = startIso ?? dateIso;
-  const parsed = base ? new Date(base) : null;
-  if (!parsed) return '일정 미정';
-
-  const year = parsed.getFullYear();
-  const month = String(parsed.getMonth() + 1).padStart(2, '0');
-  const day = String(parsed.getDate()).padStart(2, '0');
-  const hours = String(parsed.getHours()).padStart(2, '0');
-  const minutes = String(parsed.getMinutes()).padStart(2, '0');
-
-  return `${year}.${month}.${day} ${hours}:${minutes}`;
-}
-
-function ServiceSummary({ services }: { services: { name: string }[] }) {
-  const primary = services?.[0]?.name ?? '서비스 정보 없음';
-  const extraCount = Math.max((services?.length ?? 0) - 1, 0);
-  const label = extraCount > 0 ? `${primary} 외 ${extraCount}건` : primary;
-
-  return <Text style={styles.serviceText}>{label}</Text>;
-}
 
 export function BookingsListScreen() {
   const navigation = useNavigation<BookingsNavProp>();
@@ -82,8 +47,8 @@ export function BookingsListScreen() {
   const sortedBookings = useMemo(
     () =>
       (bookings ?? []).slice().sort((a, b) => {
-        const aDate = new Date(a.scheduledDate).getTime();
-        const bDate = new Date(b.scheduledDate).getTime();
+        const aDate = new Date(a.scheduledDate ?? a.scheduledStartTime).getTime();
+        const bDate = new Date(b.scheduledDate ?? b.scheduledStartTime).getTime();
         return bDate - aDate;
       }),
     [bookings]
@@ -94,42 +59,7 @@ export function BookingsListScreen() {
   };
 
   const renderItem = ({ item }: { item: BookingSummary }) => (
-    <TouchableOpacity
-      style={styles.card}
-      onPress={() => handleSelectBooking(item.id)}
-      accessibilityRole="button"
-    >
-      <View style={styles.cardHeader}>
-        <Text style={styles.bookingNumber}>{item.bookingNumber}</Text>
-        <View
-          style={[
-            styles.statusBadge,
-            item.status === 'cancelled'
-              ? styles.statusCancelled
-              : item.status === 'completed'
-                ? styles.statusCompleted
-                : styles.statusDefault,
-          ]}
-        >
-          <Text style={styles.statusText}>
-            {STATUS_LABELS[item.status as BookingStatus] ?? item.status}
-          </Text>
-        </View>
-      </View>
-
-      <View style={styles.cardBody}>
-        <ServiceSummary services={item.services ?? []} />
-        <Text style={styles.artistText}>{item.artistName ?? '아티스트 미정'}</Text>
-        <Text style={styles.scheduleText}>
-          {formatSchedule(item.scheduledDate, item.scheduledStartTime)}
-        </Text>
-      </View>
-
-      <View style={styles.cardFooter}>
-        <Text style={styles.footerLabel}>총 금액</Text>
-        <Text style={styles.amount}>{formatCurrency(item.totalAmount)}</Text>
-      </View>
-    </TouchableOpacity>
+    <BookingCard booking={item} onPress={() => handleSelectBooking(item.id)} />
   );
 
   return (
@@ -236,73 +166,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 24,
     gap: 12,
-  },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: 14,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-    gap: 10,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  bookingNumber: {
-    fontSize: 13,
-    color: colors.subtle,
-  },
-  statusBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 999,
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  statusDefault: {
-    backgroundColor: '#eef2ff',
-  },
-  statusCompleted: {
-    backgroundColor: '#ecfdf3',
-  },
-  statusCancelled: {
-    backgroundColor: '#fef2f2',
-  },
-  cardBody: {
-    gap: 4,
-  },
-  serviceText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  artistText: {
-    fontSize: 14,
-    color: colors.subtle,
-  },
-  scheduleText: {
-    fontSize: 13,
-    color: colors.muted,
-  },
-  cardFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 6,
-  },
-  footerLabel: {
-    fontSize: 13,
-    color: colors.muted,
-  },
-  amount: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.text,
   },
   centered: {
     flex: 1,

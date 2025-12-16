@@ -1,4 +1,3 @@
-import type { BookingStatus } from '@524/shared';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React from 'react';
@@ -12,79 +11,15 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { BookingStatusBadge } from '../components/bookings/BookingStatusBadge';
+import { BookingStatusHistory } from '../components/bookings/BookingStatusHistory';
+import { formatCurrency, formatSchedule } from '../components/bookings/bookingDisplay';
 import type { RootStackParamList } from '../navigation/AppNavigator';
 import { useBookingDetail } from '../query/bookings';
 import { colors } from '../theme/colors';
 
 type BookingDetailNavProp = NativeStackNavigationProp<RootStackParamList, 'BookingDetail'>;
 type BookingDetailRouteProp = RouteProp<RootStackParamList, 'BookingDetail'>;
-
-const STATUS_LABELS: Record<BookingStatus, string> = {
-  pending: '대기',
-  confirmed: '확정',
-  paid: '결제 완료',
-  in_progress: '진행 중',
-  completed: '완료',
-  cancelled: '취소됨',
-};
-
-function formatCurrency(amount?: number) {
-  if (typeof amount !== 'number') return '-';
-  return `${amount.toLocaleString('ko-KR')}원`;
-}
-
-function formatSchedule(dateIso?: string, startIso?: string, endIso?: string) {
-  if (!dateIso && !startIso) return '일정 미정';
-  const start = startIso ?? dateIso;
-  const startDate = start ? new Date(start) : null;
-  const endDate = endIso ? new Date(endIso) : null;
-
-  if (!startDate) return '일정 미정';
-
-  const y = startDate.getFullYear();
-  const m = String(startDate.getMonth() + 1).padStart(2, '0');
-  const d = String(startDate.getDate()).padStart(2, '0');
-  const startTime = `${String(startDate.getHours()).padStart(2, '0')}:${String(
-    startDate.getMinutes()
-  ).padStart(2, '0')}`;
-  const endTime = endDate
-    ? `${String(endDate.getHours()).padStart(2, '0')}:${String(endDate.getMinutes()).padStart(
-        2,
-        '0'
-      )}`
-    : null;
-
-  return endTime ? `${y}.${m}.${d} ${startTime} - ${endTime}` : `${y}.${m}.${d} ${startTime}`;
-}
-
-function formatStatusTimestamp(iso?: string) {
-  if (!iso) return '시간 정보 없음';
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return iso;
-
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  const hh = String(date.getHours()).padStart(2, '0');
-  const mm = String(date.getMinutes()).padStart(2, '0');
-
-  return `${y}.${m}.${d} ${hh}:${mm}`;
-}
-
-function StatusBadge({ status }: { status: BookingStatus }) {
-  const baseStyle =
-    status === 'cancelled'
-      ? styles.statusCancelled
-      : status === 'completed'
-        ? styles.statusCompleted
-        : styles.statusDefault;
-
-  return (
-    <View style={[styles.statusBadge, baseStyle]}>
-      <Text style={styles.statusText}>{STATUS_LABELS[status] ?? status}</Text>
-    </View>
-  );
-}
 
 export function BookingDetailScreen() {
   const navigation = useNavigation<BookingDetailNavProp>();
@@ -118,14 +53,6 @@ export function BookingDetailScreen() {
 
   const timezoneLabel = data.timezone?.trim() || '미지정';
   const paymentStatusLabel = data.paymentStatus?.trim() || '정보 없음';
-  const historyItems = [...(data.statusHistory ?? [])].sort((a, b) => {
-    const aTime = new Date(a.timestamp).getTime();
-    const bTime = new Date(b.timestamp).getTime();
-    const safeATime = Number.isNaN(aTime) ? 0 : aTime;
-    const safeBTime = Number.isNaN(bTime) ? 0 : bTime;
-    return safeATime - safeBTime;
-  });
-
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.content}>
@@ -134,7 +61,7 @@ export function BookingDetailScreen() {
             <Text style={styles.bookingNumber}>{data.bookingNumber}</Text>
             <Text style={styles.title}>예약 상세</Text>
           </View>
-          <StatusBadge status={data.status} />
+          <BookingStatusBadge status={data.status} />
         </View>
 
         <View style={styles.section}>
@@ -177,23 +104,7 @@ export function BookingDetailScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>진행 상태</Text>
           <Text style={styles.primaryText}>결제 상태: {paymentStatusLabel}</Text>
-          {historyItems.length ? (
-            <View style={styles.historyList}>
-              {historyItems.map((entry, index) => (
-                <View
-                  key={`${entry.status}-${entry.timestamp}-${index}`}
-                  style={styles.historyItem}
-                >
-                  <Text style={styles.primaryText}>
-                    {STATUS_LABELS[entry.status as BookingStatus] ?? entry.status}
-                  </Text>
-                  <Text style={styles.secondaryText}>{formatStatusTimestamp(entry.timestamp)}</Text>
-                </View>
-              ))}
-            </View>
-          ) : (
-            <Text style={styles.secondaryText}>상태 이력이 아직 없습니다.</Text>
-          )}
+          <BookingStatusHistory history={data.statusHistory} />
         </View>
 
         <View style={styles.section}>
@@ -280,25 +191,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.text,
   },
-  statusBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 999,
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  statusDefault: {
-    backgroundColor: '#eef2ff',
-  },
-  statusCompleted: {
-    backgroundColor: '#ecfdf3',
-  },
-  statusCancelled: {
-    backgroundColor: '#fef2f2',
-  },
   centered: {
     flex: 1,
     alignItems: 'center',
@@ -349,13 +241,5 @@ const styles = StyleSheet.create({
   disabledText: {
     color: colors.muted,
     fontWeight: '600',
-  },
-  historyList: {
-    gap: 8,
-  },
-  historyItem: {
-    paddingVertical: 4,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
 });

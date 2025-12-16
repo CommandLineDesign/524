@@ -4,6 +4,7 @@ import { drizzle } from 'drizzle-orm/node-postgres';
 import 'dotenv/config';
 import * as bcrypt from 'bcryptjs';
 import pg from 'pg';
+import { userRoles } from './schema/userRoles.js';
 import { users } from './schema/users.js';
 
 const { Pool } = pg;
@@ -88,29 +89,41 @@ async function seed() {
           .delete(users)
           .where(and(eq(users.phoneNumber, testUser.phone_number), ne(users.id, testUser.id)));
 
-        await db
-          .insert(users)
-          .values({
-            id: testUser.id,
-            phoneNumber: testUser.phone_number,
-            email: testUser.email,
-            passwordHash,
-            name: testUser.name,
-            role: testUser.role,
-            phoneVerified: true,
-            isActive: true,
-            isVerified: true,
-          })
-          .onConflictDoUpdate({
-            target: users.id,
-            set: {
-              passwordHash,
+        await db.transaction(async (tx) => {
+          // Insert or update user
+          await tx
+            .insert(users)
+            .values({
+              id: testUser.id,
+              phoneNumber: testUser.phone_number,
               email: testUser.email,
+              passwordHash,
+              name: testUser.name,
+              role: testUser.role,
               phoneVerified: true,
               isActive: true,
               isVerified: true,
-            },
-          });
+            })
+            .onConflictDoUpdate({
+              target: users.id,
+              set: {
+                passwordHash,
+                email: testUser.email,
+                phoneVerified: true,
+                isActive: true,
+                isVerified: true,
+              },
+            });
+
+          // Ensure user has the correct role in user_roles
+          await tx
+            .insert(userRoles)
+            .values({
+              userId: testUser.id,
+              role: testUser.role as 'customer' | 'artist' | 'admin' | 'support',
+            })
+            .onConflictDoNothing();
+        });
 
         console.log(`✅ Seeded user: ${testUser.email} (${testUser.role})`);
       } catch (error) {

@@ -14,6 +14,15 @@ export type AdminDataProvider = DataProvider & {
   unbanUser: (resource: string, params: { id: string }) => Promise<{ data: unknown }>;
 };
 
+interface HttpError {
+  status?: number;
+  body?: { status?: number };
+}
+
+function isHttpError(error: unknown): error is HttpError {
+  return typeof error === 'object' && error !== null && ('status' in error || 'body' in error);
+}
+
 async function httpClient(url: string, options: fetchUtils.Options = {}) {
   const token = getStoredToken();
   const headers = new Headers(options.headers || {});
@@ -77,8 +86,24 @@ export const adminDataProvider: AdminDataProvider = {
       return Promise.reject(new Error(`Unsupported resource: ${resource}`));
     }
 
-    const { json } = await httpClient(`${endpoint}/${params.id}`);
-    return { data: json.data };
+    try {
+      const url = `${endpoint}/${params.id}`;
+      const response = await httpClient(url);
+
+      // Handle both {data: ...} and direct response formats
+      if (response.json.data) {
+        return { data: response.json.data };
+      }
+      return { data: response.json };
+    } catch (error: unknown) {
+      // If it's a 404, return a more graceful error
+      const is404Error = isHttpError(error) && (error.status === 404 || error.body?.status === 404);
+      if (is404Error) {
+        return Promise.reject(new Error(`${resource} with id ${params.id} not found`));
+      }
+
+      throw error;
+    }
   },
 
   async getMany() {

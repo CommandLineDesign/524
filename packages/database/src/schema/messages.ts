@@ -1,7 +1,7 @@
 import { jsonb, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 
-import { conversations } from './conversations.js';
-import { users } from './users.js';
+import { conversations } from './conversations';
+import { users } from './users';
 
 export const messages = pgTable('messages', {
   id: uuid('id').primaryKey().defaultRandom(),

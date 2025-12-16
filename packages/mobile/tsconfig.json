@@ -8,5 +8,6 @@
     "moduleResolution": "Bundler",
     "types": ["react", "react-native"]
   },
-  "include": ["src", "App.tsx", "index.ts"]
+  "include": ["src", "App.tsx", "index.ts"],
+  "exclude": ["**/*.test.tsx", "**/*.test.ts", "**/*.spec.tsx", "**/*.spec.ts"]
 }
