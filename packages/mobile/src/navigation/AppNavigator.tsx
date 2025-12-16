@@ -68,7 +68,7 @@ export function AppNavigator() {
   );
 
   const shouldShowCustomerOnboarding =
-    Boolean(user) && !(user?.onboardingCompleted || onboarding?.completed);
+    Boolean(user) && !effectiveIsArtist && !(user?.onboardingCompleted || onboarding?.completed);
   const requiresArtistProfile =
     effectiveIsArtist &&
     (!artistProfile ||

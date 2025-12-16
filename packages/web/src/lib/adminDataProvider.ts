@@ -31,8 +31,10 @@ async function httpClient(url: string, options: fetchUtils.Options = {}) {
 
 export const adminDataProvider: AdminDataProvider = {
   async getList(resource, params) {
+    console.log('[adminDataProvider] getList called for resource:', resource);
     const endpoint = resourceToEndpoint[resource as keyof typeof resourceToEndpoint];
     if (!endpoint) {
+      console.error('[adminDataProvider] No endpoint found for resource:', resource);
       return Promise.reject(new Error(`Unsupported resource: ${resource}`));
     }
 
@@ -63,7 +65,9 @@ export const adminDataProvider: AdminDataProvider = {
     }
 
     const url = `${endpoint}?${queryParams.toString()}`;
+    console.log('[adminDataProvider] Fetching:', url);
     const { json } = await httpClient(url);
+    console.log('[adminDataProvider] Response for', resource, ':', json);
 
     return {
       data: json.data ?? [],
@@ -72,13 +76,35 @@ export const adminDataProvider: AdminDataProvider = {
   },
 
   async getOne(resource, params) {
+    console.log('[adminDataProvider] getOne called for resource:', resource, 'id:', params.id);
     const endpoint = resourceToEndpoint[resource as keyof typeof resourceToEndpoint];
     if (!endpoint) {
+      console.error('[adminDataProvider] No endpoint found for resource:', resource);
       return Promise.reject(new Error(`Unsupported resource: ${resource}`));
     }
 
-    const { json } = await httpClient(`${endpoint}/${params.id}`);
-    return { data: json.data };
+    try {
+      const url = `${endpoint}/${params.id}`;
+      console.log('[adminDataProvider] Fetching getOne:', url);
+      const response = await httpClient(url);
+      console.log('[adminDataProvider] getOne response for', resource, ':', response.json);
+
+      // Handle both {data: ...} and direct response formats
+      if (response.json.data) {
+        return { data: response.json.data };
+      }
+      return { data: response.json };
+    } catch (error: unknown) {
+      console.error('[adminDataProvider] getOne error for', resource, params.id, ':', error);
+
+      // If it's a 404, return a more graceful error
+      if (error?.status === 404 || error?.body?.status === 404) {
+        console.warn('[adminDataProvider] Resource not found, returning empty data');
+        return Promise.reject(new Error(`${resource} with id ${params.id} not found`));
+      }
+
+      throw error;
+    }
   },
 
   async getMany() {

@@ -60,12 +60,14 @@ export const adminAuthProvider: AuthProvider = {
   },
 
   async getPermissions() {
+    console.log('[adminAuthProvider] getPermissions called, returning: admin');
     return 'admin';
   },
 
   async getIdentity() {
     const token = getStoredToken();
     if (!token) {
+      console.log('[adminAuthProvider] getIdentity: No token found');
       return Promise.reject();
     }
 
@@ -76,11 +78,13 @@ export const adminAuthProvider: AuthProvider = {
     });
 
     if (!response.ok) {
+      console.log('[adminAuthProvider] getIdentity: API returned error', response.status);
       clearStoredAuth();
       return Promise.reject();
     }
 
     const user = await response.json();
+    console.log('[adminAuthProvider] getIdentity: User data:', user);
 
     return {
       id: user.id ?? 'admin',
