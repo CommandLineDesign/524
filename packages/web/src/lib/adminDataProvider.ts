@@ -14,6 +14,15 @@ export type AdminDataProvider = DataProvider & {
   unbanUser: (resource: string, params: { id: string }) => Promise<{ data: unknown }>;
 };
 
+interface HttpError {
+  status?: number;
+  body?: { status?: number };
+}
+
+function isHttpError(error: unknown): error is HttpError {
+  return typeof error === 'object' && error !== null && ('status' in error || 'body' in error);
+}
+
 async function httpClient(url: string, options: fetchUtils.Options = {}) {
   const token = getStoredToken();
   const headers = new Headers(options.headers || {});
@@ -98,7 +107,8 @@ export const adminDataProvider: AdminDataProvider = {
       console.error('[adminDataProvider] getOne error for', resource, params.id, ':', error);
 
       // If it's a 404, return a more graceful error
-      if (error?.status === 404 || error?.body?.status === 404) {
+      const is404Error = isHttpError(error) && (error.status === 404 || error.body?.status === 404);
+      if (is404Error) {
         console.warn('[adminDataProvider] Resource not found, returning empty data');
         return Promise.reject(new Error(`${resource} with id ${params.id} not found`));
       }
