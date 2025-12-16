@@ -1,4 +1,4 @@
-import NetInfo from '@react-native-community/netinfo';
+import NetInfo, { NetInfoState } from '@react-native-community/netinfo';
 import { useEffect } from 'react';
 
 import { useSendMessage } from '../query/messaging';
@@ -13,7 +13,7 @@ export function useOfflineQueueProcessor() {
 
   useEffect(() => {
     // Subscribe to network state changes
-    const unsubscribe = NetInfo.addEventListener(async (state) => {
+    const unsubscribe = NetInfo.addEventListener(async (state: NetInfoState) => {
       if (state.isConnected && state.isInternetReachable) {
         // Network is back online, process the queue
         await processOfflineQueue();
@@ -21,7 +21,7 @@ export function useOfflineQueueProcessor() {
     });
 
     // Process queue on initial load if already online
-    NetInfo.fetch().then(async (state) => {
+    NetInfo.fetch().then(async (state: NetInfoState) => {
       if (state.isConnected && state.isInternetReachable) {
         await processOfflineQueue();
       }

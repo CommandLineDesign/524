@@ -12,8 +12,15 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { GiftedChat, IMessage, InputToolbar, Send } from 'react-native-gifted-chat';
-import { launchImageLibrary } from 'react-native-image-picker';
+import {
+  GiftedChat,
+  IMessage,
+  InputToolbar,
+  InputToolbarProps,
+  Send,
+  SendProps,
+} from 'react-native-gifted-chat';
+import { Callback, ImagePickerResponse, launchImageLibrary } from 'react-native-image-picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { processAndUploadImage } from '../services/imageUploadService';
@@ -44,6 +51,8 @@ export function ChatScreen() {
       </View>
     );
   }
+
+  const conversationIdToUse = conversationId;
 
   const { data: conversation, isLoading: conversationLoading } = useConversation(conversationId);
 
@@ -85,7 +94,7 @@ export function ChatScreen() {
       .reverse(); // GiftedChat expects newest first
   }, [messagesData, user]);
 
-  // Handle sending messages
+  // biome-ignore lint/correctness/useExhaustiveDependencies: conversationIdToUse is stable for component lifetime
   const handleSend = useCallback(
     async (messages: IMessage[] = []) => {
       if (!conversationIdToUse || !user) return;
@@ -104,10 +113,10 @@ export function ChatScreen() {
         Alert.alert('Error', 'Failed to send message. Please try again.');
       }
     },
-    [user, sendMessageMutation, route.params?.bookingId]
+    [conversationIdToUse, user, sendMessageMutation, route.params?.bookingId]
   );
 
-  // Handle image picker
+  // biome-ignore lint/correctness/useExhaustiveDependencies: conversationIdToUse is stable for component lifetime
   const handleImagePicker = useCallback(async () => {
     if (!conversationIdToUse) return;
 
@@ -117,7 +126,7 @@ export function ChatScreen() {
       includeBase64: false,
     };
 
-    launchImageLibrary(options, async (response) => {
+    launchImageLibrary(options, async (response: ImagePickerResponse) => {
       if (response.didCancel || response.errorMessage || !response.assets?.[0]) {
         return;
       }
@@ -148,9 +157,9 @@ export function ChatScreen() {
         );
       }
     });
-  }, [sendMessageMutation, route.params?.bookingId]);
+  }, [conversationIdToUse, sendMessageMutation, route.params?.bookingId]);
 
-  // Handle typing
+  // biome-ignore lint/correctness/useExhaustiveDependencies: conversationIdToUse is stable for component lifetime
   const handleTyping = useCallback(
     (text: string) => {
       if (!socket || !conversationIdToUse) return;
@@ -163,7 +172,7 @@ export function ChatScreen() {
         setIsTyping(false);
       }
     },
-    [socket, isTyping]
+    [socket, conversationIdToUse, isTyping]
   );
 
   // Load more messages
@@ -175,7 +184,7 @@ export function ChatScreen() {
 
   // Custom send button
   const renderSend = useCallback(
-    (props: unknown) => (
+    (props: SendProps<IMessage>) => (
       <Send {...props}>
         <View style={styles.sendButton}>
           <Text style={styles.sendButtonText}>Send</Text>
@@ -187,7 +196,7 @@ export function ChatScreen() {
 
   // Custom input toolbar with image button
   const renderInputToolbar = useCallback(
-    (props: unknown) => (
+    (props: InputToolbarProps<IMessage>) => (
       <View>
         <View style={styles.inputToolbar}>
           <TouchableOpacity style={styles.imageButton} onPress={handleImagePicker}>
@@ -200,21 +209,21 @@ export function ChatScreen() {
     [handleImagePicker]
   );
 
-  // Join conversation room when component mounts
+  // biome-ignore lint/correctness/useExhaustiveDependencies: conversationIdToUse is stable for component lifetime
   useEffect(() => {
     if (socket && conversationIdToUse && isConnected) {
       socket.emit('join:conversation', conversationIdToUse);
     }
-  }, [socket, isConnected]);
+  }, [socket, conversationIdToUse, isConnected]);
 
-  // Leave conversation room when component unmounts
+  // biome-ignore lint/correctness/useExhaustiveDependencies: conversationIdToUse is stable for component lifetime
   useEffect(() => {
     return () => {
       if (socket && conversationIdToUse) {
         socket.emit('leave:conversation', conversationIdToUse);
       }
     };
-  }, [socket]);
+  }, [socket, conversationIdToUse]);
 
   if (conversationLoading || messagesLoading) {
     return (

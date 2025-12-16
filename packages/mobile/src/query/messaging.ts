@@ -44,7 +44,7 @@ export interface Message {
   bookingId?: string;
   sentAt: string;
   readAt?: string;
-  createdAt: string;
+  createdAt?: string;
 }
 
 export interface ConversationsResponse {
