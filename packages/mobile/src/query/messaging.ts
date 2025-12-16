@@ -19,17 +19,17 @@ export interface Conversation {
   customerId: string;
   artistId: string;
   status: string;
-  lastMessageAt: string;
+  lastMessageAt: Date;
   unreadCountCustomer: number;
   unreadCountArtist: number;
-  archivedAt?: string;
-  createdAt: string;
-  updatedAt: string;
+  archivedAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
   lastMessage?: {
     id: string;
     content?: string;
     messageType: string;
-    sentAt: string;
+    sentAt: Date;
   };
 }
 
@@ -81,13 +81,32 @@ export function useConversations(userRole: 'customer' | 'artist') {
   return useInfiniteQuery({
     queryKey: messagingQueryKeys.conversations(userRole),
     queryFn: async ({ pageParam = 0 }) => {
-      const response = await apiClient.get<ConversationsResponse>('/messaging/conversations', {
+      const response = await apiClient.get<{
+        success: boolean;
+        data: Conversation[];
+        pagination: { limit: number; offset: number; hasMore: boolean; total: number };
+      }>('/messaging/conversations', {
         params: {
-          limit: 20,
-          offset: pageParam,
+          limit: '20',
+          offset: pageParam.toString(),
         },
       });
-      return response.data;
+      return {
+        conversations: response.data.map((conv) => ({
+          ...conv,
+          lastMessageAt: new Date(conv.lastMessageAt),
+          archivedAt: conv.archivedAt ? new Date(conv.archivedAt) : undefined,
+          createdAt: new Date(conv.createdAt),
+          updatedAt: new Date(conv.updatedAt),
+          lastMessage: conv.lastMessage
+            ? {
+                ...conv.lastMessage,
+                sentAt: new Date(conv.lastMessage.sentAt),
+              }
+            : undefined,
+        })),
+        pagination: response.pagination,
+      };
     },
     getNextPageParam: (lastPage) => {
       if (lastPage.pagination.hasMore) {
@@ -106,10 +125,10 @@ export function useConversation(conversationId: string) {
   return useQuery({
     queryKey: messagingQueryKeys.conversation(conversationId),
     queryFn: async () => {
-      const response = await apiClient.get<{ data: Conversation }>(
+      const response = await apiClient.get<{ success: boolean; data: Conversation }>(
         `/messaging/conversations/${conversationId}`
       );
-      return response.data.data;
+      return response.data;
     },
     enabled: !!conversationId,
   });
@@ -125,16 +144,20 @@ export function useMessages(conversationId: string) {
   const query = useInfiniteQuery({
     queryKey: messagingQueryKeys.messages(conversationId),
     queryFn: async ({ pageParam = 0 }) => {
-      const response = await apiClient.get<MessagesResponse>(
-        `/messaging/conversations/${conversationId}/messages`,
-        {
-          params: {
-            limit: 50,
-            offset: pageParam,
-          },
-        }
-      );
-      return response.data;
+      const response = await apiClient.get<{
+        success: boolean;
+        data: Message[];
+        pagination: { limit: number; offset: number; hasMore: boolean };
+      }>(`/messaging/conversations/${conversationId}/messages`, {
+        params: {
+          limit: '50',
+          offset: pageParam.toString(),
+        },
+      });
+      return {
+        messages: response.data,
+        pagination: response.pagination,
+      };
     },
     getNextPageParam: (lastPage) => {
       if (lastPage.pagination.hasMore) {
@@ -252,7 +275,7 @@ export function useSendMessage() {
       }
 
       // Send via REST API first (for persistence)
-      const response = await apiClient.post<{ data: Message }>(
+      const response = await apiClient.post<{ success: boolean; data: Message }>(
         `/messaging/conversations/${params.conversationId}/messages`,
         {
           messageType: params.messageType,
@@ -261,7 +284,7 @@ export function useSendMessage() {
           bookingId: params.bookingId,
         }
       );
-      return response.data.data;
+      return response.data;
     },
     onSuccess: (newMessage, variables) => {
       // Optimistically update the messages cache
@@ -351,7 +374,10 @@ export function useMarkAsRead() {
 
   return useMutation({
     mutationFn: async (conversationId: string) => {
-      const response = await apiClient.put(`/messaging/conversations/${conversationId}/read`);
+      // biome-ignore lint/suspicious/noExplicitAny: response data type for mark as read
+      const response = await apiClient.put<{ success: boolean; data: any }>(
+        `/messaging/conversations/${conversationId}/read`
+      );
       return response.data;
     },
     onSuccess: (_, conversationId) => {
@@ -378,10 +404,10 @@ export function useUnreadCount(userRole: 'customer' | 'artist') {
   return useQuery({
     queryKey: messagingQueryKeys.unreadCount(userRole),
     queryFn: async () => {
-      const response = await apiClient.get<{ data: { unreadCount: number } }>(
+      const response = await apiClient.get<{ success: boolean; data: { unreadCount: number } }>(
         '/messaging/messages/unread-count'
       );
-      return response.data.data.unreadCount;
+      return response.data.unreadCount;
     },
     refetchInterval: 30000, // Refetch every 30 seconds
   });

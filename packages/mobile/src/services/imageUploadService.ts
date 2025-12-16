@@ -22,13 +22,16 @@ export async function uploadMessageImage(params: UploadImageParams): Promise<Upl
 
   try {
     // Step 1: Get signed upload URL from our API
-    const response = await apiClient.post('/messaging/upload-image', {
+    const response = await apiClient.post<{
+      success: boolean;
+      data: { uploadUrl: string; key: string; publicUrl: string };
+    }>('/messaging/upload-image', {
       fileName,
       fileType,
       conversationId,
     });
 
-    const { uploadUrl, key, publicUrl } = response.data.data;
+    const { uploadUrl, key, publicUrl } = response.data;
 
     // Step 2: Upload the image to S3 using the signed URL
     await uploadToS3(uploadUrl, imageUri, fileType);

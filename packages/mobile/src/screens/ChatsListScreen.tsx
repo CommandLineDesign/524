@@ -11,7 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ConversationListItem } from '../components/messaging/ConversationListItem';
-import { useConversations } from '../query/messaging';
+import { Conversation, useConversations } from '../query/messaging';
 import { useAuthStore } from '../store/authStore';
 import { colors } from '../theme/colors';
 
@@ -42,7 +42,7 @@ export function ChatsListScreen() {
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const renderConversationItem = useCallback(
-    ({ item }) => <ConversationListItem conversation={item} />,
+    ({ item }: { item: Conversation }) => <ConversationListItem conversation={item} />,
     []
   );
 

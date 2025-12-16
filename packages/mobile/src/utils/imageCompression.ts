@@ -1,10 +1,10 @@
-import { SaveFormat, manipulateAsync } from 'expo-image-manipulator';
+import { manipulateAsync } from 'expo-image-manipulator';
 
 export interface ImageCompressionOptions {
   maxWidth?: number;
   maxHeight?: number;
   quality?: number;
-  format?: SaveFormat;
+  format?: 'jpeg' | 'png' | 'webp';
 }
 
 export interface CompressedImageResult {
@@ -22,7 +22,7 @@ export async function compressImageForMessaging(
   imageUri: string,
   options: ImageCompressionOptions = {}
 ): Promise<CompressedImageResult> {
-  const { maxWidth = 1920, maxHeight = 1920, quality = 0.8, format = SaveFormat.JPEG } = options;
+  const { maxWidth = 1920, maxHeight = 1920, quality = 0.8, format = 'jpeg' } = options;
 
   try {
     const manipResult = await manipulateAsync(
