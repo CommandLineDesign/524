@@ -109,6 +109,17 @@ export function BookingDetailScreen() {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>추가 동작</Text>
+          <TouchableOpacity
+            style={styles.messageButton}
+            onPress={() =>
+              navigation.navigate('Chat', {
+                bookingId: bookingId,
+                // The ChatScreen will handle getting/creating the conversation
+              })
+            }
+          >
+            <Text style={styles.messageButtonText}>메시지 보내기</Text>
+          </TouchableOpacity>
           <Text style={styles.secondaryText}>
             취소 및 변경은 곧 제공될 예정입니다. 현재는 확인만 가능합니다.
           </Text>
@@ -240,6 +251,18 @@ const styles = StyleSheet.create({
   },
   disabledText: {
     color: colors.muted,
+    fontWeight: '600',
+  },
+  messageButton: {
+    backgroundColor: colors.primary,
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  messageButtonText: {
+    color: colors.background,
+    fontSize: 15,
     fontWeight: '600',
   },
 });

@@ -4,6 +4,7 @@ import { adminRouter } from './admin.js';
 import { artistRouter } from './artist.js';
 import authRouter from './auth.js';
 import { bookingRouter } from './booking.js';
+import { messagingRouter } from './messaging.js';
 import { onboardingRouter } from './onboarding.js';
 import { uploadRouter } from './upload.js';
 
@@ -15,5 +16,6 @@ router.use('/artists', artistRouter);
 router.use('/admin', adminRouter);
 router.use('/onboarding', onboardingRouter);
 router.use('/uploads', uploadRouter);
+router.use('/messaging', messagingRouter);
 
 export const v1Router: ExpressRouter = router;

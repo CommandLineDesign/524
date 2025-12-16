@@ -166,6 +166,21 @@ export function ArtistBookingDetailScreen() {
           <BookingStatusHistory history={data.statusHistory} />
         </View>
 
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>메시지</Text>
+          <TouchableOpacity
+            style={styles.messageButton}
+            onPress={() =>
+              navigation.navigate('Chat', {
+                bookingId: bookingId,
+                // The ChatScreen will handle getting/creating the conversation
+              })
+            }
+          >
+            <Text style={styles.messageButtonText}>고객에게 메시지 보내기</Text>
+          </TouchableOpacity>
+        </View>
+
         {isPending ? (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>응답</Text>
@@ -328,5 +343,16 @@ const styles = StyleSheet.create({
   acceptText: {
     color: colors.background,
     fontWeight: '700',
+  },
+  messageButton: {
+    backgroundColor: colors.primary,
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  messageButtonText: {
+    color: colors.background,
+    fontSize: 15,
+    fontWeight: '600',
   },
 });

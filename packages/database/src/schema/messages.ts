@@ -1,5 +1,6 @@
 import { jsonb, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 
+import { bookings } from './bookings';
 import { conversations } from './conversations';
 import { users } from './users';
 
@@ -15,6 +16,7 @@ export const messages = pgTable('messages', {
   messageType: varchar('message_type', { length: 20 }).default('text'),
   content: text('content'),
   images: jsonb('images'),
+  bookingId: uuid('booking_id').references(() => bookings.id),
   sentAt: timestamp('sent_at').defaultNow().notNull(),
   readAt: timestamp('read_at'),
   createdAt: timestamp('created_at').defaultNow().notNull(),

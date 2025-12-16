@@ -15,6 +15,7 @@ export const conversations = pgTable('conversations', {
   lastMessageAt: timestamp('last_message_at').notNull(),
   unreadCountCustomer: integer('unread_count_customer').default(0),
   unreadCountArtist: integer('unread_count_artist').default(0),
+  archivedAt: timestamp('archived_at'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });

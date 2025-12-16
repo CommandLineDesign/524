@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React, { useEffect, useMemo } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 
+import { useOfflineQueueProcessor } from '../hooks/useOfflineQueueProcessor';
 import { useArtistProfile } from '../query/artist';
 import { useOnboardingState } from '../query/onboarding';
 import { ArtistBookingDetailScreen } from '../screens/ArtistBookingDetailScreen';
@@ -13,6 +14,8 @@ import { ArtistSignupScreen } from '../screens/ArtistSignupScreen';
 import { BookingDetailScreen } from '../screens/BookingDetailScreen';
 import { BookingSummaryScreen } from '../screens/BookingSummaryScreen';
 import { BookingsListScreen } from '../screens/BookingsListScreen';
+import { ChatScreen } from '../screens/ChatScreen';
+import { ChatsListScreen } from '../screens/ChatsListScreen';
 import { LoginScreen } from '../screens/LoginScreen';
 import { OccasionSelectionScreen } from '../screens/OccasionSelectionScreen';
 import { OnboardingFlowScreen } from '../screens/OnboardingFlowScreen';
@@ -94,6 +97,13 @@ export type RootStackParamList = {
   ArtistPending: undefined;
   ArtistBookingsList: undefined;
   ArtistBookingDetail: { bookingId: string };
+  ChatsList: undefined;
+  Chat: {
+    conversationId?: string;
+    artistId?: string;
+    customerId?: string;
+    bookingId?: string;
+  };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -101,6 +111,9 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 export function AppNavigator() {
   const { user, isLoading, loadSession } = useAuthStore();
   const isArtist = Boolean(user?.primaryRole === 'artist' || user?.roles?.includes('artist'));
+
+  // Initialize offline queue processor
+  useOfflineQueueProcessor();
   const {
     data: artistProfile,
     isLoading: artistProfileLoading,
@@ -235,6 +248,12 @@ export function AppNavigator() {
                   component={BookingDetailScreen}
                   options={{ title: '예약 상세' }}
                 />
+                <Stack.Screen
+                  name="ChatsList"
+                  component={ChatsListScreen}
+                  options={{ title: 'Messages' }}
+                />
+                <Stack.Screen name="Chat" component={ChatScreen} options={{ title: 'Chat' }} />
               </>
             )}
             {/* Ensure Welcome is available even while onboarding to avoid reset race */}

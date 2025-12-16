@@ -7,8 +7,11 @@ import type {
   CreateBookingPayload,
   UpdateBookingStatusPayload,
 } from '@524/shared/bookings';
+import { BOOKING_SYSTEM_MESSAGES, defaultLocale } from '@524/shared/constants';
 
 import { BookingRepository } from '../repositories/bookingRepository.js';
+import { ConversationService } from './conversationService.js';
+import { MessageService } from './messageService.js';
 import { NotificationService } from './notificationService.js';
 import { PaymentService } from './paymentService.js';
 
@@ -18,7 +21,9 @@ export class BookingService {
   constructor(
     private readonly repository = new BookingRepository(),
     private readonly notificationService = new NotificationService(),
-    private readonly paymentService = new PaymentService()
+    private readonly paymentService = new PaymentService(),
+    private readonly messageService = new MessageService(),
+    private readonly conversationService = new ConversationService()
   ) {}
 
   async createBooking(payload: CreateBookingPayload): Promise<BookingSummary> {
@@ -27,6 +32,10 @@ export class BookingService {
     // This keeps parity with the existing flow until deferred payments are introduced.
     await this.paymentService.authorizePayment(booking);
     await this.notificationService.notifyBookingCreated(booking);
+
+    // Send system message for new booking (fire-and-forget)
+    this.sendBookingStatusSystemMessage(booking, 'pending');
+
     return booking;
   }
 
@@ -87,6 +96,10 @@ export class BookingService {
 
     const updated = await this.repository.updateStatus(bookingId, normalizedStatus);
     await this.notificationService.notifyBookingStatusChanged(updated);
+
+    // Send system message to conversation (fire-and-forget)
+    this.sendBookingStatusSystemMessage(updated, normalizedStatus);
+
     return updated;
   }
 
@@ -103,12 +116,84 @@ export class BookingService {
   ): Promise<BookingSummary> {
     const booking = await this.repository.declineBooking(bookingId, artistId, reason);
     await this.notificationService.notifyBookingStatusChanged(booking);
+
+    // Send system message for decline (fire-and-forget)
+    this.sendBookingStatusSystemMessage(booking, 'cancelled');
+
     return booking;
   }
 
   async cancelPendingBooking(bookingId: string, customerId: string): Promise<BookingSummary> {
     const booking = await this.repository.cancelPendingBooking(bookingId, customerId);
     await this.notificationService.notifyBookingStatusChanged(booking);
+
+    // Send system message for cancellation (fire-and-forget)
+    this.sendBookingStatusSystemMessage(booking, 'cancelled');
+
     return booking;
+  }
+
+  /**
+   * Send a system message to the conversation when booking status changes (fire-and-forget)
+   */
+  private sendBookingStatusSystemMessage(
+    booking: BookingSummary,
+    status: BookingSummary['status']
+  ): void {
+    // Fire-and-forget: don't await to avoid blocking booking operations
+    (async () => {
+      try {
+        // Get or create conversation between customer and artist
+        const conversation = await this.conversationService.getOrCreateConversation(
+          booking.customerId,
+          booking.artistId,
+          booking.id
+        );
+
+        // Generate appropriate system message based on status
+        const systemMessage = this.generateBookingStatusMessage(booking, status);
+
+        if (systemMessage) {
+          await this.messageService.sendSystemMessage(conversation.id, systemMessage, booking.id);
+        }
+      } catch (error) {
+        // Don't fail the booking operation if messaging fails
+        // Just log the error
+        console.error('Failed to send booking status system message:', error);
+      }
+    })();
+  }
+
+  /**
+   * Generate appropriate system message for booking status changes
+   */
+  private generateBookingStatusMessage(
+    booking: BookingSummary,
+    status: BookingSummary['status']
+  ): string | null {
+    const bookingNumber = booking.bookingNumber;
+    const locale = defaultLocale; // Could be made configurable per user in future
+
+    // Format date according to locale
+    const dateOptions = {
+      year: 'numeric' as const,
+      month: 'long' as const,
+      day: 'numeric' as const,
+      weekday: 'long' as const,
+    };
+    const scheduledDate = new Date(booking.scheduledDate).toLocaleDateString(
+      locale === 'ko' ? 'ko-KR' : 'en-US',
+      dateOptions
+    );
+
+    const messageTemplate = BOOKING_SYSTEM_MESSAGES[locale]?.[status];
+    if (!messageTemplate) {
+      return null;
+    }
+
+    // Replace placeholders in the message
+    return messageTemplate
+      .replace('{bookingNumber}', bookingNumber)
+      .replace('{scheduledDate}', scheduledDate);
   }
 }
