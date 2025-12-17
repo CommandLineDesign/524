@@ -127,6 +127,12 @@ describe('MessageService', () => {
         .fn()
         .mockResolvedValue(mockMessage);
 
+      // Mock updateLastMessageAt
+      const conversationService = await import('./conversationService.js');
+      conversationService.ConversationService.prototype.updateLastMessageAt = vi
+        .fn()
+        .mockResolvedValue(undefined);
+
       const result = await messageService.sendSystemMessage(
         'conv-1',
         'Booking confirmed',
@@ -135,6 +141,49 @@ describe('MessageService', () => {
 
       expect(result.messageType).toBe('system');
       expect(result.content).toBe('Booking confirmed');
+    });
+
+    it('should send system message without access validation', async () => {
+      const mockMessage = {
+        id: 'msg-1',
+        conversationId: 'conv-1',
+        senderId: 'system',
+        senderRole: 'customer',
+        messageType: 'system',
+        content: 'Booking confirmed',
+        sentAt: new Date(),
+        createdAt: new Date(),
+      };
+
+      // Mock conversation access validation to return false (should be ignored for system messages)
+      const conversationService = await import('./conversationService.js');
+      conversationService.ConversationService.prototype.validateConversationAccess = vi
+        .fn()
+        .mockResolvedValue(false);
+      conversationService.ConversationService.prototype.updateLastMessageAt = vi
+        .fn()
+        .mockResolvedValue(undefined);
+
+      // Mock message repository
+      const messageRepo = await import('../repositories/messageRepository.js');
+      messageRepo.MessageRepository.prototype.insertMessage = vi
+        .fn()
+        .mockResolvedValue(mockMessage);
+
+      // This should succeed even though validateConversationAccess returns false
+      const result = await messageService.sendSystemMessage(
+        'conv-1',
+        'Booking confirmed',
+        'booking-1'
+      );
+
+      expect(result.messageType).toBe('system');
+      expect(result.content).toBe('Booking confirmed');
+
+      // Verify that validateConversationAccess was not called for system messages
+      expect(
+        conversationService.ConversationService.prototype.validateConversationAccess
+      ).not.toHaveBeenCalled();
     });
   });
 });

@@ -31,15 +31,17 @@ export class MessageService {
    * Send a message and broadcast via WebSocket
    */
   async sendMessage(options: SendMessageOptions): Promise<MessageWithSender> {
-    const { conversationId, senderId, senderRole, ...messageData } = options;
+    const { conversationId, senderId, senderRole, messageType, ...messageData } = options;
 
-    // Validate conversation access
-    const hasAccess = await this.conversationService.validateConversationAccess(
-      conversationId,
-      senderId
-    );
-    if (!hasAccess) {
-      throw new Error('Access denied to conversation');
+    // Skip access validation for system messages (used for booking status notifications)
+    if (messageType !== 'system') {
+      const hasAccess = await this.conversationService.validateConversationAccess(
+        conversationId,
+        senderId
+      );
+      if (!hasAccess) {
+        throw new Error('Access denied to conversation');
+      }
     }
 
     // Insert message
@@ -47,6 +49,7 @@ export class MessageService {
       conversationId,
       senderId,
       senderRole,
+      messageType,
       ...messageData,
     });
 
