@@ -128,6 +128,13 @@ router.post('/conversations', async (req: AuthRequest, res: Response) => {
       });
     }
 
+    if (!bookingId) {
+      return res.status(400).json({
+        success: false,
+        error: 'bookingId is required',
+      });
+    }
+
     if (artistId === customerId) {
       return res.status(400).json({
         success: false,

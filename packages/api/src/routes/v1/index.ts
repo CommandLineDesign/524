@@ -16,6 +16,6 @@ router.use('/artists', artistRouter);
 router.use('/admin', adminRouter);
 router.use('/onboarding', onboardingRouter);
 router.use('/uploads', uploadRouter);
-router.use('/messaging', messagingRouter);
+router.use('/', messagingRouter);
 
 export const v1Router: ExpressRouter = router;
