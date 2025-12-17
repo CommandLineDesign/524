@@ -2,7 +2,7 @@ export type MessageType = 'text' | 'image' | 'system';
 
 export interface ChatMessage {
   id: string;
-  bookingId: string;
+  bookingId?: string;
   conversationId: string;
   senderId: string;
   senderRole: 'customer' | 'artist';
@@ -10,4 +10,5 @@ export interface ChatMessage {
   content: string;
   images?: string[];
   sentAt: string;
+  readAt?: string;
 }

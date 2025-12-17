@@ -249,3 +249,29 @@ export async function presignProfilePhoto(
     body: JSON.stringify({ contentType, contentLength }),
   });
 }
+
+// Axios-like API client for compatibility
+export const apiClient = {
+  async get<T>(path: string, config?: { params?: Record<string, string> }): Promise<T> {
+    const url = config?.params ? `${path}?${new URLSearchParams(config.params)}` : path;
+    return request<T>(url, { method: 'GET' });
+  },
+
+  async post<T>(path: string, data?: unknown): Promise<T> {
+    return request<T>(path, {
+      method: 'POST',
+      body: data ? JSON.stringify(data) : undefined,
+    });
+  },
+
+  async put<T>(path: string, data?: unknown): Promise<T> {
+    return request<T>(path, {
+      method: 'PUT',
+      body: data ? JSON.stringify(data) : undefined,
+    });
+  },
+
+  async delete<T>(path: string): Promise<T> {
+    return request<T>(path, { method: 'DELETE' });
+  },
+};

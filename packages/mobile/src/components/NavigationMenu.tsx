@@ -22,6 +22,7 @@ const menuItems: Array<{ label: string; screen: SimpleRoute }> = [
   { label: 'Occasions', screen: 'OccasionSelection' },
   { label: 'Booking Summary', screen: 'BookingSummary' },
   { label: 'My Bookings', screen: 'BookingsList' },
+  { label: 'Messages', screen: 'ChatsList' },
 ];
 
 export function NavigationMenu({ visible, onClose }: NavigationMenuProps) {

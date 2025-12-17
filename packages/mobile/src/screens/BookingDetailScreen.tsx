@@ -3,6 +3,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React from 'react';
 import {
   ActivityIndicator,
+  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -16,6 +17,7 @@ import { BookingStatusHistory } from '../components/bookings/BookingStatusHistor
 import { formatCurrency, formatSchedule } from '../components/bookings/bookingDisplay';
 import type { RootStackParamList } from '../navigation/AppNavigator';
 import { useBookingDetail } from '../query/bookings';
+import { useCreateConversation } from '../query/messaging';
 import { colors } from '../theme/colors';
 
 type BookingDetailNavProp = NativeStackNavigationProp<RootStackParamList, 'BookingDetail'>;
@@ -27,6 +29,7 @@ export function BookingDetailScreen() {
   const bookingId = route.params.bookingId;
 
   const { data, isLoading, isError, refetch } = useBookingDetail(bookingId);
+  const createConversationMutation = useCreateConversation();
 
   if (isLoading) {
     return (
@@ -109,6 +112,35 @@ export function BookingDetailScreen() {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>추가 동작</Text>
+          <TouchableOpacity
+            style={styles.messageButton}
+            onPress={async () => {
+              try {
+                if (!data?.artistId) {
+                  Alert.alert('오류', '아티스트 정보를 찾을 수 없습니다.');
+                  return;
+                }
+
+                const conversation = await createConversationMutation.mutateAsync({
+                  artistId: data.artistId,
+                  bookingId: bookingId,
+                });
+
+                navigation.navigate('Chat', {
+                  conversationId: conversation.id,
+                  bookingId: bookingId,
+                });
+              } catch (error) {
+                console.error('Failed to create conversation:', error);
+                Alert.alert(
+                  '메시지 시작 실패',
+                  '대화를 시작할 수 없습니다. 잠시 후 다시 시도해 주세요.'
+                );
+              }
+            }}
+          >
+            <Text style={styles.messageButtonText}>메시지 보내기</Text>
+          </TouchableOpacity>
           <Text style={styles.secondaryText}>
             취소 및 변경은 곧 제공될 예정입니다. 현재는 확인만 가능합니다.
           </Text>
@@ -240,6 +272,18 @@ const styles = StyleSheet.create({
   },
   disabledText: {
     color: colors.muted,
+    fontWeight: '600',
+  },
+  messageButton: {
+    backgroundColor: colors.primary,
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  messageButtonText: {
+    color: colors.background,
+    fontSize: 15,
     fontWeight: '600',
   },
 });

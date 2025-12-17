@@ -7,6 +7,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { enableScreens } from 'react-native-screens';
 
+import { SocketProvider } from './src/contexts/SocketContext';
 import { AppNavigator } from './src/navigation/AppNavigator';
 import { queryClient } from './src/query/client';
 
@@ -17,8 +18,10 @@ export default function App() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
-          <StatusBar style="dark" />
-          <AppNavigator />
+          <SocketProvider>
+            <StatusBar style="dark" />
+            <AppNavigator />
+          </SocketProvider>
         </QueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

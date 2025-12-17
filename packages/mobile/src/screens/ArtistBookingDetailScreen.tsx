@@ -21,6 +21,7 @@ import {
   useBookingDetail,
   useDeclineBookingMutation,
 } from '../query/bookings';
+import { useCreateConversation } from '../query/messaging';
 import { colors } from '../theme/colors';
 
 // Helper function to get user-friendly error messages from API errors
@@ -65,6 +66,7 @@ export function ArtistBookingDetailScreen() {
   const { data, isLoading, isError, refetch } = useBookingDetail(bookingId);
   const acceptMutation = useAcceptBookingMutation();
   const declineMutation = useDeclineBookingMutation();
+  const createConversationMutation = useCreateConversation();
 
   const isPending = data?.status === 'pending';
 
@@ -164,6 +166,39 @@ export function ArtistBookingDetailScreen() {
           <Text style={styles.sectionTitle}>진행 상태</Text>
           <Text style={styles.primaryText}>결제 상태: {paymentStatusLabel}</Text>
           <BookingStatusHistory history={data.statusHistory} />
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>메시지</Text>
+          <TouchableOpacity
+            style={styles.messageButton}
+            onPress={async () => {
+              try {
+                if (!data?.customerId) {
+                  Alert.alert('오류', '고객 정보를 찾을 수 없습니다.');
+                  return;
+                }
+
+                const conversation = await createConversationMutation.mutateAsync({
+                  artistId: data.artistId,
+                  bookingId: bookingId,
+                });
+
+                navigation.navigate('Chat', {
+                  conversationId: conversation.id,
+                  bookingId: bookingId,
+                });
+              } catch (error) {
+                console.error('Failed to create conversation:', error);
+                Alert.alert(
+                  '메시지 시작 실패',
+                  '대화를 시작할 수 없습니다. 잠시 후 다시 시도해 주세요.'
+                );
+              }
+            }}
+          >
+            <Text style={styles.messageButtonText}>고객에게 메시지 보내기</Text>
+          </TouchableOpacity>
         </View>
 
         {isPending ? (
@@ -328,5 +363,16 @@ const styles = StyleSheet.create({
   acceptText: {
     color: colors.background,
     fontWeight: '700',
+  },
+  messageButton: {
+    backgroundColor: colors.primary,
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  messageButtonText: {
+    color: colors.background,
+    fontSize: 15,
+    fontWeight: '600',
   },
 });
