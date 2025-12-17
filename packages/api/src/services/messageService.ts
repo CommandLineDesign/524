@@ -197,4 +197,28 @@ export class MessageService {
 
     return context.conversation.customerId === userId || context.conversation.artistId === userId;
   }
+
+  /**
+   * ADMIN: Get messages for a conversation without permission check
+   */
+  async getMessagesForConversation(
+    conversationId: string,
+    pagination: { limit?: number; offset?: number } = { limit: 50, offset: 0 }
+  ): Promise<MessageListResult> {
+    const limit = pagination.limit ?? 50;
+    const offset = pagination.offset ?? 0;
+
+    const messages = await this.messageRepo.getMessagesForConversation(conversationId, {
+      limit,
+      offset,
+    });
+
+    // Check if there are more messages (simplified check)
+    const hasMore = messages.length === limit;
+
+    return {
+      messages: messages.reverse(), // Return in chronological order (oldest first)
+      hasMore,
+    };
+  }
 }

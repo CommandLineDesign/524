@@ -168,4 +168,15 @@ export class MessageRepository {
     // biome-ignore lint/suspicious/noExplicitAny: SQL join result type is dynamic
     return result[0] as any;
   }
+
+  /**
+   * ADMIN: Get messages for a conversation without permission check
+   * This is essentially the same as getMessages but explicitly named for admin use
+   */
+  async getMessagesForConversation(
+    conversationId: string,
+    pagination: { limit: number; offset: number } = { limit: 50, offset: 0 }
+  ): Promise<MessageWithSender[]> {
+    return await this.getMessages(conversationId, pagination);
+  }
 }

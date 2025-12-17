@@ -52,7 +52,7 @@ router.get('/conversations', requireAdmin(), async (req: AuthRequest, res) => {
     const offset = Number.isFinite(rawOffset) ? Math.max(rawOffset, 0) : 0;
 
     // Get conversations with pagination
-    const conversations = await conversationService.getUserConversations('admin', 'customer', {
+    const conversations = await conversationService.getAllConversations({
       limit,
       offset,
     });
@@ -106,7 +106,7 @@ router.get('/conversations/:id', requireAdmin(), async (req: AuthRequest, res) =
     }
 
     // Admin can view any conversation
-    const conversation = await conversationService.getConversation(conversationId, 'admin');
+    const conversation = await conversationService.getConversationById(conversationId);
 
     if (!conversation) {
       return res.status(404).json({
@@ -167,7 +167,10 @@ router.get('/conversations/:id/messages', requireAdmin(), async (req: AuthReques
     const offset = Number.isFinite(rawOffset) ? Math.max(rawOffset, 0) : 0;
 
     // Admin can view messages from any conversation
-    const result = await messageService.getMessages(conversationId, 'admin', { limit, offset });
+    const result = await messageService.getMessagesForConversation(conversationId, {
+      limit,
+      offset,
+    });
 
     // Audit log admin access
     await auditLogRepository.create({

@@ -124,4 +124,35 @@ export class ConversationService {
     const conversation = await this.conversationRepo.getConversation(conversationId, userId);
     return conversation !== null;
   }
+
+  /**
+   * ADMIN: Get all conversations with pagination (bypasses user permission checks)
+   */
+  async getAllConversations(
+    pagination: PaginationOptions = { limit: 20, offset: 0 }
+  ): Promise<ConversationListResult> {
+    const limit = pagination.limit ?? 20;
+    const offset = pagination.offset ?? 0;
+
+    // Fetch conversations and total count in parallel
+    const [conversations, total] = await Promise.all([
+      this.conversationRepo.getAllConversations({ limit, offset }),
+      this.conversationRepo.getAllConversationsCount(),
+    ]);
+
+    const hasMore = offset + conversations.length < total;
+
+    return {
+      conversations,
+      total,
+      hasMore,
+    };
+  }
+
+  /**
+   * ADMIN: Get a single conversation by ID without permission check
+   */
+  async getConversationById(conversationId: string) {
+    return await this.conversationRepo.getConversationById(conversationId);
+  }
 }

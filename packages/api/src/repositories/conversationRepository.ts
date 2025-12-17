@@ -267,4 +267,102 @@ export class ConversationRepository {
       .where(eq(conversations.id, conversationId))
       .returning();
   }
+
+  /**
+   * ADMIN: Get count of all conversations (bypasses user permission checks)
+   */
+  async getAllConversationsCount(): Promise<number> {
+    const result = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(conversations)
+      .where(eq(conversations.status, 'active'));
+
+    return Number(result[0]?.count ?? 0);
+  }
+
+  /**
+   * ADMIN: Get all conversations with pagination (bypasses user permission checks)
+   */
+  async getAllConversations(
+    pagination: { limit: number; offset: number } = { limit: 20, offset: 0 }
+  ): Promise<ConversationWithDetails[]> {
+    const result = await db
+      .select({
+        conversation: conversations,
+        lastMessage: {
+          id: messages.id,
+          content: messages.content,
+          messageType: messages.messageType,
+          sentAt: messages.sentAt,
+        },
+      })
+      .from(conversations)
+      .leftJoin(messages, eq(messages.conversationId, conversations.id))
+      .where(eq(conversations.status, 'active'))
+      .orderBy(desc(conversations.lastMessageAt))
+      .limit(pagination.limit)
+      .offset(pagination.offset);
+
+    // Group by conversation and get the latest message
+    const conversationMap = new Map<string, ConversationWithDetails>();
+
+    for (const row of result) {
+      const convId = row.conversation.id;
+      if (!conversationMap.has(convId)) {
+        conversationMap.set(convId, {
+          ...row.conversation,
+          lastMessage: undefined,
+        });
+      }
+
+      // Keep only the most recent message
+      const existing = conversationMap.get(convId);
+      if (
+        existing &&
+        row.lastMessage &&
+        (!existing.lastMessage || row.lastMessage.sentAt > existing.lastMessage.sentAt)
+      ) {
+        existing.lastMessage = row.lastMessage;
+      }
+    }
+
+    return Array.from(conversationMap.values());
+  }
+
+  /**
+   * ADMIN: Get a single conversation by ID without permission check
+   */
+  async getConversationById(conversationId: string) {
+    const result = await db
+      .select({
+        conversation: conversations,
+        lastMessage: {
+          id: messages.id,
+          content: messages.content,
+          messageType: messages.messageType,
+          sentAt: messages.sentAt,
+        },
+      })
+      .from(conversations)
+      .leftJoin(
+        messages,
+        and(
+          eq(messages.conversationId, conversations.id),
+          sql`${messages.sentAt} = (
+            SELECT MAX(sent_at) FROM messages WHERE conversation_id = ${conversations.id}
+          )`
+        )
+      )
+      .where(eq(conversations.id, conversationId))
+      .limit(1);
+
+    if (result.length === 0) {
+      return null;
+    }
+
+    return {
+      ...result[0].conversation,
+      lastMessage: result[0].lastMessage,
+    };
+  }
 }
