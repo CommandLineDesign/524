@@ -90,6 +90,7 @@ describe('MessageService', () => {
 
       const messageRepo = await import('../repositories/messageRepository.js');
       messageRepo.MessageRepository.prototype.getMessages = vi.fn().mockResolvedValue(mockMessages);
+      messageRepo.MessageRepository.prototype.getTotalMessageCount = vi.fn().mockResolvedValue(1); // Total count = number of messages returned
 
       const result = await messageService.getMessages('conv-1', 'user-1');
 
@@ -98,47 +99,7 @@ describe('MessageService', () => {
     });
 
     it('should return hasMore true when more messages exist beyond the limit', async () => {
-      // Mock repository to return limit + 1 messages (indicating more exist)
-      const mockMessagesWithExtra = Array.from({ length: 51 }, (_, i) => ({
-        id: `msg-${i + 1}`,
-        conversationId: 'conv-1',
-        senderId: 'user-1',
-        senderRole: 'customer',
-        messageType: 'text',
-        content: `Message ${i + 1}`,
-        sentAt: new Date(),
-        createdAt: new Date(),
-      }));
-
-      // Mock conversation access validation
-      const conversationService = await import('./conversationService.js');
-      conversationService.ConversationService.prototype.validateConversationAccess = vi
-        .fn()
-        .mockResolvedValue(true);
-
-      // Mock message repository - need to mock it before creating the service
-      const messageRepo = await import('../repositories/messageRepository.js');
-      const originalGetMessages = messageRepo.MessageRepository.prototype.getMessages;
-      messageRepo.MessageRepository.prototype.getMessages = vi
-        .fn()
-        .mockResolvedValue(mockMessagesWithExtra);
-
-      try {
-        const result = await messageService.getMessages('conv-1', 'user-1', {
-          limit: 50,
-          offset: 0,
-        });
-
-        expect(result.messages).toHaveLength(50); // Should return only the limit
-        expect(result.hasMore).toBe(true); // Should indicate more messages exist
-      } finally {
-        // Restore original method
-        messageRepo.MessageRepository.prototype.getMessages = originalGetMessages;
-      }
-    });
-
-    it('should return hasMore false when exactly at the limit with no more messages', async () => {
-      // Mock repository to return exactly the limit (50 messages) - no more available
+      // Mock repository to return exactly the limit messages
       const mockMessages = Array.from({ length: 50 }, (_, i) => ({
         id: `msg-${i + 1}`,
         conversationId: 'conv-1',
@@ -159,7 +120,55 @@ describe('MessageService', () => {
       // Mock message repository
       const messageRepo = await import('../repositories/messageRepository.js');
       const originalGetMessages = messageRepo.MessageRepository.prototype.getMessages;
+      const originalGetMessageCountAfterOffset =
+        messageRepo.MessageRepository.prototype.getTotalMessageCount;
+
       messageRepo.MessageRepository.prototype.getMessages = vi.fn().mockResolvedValue(mockMessages);
+      messageRepo.MessageRepository.prototype.getTotalMessageCount = vi.fn().mockResolvedValue(100); // Total count > offset + limit (0 + 50)
+
+      try {
+        const result = await messageService.getMessages('conv-1', 'user-1', {
+          limit: 50,
+          offset: 0,
+        });
+
+        expect(result.messages).toHaveLength(50);
+        expect(result.hasMore).toBe(true); // Should indicate more messages exist
+      } finally {
+        // Restore original methods
+        messageRepo.MessageRepository.prototype.getMessages = originalGetMessages;
+        messageRepo.MessageRepository.prototype.getTotalMessageCount =
+          originalGetMessageCountAfterOffset;
+      }
+    });
+
+    it('should return hasMore false when exactly at the limit with no more messages', async () => {
+      // Mock repository to return exactly the limit (50 messages)
+      const mockMessages = Array.from({ length: 50 }, (_, i) => ({
+        id: `msg-${i + 1}`,
+        conversationId: 'conv-1',
+        senderId: 'user-1',
+        senderRole: 'customer',
+        messageType: 'text',
+        content: `Message ${i + 1}`,
+        sentAt: new Date(),
+        createdAt: new Date(),
+      }));
+
+      // Mock conversation access validation
+      const conversationService = await import('./conversationService.js');
+      conversationService.ConversationService.prototype.validateConversationAccess = vi
+        .fn()
+        .mockResolvedValue(true);
+
+      // Mock message repository
+      const messageRepo = await import('../repositories/messageRepository.js');
+      const originalGetMessages = messageRepo.MessageRepository.prototype.getMessages;
+      const originalGetMessageCountAfterOffset =
+        messageRepo.MessageRepository.prototype.getTotalMessageCount;
+
+      messageRepo.MessageRepository.prototype.getMessages = vi.fn().mockResolvedValue(mockMessages);
+      messageRepo.MessageRepository.prototype.getTotalMessageCount = vi.fn().mockResolvedValue(50); // Total count = offset + limit (0 + 50)
 
       try {
         const result = await messageService.getMessages('conv-1', 'user-1', {
@@ -170,8 +179,10 @@ describe('MessageService', () => {
         expect(result.messages).toHaveLength(50);
         expect(result.hasMore).toBe(false); // Should indicate no more messages exist
       } finally {
-        // Restore original method
+        // Restore original methods
         messageRepo.MessageRepository.prototype.getMessages = originalGetMessages;
+        messageRepo.MessageRepository.prototype.getTotalMessageCount =
+          originalGetMessageCountAfterOffset;
       }
     });
 

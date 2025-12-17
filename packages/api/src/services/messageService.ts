@@ -104,13 +104,15 @@ export class MessageService {
     const limit = pagination.limit ?? 50;
     const offset = pagination.offset ?? 0;
 
-    // Fetch one extra message to check if there are more
-    const messagesWithExtra = await this.messageRepo.getMessages(conversationId, {
-      limit: limit + 1,
+    // Fetch only the requested messages
+    const messages = await this.messageRepo.getMessages(conversationId, {
+      limit,
       offset,
     });
-    const messages = messagesWithExtra.slice(0, limit);
-    const hasMore = messagesWithExtra.length > limit;
+
+    // Check if there are more messages using COUNT query
+    const totalCount = await this.messageRepo.getTotalMessageCount(conversationId);
+    const hasMore = offset + limit < totalCount;
 
     return {
       messages: messages.reverse(), // Return in chronological order (oldest first)
@@ -215,8 +217,9 @@ export class MessageService {
       offset,
     });
 
-    // Check if there are more messages (simplified check)
-    const hasMore = messages.length === limit;
+    // Check if there are more messages using COUNT query
+    const totalCount = await this.messageRepo.getTotalMessageCount(conversationId);
+    const hasMore = offset + limit < totalCount;
 
     return {
       messages: messages.reverse(), // Return in chronological order (oldest first)

@@ -60,6 +60,20 @@ export class MessageRepository {
   }
 
   /**
+   * Count total messages in a conversation
+   */
+  async getTotalMessageCount(conversationId: string): Promise<number> {
+    const result = await db
+      .select({
+        count: sql<number>`count(*)::int`,
+      })
+      .from(messages)
+      .where(eq(messages.conversationId, conversationId));
+
+    return result[0]?.count ?? 0;
+  }
+
+  /**
    * Mark a message as read
    */
   async markMessageAsRead(messageId: string, userId: string): Promise<MessageWithSender | null> {
@@ -67,7 +81,7 @@ export class MessageRepository {
     const message = await db
       .select({
         message: messages,
-        conversation: sql`conversations.customer_id, conversations.artist_id`,
+        conversation: sql`conversations.customer_id as "customerId", conversations.artist_id as "artistId"`,
       })
       .from(messages)
       .innerJoin(sql`conversations`, eq(messages.conversationId, sql`conversations.id`))
@@ -81,7 +95,7 @@ export class MessageRepository {
     const { message: msg, conversation } = message[0];
     const hasPermission =
       // biome-ignore lint/suspicious/noExplicitAny: SQL join result type is dynamic
-      (conversation as any).customer_id === userId || (conversation as any).artist_id === userId;
+      (conversation as any).customerId === userId || (conversation as any).artistId === userId;
 
     if (!hasPermission) {
       return null;
@@ -151,7 +165,7 @@ export class MessageRepository {
     const result = await db
       .select({
         message: messages,
-        conversation: sql`conversations.customer_id, conversations.artist_id`,
+        conversation: sql`conversations.customer_id as "customerId", conversations.artist_id as "artistId"`,
       })
       .from(messages)
       .innerJoin(sql`conversations`, eq(messages.conversationId, sql`conversations.id`))

@@ -62,7 +62,7 @@ router.get('/conversations', requireAdmin(), async (req: AuthRequest, res) => {
       userId: req.user?.id,
       action: 'VIEW_CONVERSATIONS_LIST',
       resourceType: 'conversation',
-      resourceId: null,
+      resourceId: '00000000-0000-0000-0000-000000000000',
       details: {
         action: 'list_conversations_paginated',
         recordCount: conversations.conversations.length,
