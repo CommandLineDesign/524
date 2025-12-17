@@ -150,6 +150,13 @@ export class ConversationService {
   }
 
   /**
+   * Get a single conversation by booking ID with permission check
+   */
+  async getConversationByBooking(bookingId: string, userId: string) {
+    return await this.conversationRepo.getConversationByBooking(bookingId, userId);
+  }
+
+  /**
    * ADMIN: Get a single conversation by ID without permission check
    */
   async getConversationById(conversationId: string) {

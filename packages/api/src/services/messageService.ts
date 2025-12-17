@@ -154,9 +154,11 @@ export class MessageService {
    * Get messages by booking ID (for displaying booking context in chat)
    */
   async getMessagesByBooking(bookingId: string, userId: string): Promise<MessageWithSender[]> {
-    // First get the conversation for this booking to validate access
-    const conversation = await this.conversationService.getConversation('dummy', userId); // We'll need to add a method to get by booking
-    // For now, just return messages (in production, add proper access control)
+    // Validate user has access to the conversation for this booking
+    const conversation = await this.conversationService.getConversationByBooking(bookingId, userId);
+    if (!conversation) {
+      throw new Error('Access denied to booking conversation');
+    }
 
     return await this.messageRepo.getMessagesByBooking(bookingId);
   }

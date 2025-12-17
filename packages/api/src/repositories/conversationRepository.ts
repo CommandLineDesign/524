@@ -308,6 +308,48 @@ export class ConversationRepository {
   }
 
   /**
+   * Get a single conversation by booking ID with permission check
+   */
+  async getConversationByBooking(bookingId: string, userId: string) {
+    const result = await db
+      .select({
+        conversation: conversations,
+        lastMessage: {
+          id: messages.id,
+          content: messages.content,
+          messageType: messages.messageType,
+          sentAt: messages.sentAt,
+        },
+      })
+      .from(conversations)
+      .leftJoin(
+        messages,
+        and(
+          eq(messages.conversationId, conversations.id),
+          sql`${messages.sentAt} = (
+            SELECT MAX(sent_at) FROM messages WHERE conversation_id = ${conversations.id}
+          )`
+        )
+      )
+      .where(
+        and(
+          eq(conversations.bookingId, bookingId),
+          sql`(${conversations.customerId} = ${userId} OR ${conversations.artistId} = ${userId})`
+        )
+      )
+      .limit(1);
+
+    if (result.length === 0) {
+      return null;
+    }
+
+    return {
+      ...result[0].conversation,
+      lastMessage: result[0].lastMessage,
+    };
+  }
+
+  /**
    * ADMIN: Get a single conversation by ID without permission check
    */
   async getConversationById(conversationId: string) {
