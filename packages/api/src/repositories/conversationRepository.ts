@@ -93,6 +93,7 @@ export class ConversationRepository {
   ): Promise<ConversationWithDetails[]> {
     const userIdField = userRole === 'customer' ? conversations.customerId : conversations.artistId;
 
+    // First get paginated conversations, then join with their latest message
     const result = await db
       .select({
         conversation: conversations,
@@ -104,36 +105,24 @@ export class ConversationRepository {
         },
       })
       .from(conversations)
-      .leftJoin(messages, eq(messages.conversationId, conversations.id))
+      .leftJoin(
+        messages,
+        and(
+          eq(messages.conversationId, conversations.id),
+          sql`${messages.sentAt} = (
+            SELECT MAX(sent_at) FROM messages WHERE conversation_id = ${conversations.id}
+          )`
+        )
+      )
       .where(and(eq(userIdField, userId), eq(conversations.status, 'active')))
       .orderBy(desc(conversations.lastMessageAt))
       .limit(pagination.limit)
       .offset(pagination.offset);
 
-    // Group by conversation and get the latest message
-    const conversationMap = new Map<string, ConversationWithDetails>();
-
-    for (const row of result) {
-      const convId = row.conversation.id;
-      if (!conversationMap.has(convId)) {
-        conversationMap.set(convId, {
-          ...row.conversation,
-          lastMessage: undefined,
-        });
-      }
-
-      // Keep only the most recent message
-      const existing = conversationMap.get(convId);
-      if (
-        existing &&
-        row.lastMessage &&
-        (!existing.lastMessage || row.lastMessage.sentAt > existing.lastMessage.sentAt)
-      ) {
-        existing.lastMessage = row.lastMessage;
-      }
-    }
-
-    return Array.from(conversationMap.values());
+    return result.map((row) => ({
+      ...row.conversation,
+      lastMessage: row.lastMessage || undefined,
+    }));
   }
 
   /**
@@ -286,6 +275,7 @@ export class ConversationRepository {
   async getAllConversations(
     pagination: { limit: number; offset: number } = { limit: 20, offset: 0 }
   ): Promise<ConversationWithDetails[]> {
+    // First get paginated conversations, then join with their latest message
     const result = await db
       .select({
         conversation: conversations,
@@ -297,36 +287,24 @@ export class ConversationRepository {
         },
       })
       .from(conversations)
-      .leftJoin(messages, eq(messages.conversationId, conversations.id))
+      .leftJoin(
+        messages,
+        and(
+          eq(messages.conversationId, conversations.id),
+          sql`${messages.sentAt} = (
+            SELECT MAX(sent_at) FROM messages WHERE conversation_id = ${conversations.id}
+          )`
+        )
+      )
       .where(eq(conversations.status, 'active'))
       .orderBy(desc(conversations.lastMessageAt))
       .limit(pagination.limit)
       .offset(pagination.offset);
 
-    // Group by conversation and get the latest message
-    const conversationMap = new Map<string, ConversationWithDetails>();
-
-    for (const row of result) {
-      const convId = row.conversation.id;
-      if (!conversationMap.has(convId)) {
-        conversationMap.set(convId, {
-          ...row.conversation,
-          lastMessage: undefined,
-        });
-      }
-
-      // Keep only the most recent message
-      const existing = conversationMap.get(convId);
-      if (
-        existing &&
-        row.lastMessage &&
-        (!existing.lastMessage || row.lastMessage.sentAt > existing.lastMessage.sentAt)
-      ) {
-        existing.lastMessage = row.lastMessage;
-      }
-    }
-
-    return Array.from(conversationMap.values());
+    return result.map((row) => ({
+      ...row.conversation,
+      lastMessage: row.lastMessage || undefined,
+    }));
   }
 
   /**

@@ -49,32 +49,32 @@ describe('ConversationService', () => {
 
   describe('getUserConversations', () => {
     it('should return paginated conversations', async () => {
-      const mockResult = {
-        conversations: [
-          {
-            id: 'conv-1',
-            customerId: 'customer-1',
-            artistId: 'artist-1',
-            status: 'active',
-            lastMessageAt: new Date(),
-            unreadCountCustomer: 0,
-            unreadCountArtist: 0,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          },
-        ],
-        total: 1,
-        hasMore: false,
-      };
+      const mockConversations = [
+        {
+          id: 'conv-1',
+          customerId: 'customer-1',
+          artistId: 'artist-1',
+          status: 'active',
+          lastMessageAt: new Date(),
+          unreadCountCustomer: 0,
+          unreadCountArtist: 0,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ];
 
       const conversationRepo = await import('../repositories/conversationRepository.js');
       conversationRepo.ConversationRepository.prototype.getUserConversations = vi
         .fn()
-        .mockResolvedValue(mockResult.conversations);
+        .mockResolvedValue(mockConversations);
+      conversationRepo.ConversationRepository.prototype.getUserConversationsCount = vi
+        .fn()
+        .mockResolvedValue(1);
 
       const result = await conversationService.getUserConversations('customer-1', 'customer');
 
       expect(result.conversations).toHaveLength(1);
+      expect(result.total).toBe(1);
       expect(result.hasMore).toBe(false);
     });
   });
