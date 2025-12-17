@@ -27,7 +27,7 @@ export class ConversationService {
   /**
    * Get or create a conversation between a customer and artist
    */
-  async getOrCreateConversation(customerId: string, artistId: string, bookingId?: string) {
+  async getOrCreateConversation(customerId: string, artistId: string, bookingId: string) {
     if (customerId === artistId) {
       throw new Error('Cannot create conversation with self');
     }

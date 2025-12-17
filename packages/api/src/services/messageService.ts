@@ -33,15 +33,13 @@ export class MessageService {
   async sendMessage(options: SendMessageOptions): Promise<MessageWithSender> {
     const { conversationId, senderId, senderRole, messageType, ...messageData } = options;
 
-    // Skip access validation for system messages (used for booking status notifications)
-    if (messageType !== 'system') {
-      const hasAccess = await this.conversationService.validateConversationAccess(
-        conversationId,
-        senderId
-      );
-      if (!hasAccess) {
-        throw new Error('Access denied to conversation');
-      }
+    // Validate conversation access for all message types
+    const hasAccess = await this.conversationService.validateConversationAccess(
+      conversationId,
+      senderId
+    );
+    if (!hasAccess) {
+      throw new Error('Access denied to conversation');
     }
 
     // Insert message

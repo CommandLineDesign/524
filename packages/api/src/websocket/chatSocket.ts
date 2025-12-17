@@ -39,29 +39,70 @@ const connectedUsers = new Map<string, Set<string>>(); // userId -> Set of socke
 
 // Rate limiting for message sending (user + conversation -> { count, resetTime })
 const messageRateLimit = new Map<string, { count: number; resetTime: number }>();
+
+/**
+ * Enforce maximum size limits on tracking Maps to prevent memory exhaustion
+ */
+function enforceMapSizeLimits() {
+  // Limit connected users
+  if (connectedUsers.size > MAX_CONNECTED_USERS) {
+    logger.warn(
+      { currentSize: connectedUsers.size, maxSize: MAX_CONNECTED_USERS },
+      'Connected users limit exceeded, clearing oldest entries'
+    );
+    // Clear oldest entries (simple FIFO approach)
+    const entries = Array.from(connectedUsers.entries());
+    const excess = entries.length - MAX_CONNECTED_USERS + 1000; // Keep some buffer
+    for (let i = 0; i < excess && i < entries.length; i++) {
+      connectedUsers.delete(entries[i][0]);
+    }
+  }
+
+  // Limit rate limit entries
+  if (messageRateLimit.size > MAX_RATE_LIMIT_ENTRIES) {
+    logger.warn(
+      { currentSize: messageRateLimit.size, maxSize: MAX_RATE_LIMIT_ENTRIES },
+      'Rate limit entries limit exceeded, clearing expired entries'
+    );
+    const now = Date.now();
+    // Aggressively clean up expired entries
+    for (const [key, limit] of messageRateLimit.entries()) {
+      if (now > limit.resetTime) {
+        messageRateLimit.delete(key);
+      }
+    }
+
+    // If still over limit, clear oldest entries
+    if (messageRateLimit.size > MAX_RATE_LIMIT_ENTRIES) {
+      const entries = Array.from(messageRateLimit.entries()).sort(
+        (a, b) => a[1].resetTime - b[1].resetTime
+      );
+      const excess = entries.length - MAX_RATE_LIMIT_ENTRIES + 5000; // Keep some buffer
+      for (let i = 0; i < excess && i < entries.length; i++) {
+        messageRateLimit.delete(entries[i][0]);
+      }
+    }
+  }
+}
 // Rate limiting constants from environment
 const RATE_LIMIT_WINDOW_MS = env.RATE_LIMIT_WINDOW_MS;
 const RATE_LIMIT_MAX_MESSAGES = env.RATE_LIMIT_MAX_MESSAGES;
+const MAX_CONNECTIONS_PER_USER = env.MAX_CONNECTIONS_PER_USER;
+
+// Map size limits to prevent memory exhaustion
+const MAX_CONNECTED_USERS = 10000; // Maximum unique users
+const MAX_RATE_LIMIT_ENTRIES = 50000; // Maximum rate limit entries
 
 const conversationService = new ConversationService();
 
 /**
  * Check if user has exceeded rate limit for messaging in this conversation
- * Accounts for multiple concurrent connections from the same user
+ * Rate limiting is per-user, independent of connection count
  */
 function checkRateLimit(userId: string, conversationId: string): boolean {
   const key = `${userId}:${conversationId}`;
   const now = Date.now();
   const limit = messageRateLimit.get(key);
-
-  // Get the number of concurrent connections for this user
-  const userConnections = connectedUsers.get(userId);
-  const connectionCount = userConnections ? userConnections.size : 1;
-  // Divide the rate limit by number of connections (minimum 1), but cap divisor at 5 to prevent abuse
-  const adjustedMaxMessages = Math.max(
-    1,
-    Math.floor(RATE_LIMIT_MAX_MESSAGES / Math.min(connectionCount, 5))
-  );
 
   if (!limit || now > limit.resetTime) {
     // Reset or initialize limit
@@ -69,7 +110,7 @@ function checkRateLimit(userId: string, conversationId: string): boolean {
     return true;
   }
 
-  if (limit.count >= adjustedMaxMessages) {
+  if (limit.count >= RATE_LIMIT_MAX_MESSAGES) {
     return false;
   }
 
@@ -150,6 +191,9 @@ function createAdaptiveCleanupScheduler(
       } catch (error) {
         logger.error({ error }, 'Error cleaning up rate limits');
       }
+
+      // Enforce size limits during cleanup
+      enforceMapSizeLimits();
     } catch (error) {
       logger.error({ error }, 'Error during cleanup operation');
     }
@@ -281,11 +325,29 @@ export function initializeChatSocket(server: HttpServer) {
     const { userId, userRole } = authSocket;
     logger.info({ socketId: socket.id, userId, userRole }, 'Client connected');
 
+    // Enforce maximum connections per user
+    const existingConnections = connectedUsers.get(userId);
+    if (existingConnections && existingConnections.size >= MAX_CONNECTIONS_PER_USER) {
+      logger.warn(
+        { userId, socketId: socket.id, connectionCount: existingConnections.size },
+        'Connection rejected: maximum connections per user exceeded'
+      );
+      socket.emit('error', {
+        type: 'CONNECTION_LIMIT_EXCEEDED',
+        message: 'Maximum connections per user exceeded',
+      });
+      socket.disconnect(true);
+      return;
+    }
+
     // Track connected user
     if (!connectedUsers.has(userId)) {
       connectedUsers.set(userId, new Set());
     }
     connectedUsers.get(userId)?.add(socket.id);
+
+    // Enforce size limits after adding new connection
+    enforceMapSizeLimits();
 
     // Join user-specific room for targeted notifications
     socket.join(`user:${userId}`);
@@ -340,7 +402,7 @@ export function initializeChatSocket(server: HttpServer) {
             return;
           }
 
-          // Validate access
+          // Validate access to conversation
           const hasAccess = await conversationService.validateConversationAccess(
             messageData.conversationId,
             userId
@@ -348,6 +410,18 @@ export function initializeChatSocket(server: HttpServer) {
           if (!hasAccess) {
             socket.emit('error', { message: 'Access denied to conversation' });
             return;
+          }
+
+          // Validate access to booking if bookingId is provided
+          if (messageData.bookingId) {
+            const bookingConversation = await conversationService.getConversationByBooking(
+              messageData.bookingId,
+              userId
+            );
+            if (!bookingConversation) {
+              socket.emit('error', { message: 'Access denied to booking' });
+              return;
+            }
           }
 
           // Validate message content
@@ -359,14 +433,9 @@ export function initializeChatSocket(server: HttpServer) {
               });
               return;
             }
-            // Basic content filtering - reject messages with excessive special characters
-            const specialCharRatio =
-              (messageData.content.match(/[^a-zA-Z0-9\s]/g) || []).length /
-              messageData.content.length;
-            if (specialCharRatio > 0.7) {
-              socket.emit('error', { message: 'Message contains too many special characters' });
-              return;
-            }
+            // Note: Removed overly restrictive special character filtering (70% threshold)
+            // Length limit and other validations provide sufficient protection
+            // More sophisticated content validation could be added in the future if needed
           }
 
           // Create the message object

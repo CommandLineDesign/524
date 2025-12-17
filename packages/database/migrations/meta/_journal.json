@@ -57,6 +57,13 @@
       "when": 1764110000000,
       "tag": "0007_onboarding_flow_versioning",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1765999371268,
+      "tag": "0008_mushy_gorgon",
+      "breakpoints": true
     }
   ]
 }

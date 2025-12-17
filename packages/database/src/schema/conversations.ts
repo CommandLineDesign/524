@@ -1,4 +1,4 @@
-import { index, integer, pgTable, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
+import { index, integer, pgTable, timestamp, unique, uuid, varchar } from 'drizzle-orm/pg-core';
 
 import { bookings } from './bookings';
 import { users } from './users';
@@ -7,7 +7,9 @@ export const conversations = pgTable(
   'conversations',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    bookingId: uuid('booking_id').references(() => bookings.id),
+    bookingId: uuid('booking_id')
+      .references(() => bookings.id)
+      .notNull(),
     customerId: uuid('customer_id')
       .references(() => users.id)
       .notNull(),
@@ -32,6 +34,12 @@ export const conversations = pgTable(
     ),
     statusIdx: index('conversations_status_idx').on(table.status),
     lastMessageAtIdx: index('conversations_last_message_at_idx').on(table.lastMessageAt),
+    // Unique constraint to prevent duplicate active conversations between same user pair
+    customerArtistActiveUnique: unique('conversations_customer_artist_active_unique').on(
+      table.customerId,
+      table.artistId,
+      table.status
+    ),
   })
 );
 

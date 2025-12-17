@@ -1,3 +1,4 @@
+import { conversations as conversationsTable } from '@524/database';
 import { and, desc, eq, sql } from 'drizzle-orm';
 
 import { conversations, messages } from '@524/database';
@@ -28,28 +29,12 @@ export class ConversationRepository {
   /**
    * Get or create a conversation between a customer and artist
    */
-  async getOrCreateConversation(customerId: string, artistId: string, bookingId?: string) {
-    // Try to find existing active conversation
-    const conversation = await db
-      .select()
-      .from(conversations)
-      .where(
-        and(
-          eq(conversations.customerId, customerId),
-          eq(conversations.artistId, artistId),
-          eq(conversations.status, 'active')
-        )
-      )
-      .limit(1);
-
-    if (conversation.length > 0) {
-      return conversation[0];
-    }
-
-    // Create new conversation
+  async getOrCreateConversation(customerId: string, artistId: string, bookingId: string) {
     const now = new Date();
-    const newConversation = await db
-      .insert(conversations)
+
+    // Use upsert to handle race conditions - if conversation exists, update bookingId if provided
+    const result = await db
+      .insert(conversationsTable)
       .values({
         customerId,
         artistId,
@@ -61,9 +46,20 @@ export class ConversationRepository {
         createdAt: now,
         updatedAt: now,
       })
+      .onConflictDoUpdate({
+        target: [
+          conversationsTable.customerId,
+          conversationsTable.artistId,
+          conversationsTable.status,
+        ],
+        set: {
+          bookingId: bookingId || sql`${conversationsTable.bookingId}`, // Keep existing bookingId if not provided
+          updatedAt: now,
+        },
+      })
       .returning();
 
-    return newConversation[0];
+    return result[0];
   }
 
   /**

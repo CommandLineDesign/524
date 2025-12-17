@@ -43,11 +43,12 @@ router.get('/conversations', async (req: AuthRequest, res: Response) => {
     const userId = req.user.id;
     const userRole = req.user.primaryRole;
 
-    const limit = Math.min(
-      Number.parseInt(req.query.limit as string) || CONVERSATIONS_DEFAULT_LIMIT,
-      CONVERSATIONS_MAX_LIMIT
-    );
-    const offset = Number.parseInt(req.query.offset as string) || 0;
+    const rawLimit = Number(req.query.limit);
+    const rawOffset = Number(req.query.offset);
+    const limit = Number.isFinite(rawLimit)
+      ? Math.min(Math.max(rawLimit, 1), CONVERSATIONS_MAX_LIMIT)
+      : CONVERSATIONS_DEFAULT_LIMIT;
+    const offset = Number.isFinite(rawOffset) ? Math.max(rawOffset, 0) : 0;
 
     const result = await conversationService.getUserConversations(
       userId,
@@ -226,11 +227,12 @@ router.get('/conversations/:id/messages', async (req: AuthRequest, res: Response
     const conversationId = req.params.id;
     const userId = req.user.id;
 
-    const limit = Math.min(
-      Number.parseInt(req.query.limit as string) || MESSAGES_DEFAULT_LIMIT,
-      MESSAGES_MAX_LIMIT
-    );
-    const offset = Number.parseInt(req.query.offset as string) || 0;
+    const rawLimit = Number(req.query.limit);
+    const rawOffset = Number(req.query.offset);
+    const limit = Number.isFinite(rawLimit)
+      ? Math.min(Math.max(rawLimit, 1), MESSAGES_MAX_LIMIT)
+      : MESSAGES_DEFAULT_LIMIT;
+    const offset = Number.isFinite(rawOffset) ? Math.max(rawOffset, 0) : 0;
 
     const result = await messageService.getMessages(conversationId, userId, { limit, offset });
 
@@ -344,12 +346,11 @@ router.put('/messages/:id/read', async (req: AuthRequest, res: Response) => {
  */
 router.get('/messages/unread-count', async (req: AuthRequest, res: Response) => {
   try {
-    if (!req.user) {
+    if (!req.user || !hasPrimaryRole(req.user)) {
       return res.status(401).json({ error: 'Authentication required' });
     }
     const userId = req.user.id;
-    // biome-ignore lint/suspicious/noExplicitAny: AuthRequest union type requires runtime check
-    const userRole = (req.user as any).primaryRole || 'customer';
+    const userRole = req.user.primaryRole;
 
     const count = await messageService.getTotalUnreadCount(
       userId,
