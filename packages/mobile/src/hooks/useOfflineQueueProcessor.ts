@@ -1,5 +1,5 @@
 import NetInfo from '@react-native-community/netinfo';
-import type { NetInfoState } from '@react-native-community/netinfo';
+import type { NetInfoState } from '@react-native-community/netinfo/lib/typescript/src/internal/types';
 import { useEffect } from 'react';
 
 import { useSendMessage } from '../query/messaging';
