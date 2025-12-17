@@ -57,8 +57,11 @@ function checkRateLimit(userId: string, conversationId: string): boolean {
   // Get the number of concurrent connections for this user
   const userConnections = connectedUsers.get(userId);
   const connectionCount = userConnections ? userConnections.size : 1;
-  // Divide the rate limit by number of connections (minimum 1)
-  const adjustedMaxMessages = Math.max(1, Math.floor(RATE_LIMIT_MAX_MESSAGES / connectionCount));
+  // Divide the rate limit by number of connections (minimum 1), but cap divisor at 5 to prevent abuse
+  const adjustedMaxMessages = Math.max(
+    1,
+    Math.floor(RATE_LIMIT_MAX_MESSAGES / Math.min(connectionCount, 5))
+  );
 
   if (!limit || now > limit.resetTime) {
     // Reset or initialize limit
@@ -116,27 +119,39 @@ function createAdaptiveCleanupScheduler(
   }
 
   function performCleanup() {
-    const now = Date.now();
-    const io = getIo();
+    try {
+      const now = Date.now();
+      const io = getIo();
 
-    // Clean up disconnected sockets
-    for (const [userId, sockets] of connectedUsers.entries()) {
-      for (const socketId of sockets) {
-        const socket = io?.sockets.sockets.get(socketId);
-        if (!socket || !socket.connected) {
-          sockets.delete(socketId);
+      // Clean up disconnected sockets
+      for (const [userId, sockets] of connectedUsers.entries()) {
+        try {
+          for (const socketId of sockets) {
+            const socket = io?.sockets.sockets.get(socketId);
+            if (!socket || !socket.connected) {
+              sockets.delete(socketId);
+            }
+          }
+          if (sockets.size === 0) {
+            connectedUsers.delete(userId);
+          }
+        } catch (error) {
+          logger.error({ error, userId }, 'Error cleaning up user sockets');
         }
       }
-      if (sockets.size === 0) {
-        connectedUsers.delete(userId);
-      }
-    }
 
-    // Clean up expired rate limits
-    for (const [key, limit] of messageRateLimit.entries()) {
-      if (now > limit.resetTime) {
-        messageRateLimit.delete(key);
+      // Clean up expired rate limits
+      try {
+        for (const [key, limit] of messageRateLimit.entries()) {
+          if (now > limit.resetTime) {
+            messageRateLimit.delete(key);
+          }
+        }
+      } catch (error) {
+        logger.error({ error }, 'Error cleaning up rate limits');
       }
+    } catch (error) {
+      logger.error({ error }, 'Error during cleanup operation');
     }
   }
 
@@ -348,7 +363,7 @@ export function initializeChatSocket(server: HttpServer) {
             const specialCharRatio =
               (messageData.content.match(/[^a-zA-Z0-9\s]/g) || []).length /
               messageData.content.length;
-            if (specialCharRatio > 0.5) {
+            if (specialCharRatio > 0.7) {
               socket.emit('error', { message: 'Message contains too many special characters' });
               return;
             }
@@ -464,6 +479,20 @@ export function initializeChatSocket(server: HttpServer) {
     () => io
   );
   cleanupScheduler.start();
+
+  // Set up process termination cleanup
+  const cleanup = () => {
+    logger.info('Shutting down WebSocket server...');
+    cleanupScheduler.stop();
+    if (io) {
+      io.close(() => {
+        logger.info('WebSocket server closed');
+      });
+    }
+  };
+
+  process.on('SIGTERM', cleanup);
+  process.on('SIGINT', cleanup);
 
   return io;
 }

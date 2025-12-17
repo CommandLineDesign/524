@@ -190,9 +190,9 @@ export class BookingService {
               : `Failed to send booking status system message (attempt ${attempt}/${maxRetries})`
           );
 
-          // If not the last attempt, wait before retrying
+          // If not the last attempt, wait before retrying with exponential backoff
           if (!isLastAttempt) {
-            await new Promise((resolve) => setTimeout(resolve, retryDelayMs * attempt));
+            await new Promise((resolve) => setTimeout(resolve, retryDelayMs * 2 ** (attempt - 1)));
           }
         }
       }

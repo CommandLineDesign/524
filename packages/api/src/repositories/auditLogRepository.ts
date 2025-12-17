@@ -19,12 +19,29 @@ export interface CreateAuditLogParams {
 
 export class AuditLogRepository {
   async create(params: CreateAuditLogParams) {
+    // Validate required fields to prevent empty string IDs
+    const adminId = params.adminId || params.userId;
+    const entityId = params.entityId || params.resourceId;
+    const entityType = params.entityType || params.resourceType;
+
+    if (!adminId || adminId.trim() === '') {
+      throw new Error('Audit log creation requires a valid adminId or userId');
+    }
+
+    if (!entityId || entityId.trim() === '') {
+      throw new Error('Audit log creation requires a valid entityId or resourceId');
+    }
+
+    if (!entityType || entityType.trim() === '') {
+      throw new Error('Audit log creation requires a valid entityType or resourceType');
+    }
+
     const [created] = await db
       .insert(auditLogs)
       .values({
-        adminId: params.adminId || params.userId || '',
-        entityType: params.entityType || params.resourceType || '',
-        entityId: params.entityId || params.resourceId || '',
+        adminId,
+        entityType,
+        entityId,
         action: params.action,
         changes: params.changes ?? null,
         metadata: params.metadata || params.details || null,
