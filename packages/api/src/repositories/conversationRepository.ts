@@ -67,6 +67,23 @@ export class ConversationRepository {
   }
 
   /**
+   * Get count of conversations for a user
+   */
+  async getUserConversationsCount(
+    userId: string,
+    userRole: 'customer' | 'artist'
+  ): Promise<number> {
+    const userIdField = userRole === 'customer' ? conversations.customerId : conversations.artistId;
+
+    const result = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(conversations)
+      .where(and(eq(userIdField, userId), eq(conversations.status, 'active')));
+
+    return Number(result[0]?.count ?? 0);
+  }
+
+  /**
    * Get conversations for a user with pagination
    */
   async getUserConversations(

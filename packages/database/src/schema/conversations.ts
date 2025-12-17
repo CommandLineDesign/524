@@ -1,12 +1,13 @@
 import { index, integer, pgTable, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 
+import { bookings } from './bookings';
 import { users } from './users';
 
 export const conversations = pgTable(
   'conversations',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    bookingId: uuid('booking_id'),
+    bookingId: uuid('booking_id').references(() => bookings.id),
     customerId: uuid('customer_id')
       .references(() => users.id)
       .notNull(),

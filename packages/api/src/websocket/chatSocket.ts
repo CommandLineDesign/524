@@ -74,6 +74,83 @@ function checkRateLimit(userId: string, conversationId: string): boolean {
   return true;
 }
 
+/**
+ * Calculate adaptive cleanup interval based on connection count
+ */
+function calculateCleanupInterval(totalConnections: number, totalUsers: number): number {
+  if (totalConnections === 0) {
+    return 5 * 60 * 1000; // 5 minutes when no connections
+  }
+  if (totalUsers < 10) {
+    return 2 * 60 * 1000; // 2 minutes for light activity
+  }
+  return 60 * 1000; // 1 minute for normal/high activity
+}
+
+/**
+ * Create an adaptive cleanup scheduler for WebSocket connections and rate limits
+ */
+function createAdaptiveCleanupScheduler(
+  connectedUsers: Map<string, Set<string>>,
+  messageRateLimit: Map<string, { count: number; resetTime: number }>,
+  getIo: () => Server | null
+) {
+  let cleanupTimeout: NodeJS.Timeout | null = null;
+
+  function scheduleCleanup() {
+    if (cleanupTimeout) {
+      clearTimeout(cleanupTimeout);
+    }
+
+    const totalConnections = Array.from(connectedUsers.values()).reduce(
+      (sum, sockets) => sum + sockets.size,
+      0
+    );
+    const totalUsers = connectedUsers.size;
+    const intervalMs = calculateCleanupInterval(totalConnections, totalUsers);
+
+    cleanupTimeout = setTimeout(() => {
+      performCleanup();
+      scheduleCleanup();
+    }, intervalMs);
+  }
+
+  function performCleanup() {
+    const now = Date.now();
+    const io = getIo();
+
+    // Clean up disconnected sockets
+    for (const [userId, sockets] of connectedUsers.entries()) {
+      for (const socketId of sockets) {
+        const socket = io?.sockets.sockets.get(socketId);
+        if (!socket || !socket.connected) {
+          sockets.delete(socketId);
+        }
+      }
+      if (sockets.size === 0) {
+        connectedUsers.delete(userId);
+      }
+    }
+
+    // Clean up expired rate limits
+    for (const [key, limit] of messageRateLimit.entries()) {
+      if (now > limit.resetTime) {
+        messageRateLimit.delete(key);
+      }
+    }
+  }
+
+  return {
+    start: scheduleCleanup,
+    stop: () => {
+      if (cleanupTimeout) {
+        clearTimeout(cleanupTimeout);
+        cleanupTimeout = null;
+      }
+    },
+  };
+}
+
 export function initializeChatSocket(server: HttpServer) {
   if (io) {
     return io;
@@ -380,61 +457,13 @@ export function initializeChatSocket(server: HttpServer) {
     });
   });
 
-  // Adaptive cleanup function based on connection count
-  let cleanupTimeout: NodeJS.Timeout | null = null;
-
-  function scheduleCleanup() {
-    if (cleanupTimeout) {
-      clearTimeout(cleanupTimeout);
-    }
-
-    const totalConnections = Array.from(connectedUsers.values()).reduce(
-      (sum, sockets) => sum + sockets.size,
-      0
-    );
-    const totalUsers = connectedUsers.size;
-
-    // Adaptive interval: more frequent when busy, less frequent when idle
-    let intervalMs: number;
-    if (totalConnections === 0) {
-      intervalMs = 5 * 60 * 1000; // 5 minutes when no connections
-    } else if (totalUsers < 10) {
-      intervalMs = 2 * 60 * 1000; // 2 minutes for light activity
-    } else {
-      intervalMs = 60 * 1000; // 1 minute for normal/high activity
-    }
-
-    cleanupTimeout = setTimeout(() => {
-      const now = Date.now();
-
-      // This is a simple cleanup - in production you might want more sophisticated tracking
-      for (const [userId, sockets] of connectedUsers.entries()) {
-        // Remove sockets that are no longer connected
-        for (const socketId of sockets) {
-          const socket = io?.sockets.sockets.get(socketId);
-          if (!socket || !socket.connected) {
-            sockets.delete(socketId);
-          }
-        }
-        if (sockets.size === 0) {
-          connectedUsers.delete(userId);
-        }
-      }
-
-      // Clean up expired rate limits
-      for (const [key, limit] of messageRateLimit.entries()) {
-        if (now > limit.resetTime) {
-          messageRateLimit.delete(key);
-        }
-      }
-
-      // Schedule next cleanup
-      scheduleCleanup();
-    }, intervalMs);
-  }
-
-  // Start the adaptive cleanup
-  scheduleCleanup();
+  // Start the adaptive cleanup scheduler
+  const cleanupScheduler = createAdaptiveCleanupScheduler(
+    connectedUsers,
+    messageRateLimit,
+    () => io
+  );
+  cleanupScheduler.start();
 
   return io;
 }

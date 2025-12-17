@@ -138,45 +138,63 @@ export class BookingService {
   }
 
   /**
-   * Send a system message to the conversation when booking status changes (fire-and-forget)
+   * Send a system message to the conversation when booking status changes (fire-and-forget with retry)
    */
   private sendBookingStatusSystemMessage(
     booking: BookingSummary,
     status: BookingSummary['status']
   ): void {
     // Fire-and-forget: don't await to avoid blocking booking operations
+    // Uses retry mechanism for better reliability
     (async () => {
-      try {
-        // Get or create conversation between customer and artist
-        const conversation = await this.conversationService.getOrCreateConversation(
-          booking.customerId,
-          booking.artistId,
-          booking.id
-        );
+      const maxRetries = 3;
+      const retryDelayMs = 1000;
 
-        // Generate appropriate system message based on status
-        const systemMessage = this.messageTemplateService.generateBookingStatusMessage(
-          booking,
-          status
-        );
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          // Get or create conversation between customer and artist
+          const conversation = await this.conversationService.getOrCreateConversation(
+            booking.customerId,
+            booking.artistId,
+            booking.id
+          );
 
-        if (systemMessage) {
-          await this.messageService.sendSystemMessage(conversation.id, systemMessage, booking.id);
+          // Generate appropriate system message based on status
+          const systemMessage = this.messageTemplateService.generateBookingStatusMessage(
+            booking,
+            status
+          );
+
+          if (systemMessage) {
+            await this.messageService.sendSystemMessage(conversation.id, systemMessage, booking.id);
+          }
+
+          // Success - exit retry loop
+          return;
+        } catch (error) {
+          const isLastAttempt = attempt === maxRetries;
+
+          logger.error(
+            {
+              error,
+              bookingId: booking.id,
+              customerId: booking.customerId,
+              artistId: booking.artistId,
+              status,
+              attempt,
+              maxRetries,
+              operation: 'sendBookingStatusSystemMessage',
+            },
+            isLastAttempt
+              ? 'Failed to send booking status system message after all retries'
+              : `Failed to send booking status system message (attempt ${attempt}/${maxRetries})`
+          );
+
+          // If not the last attempt, wait before retrying
+          if (!isLastAttempt) {
+            await new Promise((resolve) => setTimeout(resolve, retryDelayMs * attempt));
+          }
         }
-      } catch (error) {
-        // Don't fail the booking operation if messaging fails
-        // Log the error with context for debugging
-        logger.error(
-          {
-            error,
-            bookingId: booking.id,
-            customerId: booking.customerId,
-            artistId: booking.artistId,
-            status,
-            operation: 'sendBookingStatusSystemMessage',
-          },
-          'Failed to send booking status system message'
-        );
       }
     })();
   }

@@ -46,14 +46,13 @@ export class ConversationService {
     const limit = pagination.limit ?? 20;
     const offset = pagination.offset ?? 0;
 
-    const conversations = await this.conversationRepo.getUserConversations(userId, userRole, {
-      limit,
-      offset,
-    });
+    // Fetch conversations and total count in parallel
+    const [conversations, total] = await Promise.all([
+      this.conversationRepo.getUserConversations(userId, userRole, { limit, offset }),
+      this.conversationRepo.getUserConversationsCount(userId, userRole),
+    ]);
 
-    // Calculate total count (simplified - in production you'd want a separate count query)
-    const total = conversations.length + offset;
-    const hasMore = conversations.length === limit;
+    const hasMore = offset + conversations.length < total;
 
     return {
       conversations,
