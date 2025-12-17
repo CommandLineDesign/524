@@ -1,4 +1,4 @@
-import { and, desc, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, neq, sql } from 'drizzle-orm';
 
 import { messages } from '@524/database';
 
@@ -104,18 +104,15 @@ export class MessageRepository {
     userId: string,
     userRole: 'customer' | 'artist'
   ): Promise<number> {
-    const senderIdField = userRole === 'customer' ? 'artist_id' : 'customer_id';
-
     const result = await db
       .select({
         count: sql<number>`count(*)::int`,
       })
       .from(messages)
-      .innerJoin(sql`conversations`, eq(messages.conversationId, sql`conversations.id`))
       .where(
         and(
           eq(messages.conversationId, conversationId),
-          eq(sql`conversations.${sql.identifier(senderIdField)}`, userId),
+          neq(messages.senderId, userId), // Count messages sent by the other party
           sql`${messages.readAt} IS NULL`
         )
       );
