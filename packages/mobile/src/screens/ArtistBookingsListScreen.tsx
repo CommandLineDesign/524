@@ -13,6 +13,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ArtistNavigationMenu } from '../components/ArtistNavigationMenu';
+import { MenuButton } from '../components/MenuButton';
 import { BookingCard } from '../components/bookings/BookingCard';
 import { STATUS_LABELS } from '../components/bookings/bookingDisplay';
 import type { RootStackParamList } from '../navigation/AppNavigator';
@@ -33,6 +35,7 @@ const STATUS_CHIPS: Array<{ value: BookingStatus | 'all'; label: string }> = [
 export function ArtistBookingsListScreen() {
   const navigation = useNavigation<ArtistBookingsNavProp>();
   const [statusFilter, setStatusFilter] = useState<BookingStatus | 'all'>('pending');
+  const [menuVisible, setMenuVisible] = useState(false);
 
   const {
     data: bookings,
@@ -63,9 +66,12 @@ export function ArtistBookingsListScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom', 'left', 'right']}>
-      <View style={styles.header}>
-        <Text style={styles.title}>예약 요청</Text>
-        <Text style={styles.subtitle}>대기 중인 예약을 확인하고 응답하세요.</Text>
+      <View style={styles.headerContainer}>
+        <View style={styles.header}>
+          <Text style={styles.title}>예약 요청</Text>
+          <Text style={styles.subtitle}>대기 중인 예약을 확인하고 응답하세요.</Text>
+        </View>
+        <MenuButton onPress={() => setMenuVisible(true)} />
       </View>
 
       <View style={styles.filters}>
@@ -117,6 +123,7 @@ export function ArtistBookingsListScreen() {
           refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={() => refetch()} />}
         />
       )}
+      <ArtistNavigationMenu visible={menuVisible} onClose={() => setMenuVisible(false)} />
     </SafeAreaView>
   );
 }
@@ -126,9 +133,15 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  header: {
+  headerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
     paddingHorizontal: 20,
     paddingVertical: 12,
+  },
+  header: {
+    flex: 1,
     gap: 4,
   },
   title: {

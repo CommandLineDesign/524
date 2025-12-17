@@ -99,6 +99,8 @@ await sendMessage.mutateAsync({
 
 ### Booking System
 - Automatic conversation creation from booking screens
+- **Conversation reuse**: One persistent conversation per artist-customer pair (Airbnb-style)
+- Clicking "Message" from any booking navigates to the existing conversation if one exists
 - System messages for booking status changes
 - Booking context in chat messages
 

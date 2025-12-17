@@ -18,7 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { processAndUploadImage } from '../services/imageUploadService';
 
-import { useSocket } from '../hooks/useSocket';
+import { useSocket } from '../contexts/SocketContext';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { useConversation, useMessages, useSendMessage } from '../query/messaging';
 import { useAuthStore } from '../store/authStore';
@@ -67,25 +67,62 @@ export function ChatScreen() {
 
     const allMessages = messagesData.pages.flatMap((page) => page.messages);
 
-    return allMessages
-      .map(
-        // biome-ignore lint/suspicious/noExplicitAny: GiftedChat message transformation
-        (message): any => ({
-          _id: message.id,
-          text: message.content || '',
-          createdAt: new Date(message.sentAt),
-          user: {
-            _id: message.senderId,
-            name: message.senderRole === 'artist' ? 'Artist' : 'Customer', // TODO: Get actual names
-            avatar: undefined, // TODO: Add user avatars
-          },
-          image: message.images?.[0], // Use first image if present
-          // Add custom properties
-          messageType: message.messageType,
-          bookingId: message.bookingId,
-        })
-      )
-      .reverse(); // GiftedChat expects newest first
+    console.log(`[ChatScreen] Converting ${allMessages.length} messages for GiftedChat`);
+    if (allMessages.length > 0) {
+      console.log(
+        '[ChatScreen] First message in array:',
+        allMessages[0]?.id,
+        allMessages[0]?.sentAt
+      );
+      console.log(
+        '[ChatScreen] Last message in array:',
+        allMessages[allMessages.length - 1]?.id,
+        allMessages[allMessages.length - 1]?.sentAt
+      );
+    }
+
+    // Map messages to GiftedChat format
+    const mapped = allMessages.map(
+      // biome-ignore lint/suspicious/noExplicitAny: GiftedChat message transformation
+      (message): any => ({
+        _id: message.id,
+        text: message.content || '',
+        createdAt: new Date(message.sentAt),
+        user: {
+          _id: message.senderId,
+          name: message.senderRole === 'artist' ? 'Artist' : 'Customer', // TODO: Get actual names
+          avatar: undefined, // TODO: Add user avatars
+        },
+        image: message.images?.[0], // Use first image if present
+        // Add custom properties
+        messageType: message.messageType,
+        bookingId: message.bookingId,
+      })
+    );
+
+    // GiftedChat expects messages sorted in DESCENDING order by createdAt
+    // (newest message at index 0, which displays at bottom of screen)
+    const sorted = mapped.sort((a, b) => {
+      const timeA = new Date(a.createdAt).getTime();
+      const timeB = new Date(b.createdAt).getTime();
+      return timeB - timeA; // Descending order (newest first)
+    });
+
+    console.log('[ChatScreen] GiftedChat messages array length:', sorted.length);
+    if (sorted.length > 0) {
+      console.log(
+        '[ChatScreen] GiftedChat first message (index 0, should be newest):',
+        sorted[0]?._id,
+        sorted[0]?.createdAt
+      );
+      console.log(
+        '[ChatScreen] GiftedChat last message (should be oldest):',
+        sorted[sorted.length - 1]?._id,
+        sorted[sorted.length - 1]?.createdAt
+      );
+    }
+
+    return sorted;
   }, [messagesData, user]);
 
   const handleSend = useCallback(
@@ -98,6 +135,8 @@ export function ChatScreen() {
       const message = messages[0];
       if (!message) return;
 
+      console.log('[ChatScreen] Sending message:', message.text);
+
       try {
         await sendMessageMutation.mutateAsync({
           conversationId: conversationIdToUse,
@@ -105,7 +144,9 @@ export function ChatScreen() {
           content: message.text,
           bookingId: route.params?.bookingId,
         });
+        console.log('[ChatScreen] Message sent successfully');
       } catch (error) {
+        console.error('[ChatScreen] Failed to send message:', error);
         Alert.alert('Error', 'Failed to send message. Please try again.');
       }
     },
@@ -212,6 +253,7 @@ export function ChatScreen() {
 
   useEffect(() => {
     if (socket && conversationIdToUse && isConnected) {
+      console.log('[ChatScreen] Joining conversation:', conversationIdToUse);
       socket.emit('join:conversation', conversationIdToUse);
     }
   }, [socket, conversationIdToUse, isConnected]);
@@ -219,6 +261,7 @@ export function ChatScreen() {
   useEffect(() => {
     return () => {
       if (socket && conversationIdToUse) {
+        console.log('[ChatScreen] Leaving conversation:', conversationIdToUse);
         socket.emit('leave:conversation', conversationIdToUse);
       }
     };

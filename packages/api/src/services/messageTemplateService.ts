@@ -25,11 +25,7 @@ export class MessageTemplateService {
     );
 
     // Get the message template for the status
-    const localeMessages = BOOKING_SYSTEM_MESSAGES[locale];
-    const messageTemplate =
-      localeMessages && status in localeMessages
-        ? localeMessages[status as keyof typeof localeMessages]
-        : undefined;
+    const messageTemplate = BOOKING_SYSTEM_MESSAGES[locale]?.[status];
     if (!messageTemplate) {
       return null;
     }

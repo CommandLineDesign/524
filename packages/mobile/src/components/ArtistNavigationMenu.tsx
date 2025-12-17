@@ -11,21 +11,17 @@ type SimpleRoute = {
   [K in keyof RootStackParamList]: RootStackParamList[K] extends undefined ? K : never;
 }[keyof RootStackParamList];
 
-interface NavigationMenuProps {
+interface ArtistNavigationMenuProps {
   visible: boolean;
   onClose: () => void;
 }
 
-const menuItems: Array<{ label: string; screen: SimpleRoute }> = [
-  { label: 'Home', screen: 'Welcome' },
-  { label: 'Services', screen: 'ServiceSelection' },
-  { label: 'Occasions', screen: 'OccasionSelection' },
-  { label: 'Booking Summary', screen: 'BookingSummary' },
-  { label: 'My Bookings', screen: 'BookingsList' },
+const artistMenuItems: Array<{ label: string; screen: SimpleRoute }> = [
+  { label: 'My Bookings', screen: 'ArtistBookingsList' },
   { label: 'Messages', screen: 'ChatsList' },
 ];
 
-export function NavigationMenu({ visible, onClose }: NavigationMenuProps) {
+export function ArtistNavigationMenu({ visible, onClose }: ArtistNavigationMenuProps) {
   const navigation = useNavigation<NavigationProp>();
   const logout = useAuthStore((state) => state.logout);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -61,7 +57,7 @@ export function NavigationMenu({ visible, onClose }: NavigationMenuProps) {
         <ScrollView style={styles.content}>
           <View style={styles.menuSection}>
             <Text style={styles.sectionTitle}>Navigation</Text>
-            {menuItems.map((item) => (
+            {artistMenuItems.map((item) => (
               <TouchableOpacity
                 key={item.screen}
                 style={styles.menuItem}

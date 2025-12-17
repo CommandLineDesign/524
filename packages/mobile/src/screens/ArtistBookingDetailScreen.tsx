@@ -21,6 +21,7 @@ import {
   useBookingDetail,
   useDeclineBookingMutation,
 } from '../query/bookings';
+import { useCreateConversation } from '../query/messaging';
 import { colors } from '../theme/colors';
 
 // Helper function to get user-friendly error messages from API errors
@@ -65,6 +66,7 @@ export function ArtistBookingDetailScreen() {
   const { data, isLoading, isError, refetch } = useBookingDetail(bookingId);
   const acceptMutation = useAcceptBookingMutation();
   const declineMutation = useDeclineBookingMutation();
+  const createConversationMutation = useCreateConversation();
 
   const isPending = data?.status === 'pending';
 
@@ -170,12 +172,30 @@ export function ArtistBookingDetailScreen() {
           <Text style={styles.sectionTitle}>메시지</Text>
           <TouchableOpacity
             style={styles.messageButton}
-            onPress={() =>
-              navigation.navigate('Chat', {
-                bookingId: bookingId,
-                // The ChatScreen will handle getting/creating the conversation
-              })
-            }
+            onPress={async () => {
+              try {
+                if (!data?.customerId) {
+                  Alert.alert('오류', '고객 정보를 찾을 수 없습니다.');
+                  return;
+                }
+
+                const conversation = await createConversationMutation.mutateAsync({
+                  artistId: data.artistId,
+                  bookingId: bookingId,
+                });
+
+                navigation.navigate('Chat', {
+                  conversationId: conversation.id,
+                  bookingId: bookingId,
+                });
+              } catch (error) {
+                console.error('Failed to create conversation:', error);
+                Alert.alert(
+                  '메시지 시작 실패',
+                  '대화를 시작할 수 없습니다. 잠시 후 다시 시도해 주세요.'
+                );
+              }
+            }}
           >
             <Text style={styles.messageButtonText}>고객에게 메시지 보내기</Text>
           </TouchableOpacity>

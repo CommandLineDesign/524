@@ -4,9 +4,11 @@ import React, { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ArtistNavigationMenu } from '../components/ArtistNavigationMenu';
 import { MenuButton } from '../components/MenuButton';
 import { NavigationMenu } from '../components/NavigationMenu';
 import type { RootStackParamList } from '../navigation/AppNavigator';
+import { useAuthStore } from '../store/authStore';
 import { colors } from '../theme/colors';
 
 type WelcomeNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Welcome'>;
@@ -14,6 +16,8 @@ type WelcomeNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Welc
 export function WelcomeScreen() {
   const navigation = useNavigation<WelcomeNavigationProp>();
   const [menuVisible, setMenuVisible] = useState(false);
+  const { user } = useAuthStore();
+  const isArtist = Boolean(user?.primaryRole === 'artist' || user?.roles?.includes('artist'));
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom', 'left', 'right']}>
@@ -39,7 +43,11 @@ export function WelcomeScreen() {
         <Text style={styles.primaryButtonText}>예약 시작하기</Text>
       </TouchableOpacity>
 
-      <NavigationMenu visible={menuVisible} onClose={() => setMenuVisible(false)} />
+      {isArtist ? (
+        <ArtistNavigationMenu visible={menuVisible} onClose={() => setMenuVisible(false)} />
+      ) : (
+        <NavigationMenu visible={menuVisible} onClose={() => setMenuVisible(false)} />
+      )}
     </SafeAreaView>
   );
 }

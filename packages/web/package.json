@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "next dev --turbo --port 5241",
+    "dev": "next dev --port 5241",
     "build": "next build",
     "start": "next start --port 5241",
     "lint": "biome lint .",
@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@524/shared": "file:../shared",
+    "@babel/runtime": "^7.23.0",
     "@emotion/react": "^11.11.0",
     "@emotion/styled": "^11.11.0",
     "@mui/material": "^5.15.0",

@@ -3,15 +3,20 @@ import { useEffect } from 'react';
 
 import { useSendMessage } from '../query/messaging';
 import { OfflineMessageQueue, QueuedMessage } from '../services/offlineMessageQueue';
+import { useAuthStore } from '../store/authStore';
 
 /**
  * Hook that monitors network connectivity and processes offline message queue
  */
 export function useOfflineQueueProcessor() {
+  const { user } = useAuthStore();
   const sendMessageMutation = useSendMessage();
   const offlineQueue = OfflineMessageQueue.getInstance();
 
   useEffect(() => {
+    // Only process queue if user is authenticated
+    if (!user) return;
+
     // Subscribe to network state changes
     // biome-ignore lint/suspicious/noExplicitAny: NetInfo state type from third-party library
     const unsubscribe = NetInfo.addEventListener(async (state: any) => {
@@ -30,7 +35,7 @@ export function useOfflineQueueProcessor() {
     });
 
     return unsubscribe;
-  }, []);
+  }, [user]);
 
   const processOfflineQueue = async () => {
     try {

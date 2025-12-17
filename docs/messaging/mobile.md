@@ -362,13 +362,53 @@ export type RootStackParamList = {
 
 ```typescript
 // packages/mobile/src/screens/BookingDetailScreen.tsx
-const handleMessageArtist = () => {
-  navigation.navigate('Chat', {
-    bookingId: bookingId,
-    // conversationId will be resolved in ChatScreen
-  });
+const createConversationMutation = useCreateConversation();
+
+const handleMessageArtist = async () => {
+  try {
+    const conversation = await createConversationMutation.mutateAsync({
+      artistId: data.artistId,
+      bookingId: bookingId,
+    });
+    
+    navigation.navigate('Chat', {
+      conversationId: conversation.id,
+      bookingId: bookingId,
+    });
+  } catch (error) {
+    Alert.alert('Failed to start conversation');
+  }
 };
 ```
+
+### Accessing Messages from Navigation
+
+#### Customer Navigation Menu
+Customers access their messages through the hamburger menu:
+
+```typescript
+// packages/mobile/src/components/NavigationMenu.tsx
+const menuItems = [
+  { label: 'Home', screen: 'Welcome' },
+  { label: 'My Bookings', screen: 'BookingsList' },
+  { label: 'Messages', screen: 'ChatsList' },  // New
+  // ...
+];
+```
+
+#### Artist Navigation Menu
+Artists have a dedicated navigation menu with access to bookings and messages:
+
+```typescript
+// packages/mobile/src/components/ArtistNavigationMenu.tsx
+const artistMenuItems = [
+  { label: 'My Bookings', screen: 'ArtistBookingsList' },
+  { label: 'Messages', screen: 'ChatsList' },
+  // ...
+];
+```
+
+Both menus are accessible via the hamburger icon in the app header.
 
 ## State Management
 
