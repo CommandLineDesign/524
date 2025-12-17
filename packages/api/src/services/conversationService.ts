@@ -99,7 +99,7 @@ export class ConversationService {
    * Called after new messages or when messages are read
    */
   private async updateUnreadCounts(conversationId: string) {
-    const conversation = await this.conversationRepo.getConversation(conversationId, 'dummy'); // We just need the IDs
+    const conversation = await this.conversationRepo.getConversationById(conversationId); // We just need the IDs
     if (!conversation) return;
 
     const [customerUnread, artistUnread] = await Promise.all([
