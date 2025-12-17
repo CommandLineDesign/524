@@ -1,4 +1,4 @@
-import { and, desc, eq, neq, sql } from 'drizzle-orm';
+import { and, desc, eq, ne, sql } from 'drizzle-orm';
 
 import { messages } from '@524/database';
 
@@ -112,7 +112,7 @@ export class MessageRepository {
       .where(
         and(
           eq(messages.conversationId, conversationId),
-          neq(messages.senderId, userId), // Count messages sent by the other party
+          ne(messages.senderId, userId), // Count messages sent by the other party
           sql`${messages.readAt} IS NULL`
         )
       );
