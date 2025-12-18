@@ -19,13 +19,14 @@ import type { RootStackParamList } from '../navigation/AppNavigator';
 import {
   useAcceptBookingMutation,
   useBookingDetail,
+  useCompleteBookingMutation,
   useDeclineBookingMutation,
 } from '../query/bookings';
 import { useCreateConversation } from '../query/messaging';
 import { colors } from '../theme/colors';
 
 // Helper function to get user-friendly error messages from API errors
-function getBookingErrorMessage(error: unknown, action: 'accept' | 'decline'): string {
+function getBookingErrorMessage(error: unknown, action: 'accept' | 'decline' | 'complete'): string {
   if (error instanceof Error) {
     const message = error.message.toLowerCase();
 
@@ -49,7 +50,10 @@ function getBookingErrorMessage(error: unknown, action: 'accept' | 'decline'): s
   }
 
   // Fallback messages
-  return action === 'accept' ? '예약 승인에 실패했습니다.' : '예약 거절에 실패했습니다.';
+  if (action === 'accept') return '예약 승인에 실패했습니다.';
+  if (action === 'decline') return '예약 거절에 실패했습니다.';
+  if (action === 'complete') return '예약 완료 처리에 실패했습니다.';
+  return '예약 처리에 실패했습니다.';
 }
 
 type ArtistBookingDetailNavProp = NativeStackNavigationProp<
@@ -66,9 +70,11 @@ export function ArtistBookingDetailScreen() {
   const { data, isLoading, isError, refetch } = useBookingDetail(bookingId);
   const acceptMutation = useAcceptBookingMutation();
   const declineMutation = useDeclineBookingMutation();
+  const completeMutation = useCompleteBookingMutation();
   const createConversationMutation = useCreateConversation();
 
   const isPending = data?.status === 'pending';
+  const canComplete = data?.status === 'paid' || data?.status === 'in_progress';
 
   const handleAccept = () => {
     if (!data) return;
@@ -97,6 +103,31 @@ export function ArtistBookingDetailScreen() {
           Alert.alert('거절 실패', message);
         },
       }
+    );
+  };
+
+  const handleComplete = () => {
+    if (!data) return;
+    Alert.alert(
+      '예약 완료 처리',
+      '이 예약을 완료 처리하시겠습니까? 완료 처리 후 고객이 리뷰를 작성할 수 있습니다.',
+      [
+        { text: '취소', style: 'cancel' },
+        {
+          text: '완료',
+          onPress: () => {
+            completeMutation.mutate(data.id, {
+              onSuccess: () => {
+                Alert.alert('예약을 완료 처리했습니다', '고객이 이제 리뷰를 작성할 수 있습니다.');
+              },
+              onError: (error) => {
+                const message = getBookingErrorMessage(error, 'complete');
+                Alert.alert('완료 처리 실패', message);
+              },
+            });
+          },
+        },
+      ]
     );
   };
 
@@ -230,6 +261,24 @@ export function ArtistBookingDetailScreen() {
               </TouchableOpacity>
             </View>
           </View>
+        ) : canComplete ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>서비스 완료</Text>
+            <Text style={styles.secondaryText}>
+              서비스를 완료했으면 완료 처리하여 고객이 리뷰를 작성할 수 있도록 하세요.
+            </Text>
+            <TouchableOpacity
+              style={[styles.actionButton, styles.completeButton]}
+              onPress={handleComplete}
+              disabled={completeMutation.isPending}
+            >
+              {completeMutation.isPending ? (
+                <ActivityIndicator color={colors.background} />
+              ) : (
+                <Text style={styles.completeText}>완료 처리</Text>
+              )}
+            </TouchableOpacity>
+          </View>
         ) : (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>응답</Text>
@@ -356,11 +405,19 @@ const styles = StyleSheet.create({
   acceptButton: {
     backgroundColor: colors.primary,
   },
+  completeButton: {
+    backgroundColor: colors.primary,
+    marginTop: 8,
+  },
   declineText: {
     color: colors.text,
     fontWeight: '700',
   },
   acceptText: {
+    color: colors.background,
+    fontWeight: '700',
+  },
+  completeText: {
     color: colors.background,
     fontWeight: '700',
   },

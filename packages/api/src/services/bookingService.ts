@@ -210,6 +210,16 @@ export class BookingService {
     return booking;
   }
 
+  async completeBooking(bookingId: string, artistId: string): Promise<BookingSummary> {
+    const booking = await this.repository.completeBooking(bookingId, artistId);
+    await this.notificationService.notifyBookingStatusChanged(booking);
+
+    // Send system message for completion (fire-and-forget)
+    this.sendBookingStatusSystemMessage(booking, 'completed');
+
+    return booking;
+  }
+
   /**
    * Send a system message to the conversation when booking status changes (fire-and-forget with circuit breaker and retry)
    */

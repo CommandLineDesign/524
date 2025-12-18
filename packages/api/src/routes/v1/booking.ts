@@ -35,4 +35,7 @@ router.post('/:bookingId/decline', requireArtist(), BookingController.declineBoo
 // Customer action: cancel pending booking
 router.post('/:bookingId/cancel', requireCustomer(), BookingController.cancelPendingBooking);
 
+// Artist action: mark booking as complete
+router.post('/:bookingId/complete', requireArtist(), BookingController.completeBooking);
+
 export const bookingRouter: ExpressRouter = router;

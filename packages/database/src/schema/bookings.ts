@@ -61,6 +61,8 @@ export const bookings = pgTable('bookings', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
   confirmedAt: timestamp('confirmed_at'),
+  completedAt: timestamp('completed_at'),
+  completedBy: uuid('completed_by').references(() => users.id),
 });
 
 export type Booking = typeof bookings.$inferSelect;

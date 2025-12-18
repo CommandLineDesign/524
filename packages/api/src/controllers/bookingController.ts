@@ -231,4 +231,17 @@ export const BookingController = {
       next(error);
     }
   },
+
+  async completeBooking(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      if (!req.user?.id) {
+        res.status(401).json({ error: 'User not authenticated' });
+        return;
+      }
+      const booking = await bookingService.completeBooking(req.params.bookingId, req.user.id);
+      res.json(booking);
+    } catch (error) {
+      next(error);
+    }
+  },
 };

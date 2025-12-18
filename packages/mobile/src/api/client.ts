@@ -152,6 +152,13 @@ export async function cancelBooking(bookingId: string) {
   });
 }
 
+export async function completeBooking(bookingId: string) {
+  return request<BookingSummary>(`/api/v1/bookings/${bookingId}/complete`, {
+    method: 'POST',
+    body: JSON.stringify({}),
+  });
+}
+
 export async function signUpUser(payload: SignupPayload): Promise<AuthResponse> {
   return request<AuthResponse>('/api/v1/auth/signup/user', {
     method: 'POST',
