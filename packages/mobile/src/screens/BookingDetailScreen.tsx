@@ -18,6 +18,7 @@ import { formatCurrency, formatSchedule } from '../components/bookings/bookingDi
 import type { RootStackParamList } from '../navigation/AppNavigator';
 import { useBookingDetail } from '../query/bookings';
 import { useCreateConversation } from '../query/messaging';
+import { useAuthStore } from '../store/authStore';
 import { colors } from '../theme/colors';
 
 type BookingDetailNavProp = NativeStackNavigationProp<RootStackParamList, 'BookingDetail'>;
@@ -27,6 +28,7 @@ export function BookingDetailScreen() {
   const navigation = useNavigation<BookingDetailNavProp>();
   const route = useRoute<BookingDetailRouteProp>();
   const bookingId = route.params.bookingId;
+  const { user } = useAuthStore();
 
   const { data, isLoading, isError, refetch } = useBookingDetail(bookingId);
   const createConversationMutation = useCreateConversation();
@@ -56,6 +58,16 @@ export function BookingDetailScreen() {
 
   const timezoneLabel = data.timezone?.trim() || '미지정';
   const paymentStatusLabel = data.paymentStatus?.trim() || '정보 없음';
+
+  // Check if review button should be shown
+  const isCustomer = user?.roles?.includes('customer');
+  const isBookingCompleted = data.status === 'completed';
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  const isWithinReviewWindow = data.serviceCompletedAt
+    ? new Date(data.serviceCompletedAt) >= thirtyDaysAgo
+    : false;
+  const canLeaveReview = isCustomer && isBookingCompleted && isWithinReviewWindow;
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.content}>
@@ -141,6 +153,16 @@ export function BookingDetailScreen() {
           >
             <Text style={styles.messageButtonText}>메시지 보내기</Text>
           </TouchableOpacity>
+
+          {canLeaveReview && (
+            <TouchableOpacity
+              style={styles.reviewButton}
+              onPress={() => navigation.navigate('ReviewSubmission', { bookingId })}
+            >
+              <Text style={styles.reviewButtonText}>리뷰 작성하기</Text>
+            </TouchableOpacity>
+          )}
+
           <Text style={styles.secondaryText}>
             취소 및 변경은 곧 제공될 예정입니다. 현재는 확인만 가능합니다.
           </Text>
@@ -282,6 +304,18 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   messageButtonText: {
+    color: colors.background,
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  reviewButton: {
+    backgroundColor: '#10b981', // Green color for positive action
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  reviewButtonText: {
     color: colors.background,
     fontSize: 15,
     fontWeight: '600',
