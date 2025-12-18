@@ -27,3 +27,18 @@ export const reviews = pgTable('reviews', {
 });
 
 export type Review = typeof reviews.$inferSelect;
+
+export const reviewImages = pgTable('review_images', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  reviewId: uuid('review_id')
+    .references(() => reviews.id, { onDelete: 'cascade', onUpdate: 'restrict' })
+    .notNull(),
+  s3Key: text('s3_key').notNull(),
+  fileSize: integer('file_size').notNull(),
+  mimeType: text('mime_type').notNull(),
+  displayOrder: integer('display_order').notNull().default(0),
+  publicUrl: text('public_url').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export type ReviewImage = typeof reviewImages.$inferSelect;
