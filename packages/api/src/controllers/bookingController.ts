@@ -4,8 +4,10 @@ import { BOOKING_STATUS } from '@524/shared';
 
 import type { AuthRequest } from '../middleware/auth.js';
 import { BookingService } from '../services/bookingService.js';
+import { ReviewService } from '../services/reviewService.js';
 
 const bookingService = new BookingService();
+const reviewService = new ReviewService();
 
 // Utility function to extract user roles from request
 function getUserRoles(req: AuthRequest): string[] {
@@ -241,6 +243,39 @@ export const BookingController = {
 
       const booking = await bookingService.completeBooking(req.params.bookingId, req.user.id);
       res.json(booking);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async submitReview(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      if (!req.user?.id) {
+        res.status(401).json({ error: 'User not authenticated' });
+        return;
+      }
+
+      const { bookingId } = req.params;
+      const userId = req.user.id;
+      const userRoles = getUserRoles(req);
+
+      // Only customers can submit reviews
+      if (!userRoles.includes('customer')) {
+        res.status(403).json({ error: 'Only customers can submit reviews' });
+        return;
+      }
+
+      const payload = req.body as {
+        overallRating: number;
+        qualityRating: number;
+        professionalismRating: number;
+        timelinessRating: number;
+        reviewText?: string;
+        reviewImages?: string[];
+      };
+
+      const review = await reviewService.submitReview(bookingId, userId, payload);
+      res.status(201).json(review);
     } catch (error) {
       next(error);
     }
