@@ -33,21 +33,9 @@ async function httpClient(url: string, options: fetchUtils.Options = {}) {
 
   if (token) {
     headers.set('Authorization', `Bearer ${token}`);
-  } else {
-    console.warn('[AdminDataProvider] No auth token found for request to:', url);
   }
 
-  try {
-    return await fetchUtils.fetchJson(url, { ...options, headers });
-  } catch (error) {
-    console.error('[AdminDataProvider] Request failed:', {
-      url,
-      method: options.method || 'GET',
-      hasToken: !!token,
-      error: error instanceof Error ? error.message : error,
-    });
-    throw error;
-  }
+  return await fetchUtils.fetchJson(url, { ...options, headers });
 }
 
 export const adminDataProvider: AdminDataProvider = {

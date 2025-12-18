@@ -115,14 +115,11 @@ export function ArtistBookingDetailScreen() {
 
   const handleComplete = () => {
     if (!data) return;
-    console.log('Completing booking:', data.id);
     completeMutation.mutate(data.id, {
       onSuccess: () => {
-        console.log('Booking completed successfully');
         Alert.alert('예약을 완료 처리했습니다', '고객이 이제 리뷰를 작성할 수 있습니다.');
       },
       onError: (error) => {
-        console.log('Booking completion error:', error);
         const message = getBookingErrorMessage(error, 'complete');
         Alert.alert('완료 처리 실패', message);
       },

@@ -38,7 +38,7 @@ function mapRowToSummary(row: BookingRow): BookingSummary {
     createdAt: row.createdAt?.toISOString(),
     paymentStatus: row.paymentStatus as BookingSummary['paymentStatus'],
     statusHistory: row.statusHistory as BookingSummary['statusHistory'],
-    completedAt: row.completedAt ?? undefined,
+    completedAt: row.completedAt?.toISOString() ?? undefined,
     completedBy: row.completedBy ?? undefined,
   };
 }
