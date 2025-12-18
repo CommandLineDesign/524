@@ -15,6 +15,8 @@ import { buildStatusHistory } from './statusHistory.js';
 
 type BookingRow = typeof bookings.$inferSelect & {
   artistName?: string | null;
+  completedAt?: Date | null;
+  completedBy?: string | null;
 };
 
 function mapRowToSummary(row: BookingRow): BookingSummary {
@@ -36,6 +38,8 @@ function mapRowToSummary(row: BookingRow): BookingSummary {
     createdAt: row.createdAt?.toISOString(),
     paymentStatus: row.paymentStatus as BookingSummary['paymentStatus'],
     statusHistory: row.statusHistory as BookingSummary['statusHistory'],
+    completedAt: row.completedAt?.toISOString() ?? undefined,
+    completedBy: row.completedBy ?? undefined,
   };
 }
 
@@ -112,6 +116,8 @@ export class BookingRepository {
         statusHistory: bookings.statusHistory,
         address: bookings.address,
         createdAt: bookings.createdAt,
+        completedAt: bookings.completedAt,
+        completedBy: bookings.completedBy,
       })
       .from(bookings)
       .leftJoin(users, eq(users.id, bookings.artistId))
@@ -156,6 +162,8 @@ export class BookingRepository {
         statusHistory: bookings.statusHistory,
         address: bookings.address,
         createdAt: bookings.createdAt,
+        completedAt: bookings.completedAt,
+        completedBy: bookings.completedBy,
       })
       .from(bookings)
       .leftJoin(users, eq(users.id, bookings.artistId))
@@ -215,6 +223,8 @@ export class BookingRepository {
         statusHistory: bookings.statusHistory,
         address: bookings.address,
         createdAt: bookings.createdAt,
+        completedAt: bookings.completedAt,
+        completedBy: bookings.completedBy,
       })
       .from(bookings)
       .leftJoin(users, eq(users.id, bookings.artistId))
@@ -312,6 +322,37 @@ export class BookingRepository {
         statusHistory: buildStatusHistory(
           existing.statusHistory as Array<{ status: string; timestamp: string }> | null,
           'cancelled'
+        ),
+      })
+      .where(eq(bookings.id, bookingId))
+      .returning();
+
+    return mapRowToSummary(record);
+  }
+
+  async completeBooking(bookingId: string, artistId: string): Promise<BookingSummary> {
+    const existing = await this.findById(bookingId);
+    if (!existing) {
+      throw Object.assign(new Error('Booking not found'), { status: 404 });
+    }
+    if (existing.artistId !== artistId) {
+      throw Object.assign(new Error('Forbidden'), { status: 403 });
+    }
+    if (existing.status !== 'in_progress' || existing.paymentStatus !== 'paid') {
+      throw Object.assign(new Error('Only paid bookings in progress can be completed'), {
+        status: 409,
+      });
+    }
+
+    const [record] = await db
+      .update(bookings)
+      .set({
+        status: 'completed',
+        completedAt: new Date(),
+        completedBy: artistId,
+        statusHistory: buildStatusHistory(
+          existing.statusHistory as Array<{ status: string; timestamp: string }> | null,
+          'completed'
         ),
       })
       .where(eq(bookings.id, bookingId))

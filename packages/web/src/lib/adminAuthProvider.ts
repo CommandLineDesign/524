@@ -35,10 +35,12 @@ export const adminAuthProvider: AuthProvider = {
     }
 
     const payload = await response.json();
+    console.log('[AdminAuthProvider] Login successful, received token:', !!payload.token);
 
     setStoredToken(payload.token);
     if (typeof window !== 'undefined' && payload.user) {
       localStorage.setItem(ADMIN_USER_STORAGE_KEY, JSON.stringify(payload.user));
+      console.log('[AdminAuthProvider] User data stored:', payload.user);
     }
   },
 
@@ -48,7 +50,9 @@ export const adminAuthProvider: AuthProvider = {
   },
 
   async checkAuth() {
-    return getStoredToken() ? Promise.resolve() : Promise.reject();
+    const token = getStoredToken();
+    console.log('[AdminAuthProvider] checkAuth called, token exists:', !!token);
+    return token ? Promise.resolve() : Promise.reject();
   },
 
   async checkError(error) {
@@ -65,27 +69,35 @@ export const adminAuthProvider: AuthProvider = {
 
   async getIdentity() {
     const token = getStoredToken();
+    console.log('[AdminAuthProvider] getIdentity called, token exists:', !!token);
     if (!token) {
       return Promise.reject();
     }
 
-    const response = await fetch(`${API_BASE_URL}/auth/me`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/me`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-    if (!response.ok) {
-      clearStoredAuth();
-      return Promise.reject();
+      if (!response.ok) {
+        console.log('[AdminAuthProvider] getIdentity failed with status:', response.status);
+        clearStoredAuth();
+        return Promise.reject();
+      }
+
+      const user = await response.json();
+      console.log('[AdminAuthProvider] getIdentity successful for user:', user.email);
+
+      return {
+        id: user.id ?? 'admin',
+        fullName: user.name ?? 'Admin',
+        email: user.email,
+      };
+    } catch (error) {
+      console.error('[AdminAuthProvider] getIdentity error:', error);
+      throw error;
     }
-
-    const user = await response.json();
-
-    return {
-      id: user.id ?? 'admin',
-      fullName: user.name ?? 'Admin',
-      email: user.email,
-    };
   },
 };

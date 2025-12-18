@@ -46,6 +46,8 @@ export interface BookingSummary {
   paymentStatus?: string;
   statusHistory?: BookingStatusHistoryEntry[];
   timezone?: string;
+  completedAt?: string;
+  completedBy?: string;
 }
 
 export interface UpdateBookingStatusPayload {

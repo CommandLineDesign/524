@@ -4,10 +4,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   acceptBooking,
   cancelBooking,
+  completeBooking,
   declineBooking,
   getArtistBookings,
   getBookingDetail,
   getBookings,
+  updateBookingStatus,
 } from '../api/client';
 
 const bookingListKey = (status?: BookingStatus) => ['bookings', 'list', status ?? 'all'];
@@ -69,6 +71,29 @@ export function useCancelBookingMutation() {
   return useMutation({
     mutationFn: (bookingId: string) => cancelBooking(bookingId),
     onSuccess: (_data, bookingId) => {
+      queryClient.invalidateQueries();
+      queryClient.invalidateQueries({ queryKey: bookingDetailKey(bookingId) });
+    },
+  });
+}
+
+export function useCompleteBookingMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (bookingId: string) => completeBooking(bookingId),
+    onSuccess: (_data, bookingId) => {
+      queryClient.invalidateQueries();
+      queryClient.invalidateQueries({ queryKey: bookingDetailKey(bookingId) });
+    },
+  });
+}
+
+export function useUpdateBookingStatusMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ bookingId, status }: { bookingId: string; status: BookingStatus }) =>
+      updateBookingStatus(bookingId, status),
+    onSuccess: (_data, { bookingId }) => {
       queryClient.invalidateQueries();
       queryClient.invalidateQueries({ queryKey: bookingDetailKey(bookingId) });
     },

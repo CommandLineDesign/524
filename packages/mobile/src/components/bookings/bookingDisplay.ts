@@ -4,7 +4,6 @@ export const STATUS_LABELS: Record<BookingStatus, string> = {
   pending: '대기',
   declined: '거절됨',
   confirmed: '확정',
-  paid: '결제 완료',
   in_progress: '진행 중',
   completed: '완료',
   cancelled: '취소됨',

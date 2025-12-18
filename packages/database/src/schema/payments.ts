@@ -9,8 +9,8 @@ import {
   varchar,
 } from 'drizzle-orm/pg-core';
 
-import { bookings } from './bookings';
-import { users } from './users';
+import { bookings } from './bookings.js';
+import { users } from './users.js';
 
 export const payments = pgTable('payments', {
   id: uuid('id').primaryKey().defaultRandom(),

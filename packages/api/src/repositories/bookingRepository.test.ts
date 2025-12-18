@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { afterEach, beforeEach, describe, it } from 'node:test';
+import { eq } from 'drizzle-orm';
 
 import { TEST_USERS, cleanupTestData, createTestBookingInDB } from '../test/fixtures.js';
 import { BookingRepository } from './bookingRepository.js';
@@ -232,6 +233,106 @@ describe('BookingRepository', () => {
       assert.ok(result.statusHistory);
       assert.equal(result.statusHistory.length, 1);
       assert.equal(result.statusHistory[0].status, 'pending');
+    });
+  });
+
+  describe('completeBooking', () => {
+    it('should update status from in_progress to completed with completion metadata', async () => {
+      // Create a test booking and put it in in_progress status
+      const booking = await createTestBookingInDB({
+        artistId: TEST_USERS.artist1,
+        customerId: TEST_USERS.customer1,
+      });
+
+      // First accept the booking (pending -> confirmed)
+      const acceptedBooking = await repository.acceptBooking(booking.id, TEST_USERS.artist1);
+
+      // Then manually set to in_progress and paid (simulating the workflow)
+      await repository.updateStatus(acceptedBooking.id, 'in_progress');
+
+      // Mock the payment status as paid by directly updating the database
+      const { db } = await import('../db/client.js');
+      const { bookings } = await import('@524/database');
+      await db
+        .update(bookings)
+        .set({ paymentStatus: 'paid' })
+        .where(eq(bookings.id, acceptedBooking.id));
+
+      // Now complete the booking
+      const result = await repository.completeBooking(acceptedBooking.id, TEST_USERS.artist1);
+
+      assert.equal(result.id, acceptedBooking.id);
+      assert.equal(result.status, 'completed');
+      assert.ok(result.completedAt);
+      assert.equal(result.completedBy, TEST_USERS.artist1);
+      assert.ok(result.statusHistory);
+      assert.equal(result.statusHistory?.length, 4); // pending -> confirmed -> in_progress -> completed
+      assert.equal(result.statusHistory?.[3].status, 'completed');
+    });
+
+    it('should throw error when booking does not exist', async () => {
+      try {
+        await repository.completeBooking('non-existent-booking', TEST_USERS.artist1);
+        assert.fail('Should have thrown an error');
+      } catch (error: unknown) {
+        assert.equal((error as Error).message, 'Booking not found');
+        assert.equal((error as Error & { status: number }).status, 404);
+      }
+    });
+
+    it('should throw error when artist does not own the booking', async () => {
+      // Create a booking for artist1
+      const booking = await createTestBookingInDB({
+        artistId: TEST_USERS.artist1,
+        customerId: TEST_USERS.customer1,
+      });
+
+      // Try to complete with artist2
+      try {
+        await repository.completeBooking(booking.id, TEST_USERS.artist2);
+        assert.fail('Should have thrown an error');
+      } catch (error: unknown) {
+        assert.equal((error as Error).message, 'Forbidden');
+        assert.equal((error as Error & { status: number }).status, 403);
+      }
+    });
+
+    it('should throw error when booking is not in progress', async () => {
+      // Create a test booking (starts as pending)
+      const booking = await createTestBookingInDB({
+        artistId: TEST_USERS.artist1,
+        customerId: TEST_USERS.customer1,
+      });
+
+      // Try to complete a pending booking
+      try {
+        await repository.completeBooking(booking.id, TEST_USERS.artist1);
+        assert.fail('Should have thrown an error');
+      } catch (error: unknown) {
+        assert.equal((error as Error).message, 'Only paid bookings in progress can be completed');
+        assert.equal((error as Error & { status: number }).status, 409);
+      }
+    });
+
+    it('should throw error when booking payment is not paid', async () => {
+      // Create a test booking and put it in in_progress status
+      const booking = await createTestBookingInDB({
+        artistId: TEST_USERS.artist1,
+        customerId: TEST_USERS.customer1,
+      });
+
+      // Accept and set to in_progress, but leave payment as pending
+      const acceptedBooking = await repository.acceptBooking(booking.id, TEST_USERS.artist1);
+      await repository.updateStatus(acceptedBooking.id, 'in_progress');
+
+      // Try to complete - should fail because payment is not paid
+      try {
+        await repository.completeBooking(acceptedBooking.id, TEST_USERS.artist1);
+        assert.fail('Should have thrown an error');
+      } catch (error: unknown) {
+        assert.equal((error as Error).message, 'Only paid bookings in progress can be completed');
+        assert.equal((error as Error & { status: number }).status, 409);
+      }
     });
   });
 });

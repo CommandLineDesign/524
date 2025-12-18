@@ -35,11 +35,18 @@ async function httpClient(url: string, options: fetchUtils.Options = {}) {
     headers.set('Authorization', `Bearer ${token}`);
   }
 
-  return fetchUtils.fetchJson(url, { ...options, headers });
+  return await fetchUtils.fetchJson(url, { ...options, headers });
 }
 
 export const adminDataProvider: AdminDataProvider = {
   async getList(resource, params) {
+    console.log(
+      '[AdminDataProvider] getList called for resource:',
+      resource,
+      'with params:',
+      params
+    );
+
     const endpoint = resourceToEndpoint[resource as keyof typeof resourceToEndpoint];
     if (!endpoint) {
       return Promise.reject(new Error(`Unsupported resource: ${resource}`));
@@ -72,6 +79,7 @@ export const adminDataProvider: AdminDataProvider = {
     }
 
     const url = `${endpoint}?${queryParams.toString()}`;
+    console.log('[AdminDataProvider] Making request to:', url);
     const { json } = await httpClient(url);
 
     return {
