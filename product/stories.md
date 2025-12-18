@@ -20,8 +20,23 @@ Master tracking file for all user stories, organized by epic.
 | ✅ | [View and Edit Users](./stories/view-edit-users.md) | Medium | M |
 | ✅ | [Ban User Account](./stories/ban-user-account.md) | Medium | S |
 | ✅  | [View All Bookings](./stories/view-all-bookings.md) | Medium | M |
-| ⏳ | [Process Manual Refund](./stories/process-manual-refund.md) | Medium | S |
-| ⏳ | [View Financial Dashboard](./stories/view-financial-dashboard.md) | Low | M |
+| ⏳ | [Process Manual Refund](./stories/backlog/process-manual-refund.md) | Medium | S |
+| ⏳ | [View Financial Dashboard](./stories/backlog/view-financial-dashboard.md) | Low | M |
+
+---
+
+## Review System
+
+| Status | Story | Priority | Effort |
+|--------|-------|----------|--------|
+| 📝 | [Mark Booking Complete](./stories/mark-booking-complete.md) | High | S |
+| ⏳ | [Submit Customer Review](./stories/submit-customer-review.md) | Critical | M |
+| ⏳ | [Upload Review Photos](./stories/upload-review-photos.md) | High | M |
+| ⏳ | [View Customer Review History](./stories/view-customer-review-history.md) | Medium | S |
+| ⏳ | [View Artist Reviews](./stories/view-artist-reviews.md) | High | M |
+| ⏳ | [Respond to Review](./stories/respond-to-review.md) | High | S |
+| ⏳ | [Display Reviews on Artist Profile](./stories/display-reviews-on-profile.md) | Critical | M |
+| ⏳ | [Moderate Reviews](./stories/moderate-reviews.md) | Medium | M |
 
 ---
 
@@ -29,10 +44,10 @@ Master tracking file for all user stories, organized by epic.
 
 | Metric | Count |
 |--------|-------|
-| **Total Stories** | 8 |
-| **Not Started** | 5 |
-| **In Progress** | 0 |
-| **Completed** | 3 |
+| **Total Stories** | 16 |
+| **Not Started** | 9 |
+| **In Progress** | 1 |
+| **Completed** | 6 |
 | **Completion Rate** | 38% |
 
 ---
@@ -42,3 +57,4 @@ Master tracking file for all user stories, organized by epic.
 | Epic | Stories |
 |------|---------|
 | [Admin Dashboard](./epics/admin-dashboard.md) | 8 |
+| [Review System](./epics/review-system.md) | 8 |
