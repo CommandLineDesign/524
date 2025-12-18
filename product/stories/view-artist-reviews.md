@@ -108,3 +108,4 @@ Artists should be able to access reviews both from individual completed booking 
 - Empty state should be encouraging and explain how to get first reviews
 - Review photos provide valuable context for understanding customer feedback
 - Future enhancement: Analytics dashboard showing rating trends over time
+

@@ -114,3 +114,4 @@ This review display is critical for the marketplace's success, as it enables cus
 - "Verified Booking" badge builds trust by showing reviews are from real customers
 - Future enhancement: Allow customers to mark reviews as "helpful"
 - Future enhancement: Add photo gallery view showing all review photos for an artist
+

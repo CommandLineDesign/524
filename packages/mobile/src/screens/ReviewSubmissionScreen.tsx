@@ -15,39 +15,13 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { StarRating } from '../components/StarRating';
 import type { RootStackParamList } from '../navigation/AppNavigator';
+import { useSubmitReviewMutation } from '../query/reviews';
 import { colors } from '../theme/colors';
 
 type ReviewSubmissionNavProp = NativeStackNavigationProp<RootStackParamList, 'ReviewSubmission'>;
 type ReviewSubmissionRouteProp = RouteProp<RootStackParamList, 'ReviewSubmission'>;
-
-interface StarRatingProps {
-  rating: number;
-  onRatingChange: (rating: number) => void;
-  label: string;
-}
-
-function StarRating({ rating, onRatingChange, label }: StarRatingProps) {
-  return (
-    <View style={styles.ratingContainer}>
-      <Text style={styles.ratingLabel}>{label}</Text>
-      <View style={styles.starsContainer}>
-        {[1, 2, 3, 4, 5].map((star) => (
-          <TouchableOpacity
-            key={star}
-            onPress={() => onRatingChange(star)}
-            style={styles.starButton}
-          >
-            <Text style={[styles.star, rating >= star && styles.starFilled]}>
-              {rating >= star ? '★' : '☆'}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-      <Text style={styles.ratingValue}>{rating}/5</Text>
-    </View>
-  );
-}
 
 export function ReviewSubmissionScreen() {
   const navigation = useNavigation<ReviewSubmissionNavProp>();
@@ -59,7 +33,8 @@ export function ReviewSubmissionScreen() {
   const [professionalismRating, setProfessionalismRating] = useState(0);
   const [timelinessRating, setTimelinessRating] = useState(0);
   const [reviewText, setReviewText] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const submitReviewMutation = useSubmitReviewMutation();
 
   const allRatingsProvided =
     overallRating > 0 && qualityRating > 0 && professionalismRating > 0 && timelinessRating > 0;
@@ -70,33 +45,22 @@ export function ReviewSubmissionScreen() {
       return;
     }
 
-    setIsSubmitting(true);
-
     try {
-      // TODO: Implement API call to submit review
-      // await submitReview(bookingId, {
-      //   overallRating,
-      //   qualityRating,
-      //   professionalismRating,
-      //   timelinessRating,
-      //   reviewText: reviewText.trim() || undefined,
-      // });
+      await submitReviewMutation.mutateAsync({
+        bookingId,
+        payload: {
+          overallRating,
+          qualityRating,
+          professionalismRating,
+          timelinessRating,
+          reviewText: reviewText.trim() || undefined,
+        },
+      });
 
-      Alert.alert(
-        '리뷰 제출 완료',
-        '리뷰가 성공적으로 제출되었습니다. 아티스트에게 큰 도움이 될 거예요!',
-        [
-          {
-            text: '확인',
-            onPress: () => navigation.goBack(),
-          },
-        ]
-      );
+      // Navigate to confirmation screen
+      navigation.navigate('ReviewConfirmation', { bookingId });
     } catch (error) {
-      console.error('Review submission failed:', error);
       Alert.alert('제출 실패', '리뷰 제출에 실패했습니다. 잠시 후 다시 시도해 주세요.');
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -117,21 +81,25 @@ export function ReviewSubmissionScreen() {
               rating={overallRating}
               onRatingChange={setOverallRating}
               label="전체 만족도"
+              hapticFeedback={true}
             />
             <StarRating
               rating={qualityRating}
               onRatingChange={setQualityRating}
               label="서비스 품질"
+              hapticFeedback={true}
             />
             <StarRating
               rating={professionalismRating}
               onRatingChange={setProfessionalismRating}
               label="전문성"
+              hapticFeedback={true}
             />
             <StarRating
               rating={timelinessRating}
               onRatingChange={setTimelinessRating}
               label="시간 준수"
+              hapticFeedback={true}
             />
           </View>
 
@@ -154,12 +122,13 @@ export function ReviewSubmissionScreen() {
             <TouchableOpacity
               style={[
                 styles.submitButton,
-                (!allRatingsProvided || isSubmitting) && styles.submitButtonDisabled,
+                (!allRatingsProvided || submitReviewMutation.isPending) &&
+                  styles.submitButtonDisabled,
               ]}
               onPress={handleSubmit}
-              disabled={!allRatingsProvided || isSubmitting}
+              disabled={!allRatingsProvided || submitReviewMutation.isPending}
             >
-              {isSubmitting ? (
+              {submitReviewMutation.isPending ? (
                 <ActivityIndicator color="white" />
               ) : (
                 <Text style={styles.submitButtonText}>리뷰 제출하기</Text>
@@ -169,7 +138,7 @@ export function ReviewSubmissionScreen() {
             <TouchableOpacity
               style={styles.cancelButton}
               onPress={() => navigation.goBack()}
-              disabled={isSubmitting}
+              disabled={submitReviewMutation.isPending}
             >
               <Text style={styles.cancelButtonText}>나중에 하기</Text>
             </TouchableOpacity>
@@ -205,42 +174,6 @@ const styles = StyleSheet.create({
   },
   ratingsSection: {
     marginBottom: 32,
-  },
-  ratingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-  },
-  ratingLabel: {
-    flex: 1,
-    fontSize: 16,
-    fontWeight: '500',
-    color: colors.text,
-  },
-  starsContainer: {
-    flexDirection: 'row',
-    marginHorizontal: 12,
-  },
-  starButton: {
-    padding: 2,
-  },
-  star: {
-    fontSize: 24,
-    color: colors.border,
-  },
-  starFilled: {
-    color: '#FFD700', // Gold color for filled stars
-  },
-  ratingValue: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.primary,
-    minWidth: 40,
-    textAlign: 'right',
   },
   textSection: {
     marginBottom: 32,

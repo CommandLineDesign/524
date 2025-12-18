@@ -1,9 +1,13 @@
 import { addDays, isAfter } from 'date-fns';
 
 import { BookingRepository } from '../repositories/bookingRepository.js';
-import { ReviewRepository, type CreateReviewPayload, type UpdateReviewPayload } from '../repositories/reviewRepository.js';
-import { NotificationService } from './notificationService.js';
+import {
+  type CreateReviewPayload,
+  ReviewRepository,
+  type UpdateReviewPayload,
+} from '../repositories/reviewRepository.js';
 import { createLogger } from '../utils/logger.js';
+import { NotificationService } from './notificationService.js';
 
 const logger = createLogger('review-service');
 
@@ -24,27 +28,32 @@ export class ReviewService {
   ) {}
 
   /**
-   * Submit a review for a completed booking
+   * Validate that all ratings are integers between 1 and 5
    */
-  async submitReview(bookingId: string, customerId: string, payload: SubmitReviewPayload) {
-    logger.info('Submitting review', { bookingId, customerId });
-
-    // Validate rating values (1-5)
-    const ratings = [
-      payload.overallRating,
-      payload.qualityRating,
-      payload.professionalismRating,
-      payload.timelinessRating,
-    ];
-
+  private validateRatings(ratings: number[]): void {
     for (const rating of ratings) {
       if (rating < 1 || rating > 5 || !Number.isInteger(rating)) {
         throw new Error('All ratings must be integers between 1 and 5');
       }
     }
+  }
+
+  /**
+   * Submit a review for a completed booking
+   */
+  async submitReview(bookingId: string, customerId: string, payload: SubmitReviewPayload) {
+    logger.info({ bookingId, customerId }, 'Submitting review');
+
+    // Validate rating values (1-5)
+    this.validateRatings([
+      payload.overallRating,
+      payload.qualityRating,
+      payload.professionalismRating,
+      payload.timelinessRating,
+    ]);
 
     // Check if booking exists and is completed
-    const booking = await this.bookingRepository.getBookingById(bookingId);
+    const booking = await this.bookingRepository.findById(bookingId);
     if (!booking) {
       throw new Error('Booking not found');
     }
@@ -60,12 +69,22 @@ export class ReviewService {
 
     // Check if review already exists
     const existingReview = await this.reviewRepository.getReviewByBookingId(bookingId);
+
     if (existingReview) {
-      throw new Error('Review already exists for this booking');
+      // If review exists, return it (idempotent behavior)
+      // This handles edge cases where the UI didn't update properly after submission
+      logger.warn(
+        { bookingId, existingReviewId: existingReview.id },
+        'Review submission attempted for booking that already has a review'
+      );
+      return existingReview;
     }
 
-    // Check 30-day window from completion
-    const thirtyDaysAfterCompletion = addDays(booking.serviceCompletedAt || booking.createdAt, 30);
+    // Check 30-day window from completion (only for new reviews)
+    if (!booking.completedAt) {
+      throw new Error('Booking completion date not available');
+    }
+    const thirtyDaysAfterCompletion = addDays(new Date(booking.completedAt), 30);
     if (isAfter(new Date(), thirtyDaysAfterCompletion)) {
       throw new Error('Review submission window has expired (30 days after completion)');
     }
@@ -93,15 +112,23 @@ export class ReviewService {
         data: {
           bookingId,
           reviewId: review.id,
-          rating: payload.overallRating,
+          rating: payload.overallRating.toString(),
         },
       });
     } catch (error) {
-      logger.error('Failed to send review notification', { error, bookingId, artistId: booking.artistId });
+      logger.error(
+        {
+          error,
+          bookingId,
+          artistId: booking.artistId,
+          metric: 'review_notification_failure',
+        },
+        'Failed to send review notification'
+      );
       // Don't fail the review submission if notification fails
     }
 
-    logger.info('Review submitted successfully', { reviewId: review.id, bookingId });
+    logger.info({ reviewId: review.id, bookingId }, 'Review submitted successfully');
     return review;
   }
 
@@ -109,7 +136,7 @@ export class ReviewService {
    * Update a review (within 24 hours of submission)
    */
   async updateReview(reviewId: string, customerId: string, payload: UpdateReviewPayload) {
-    logger.info('Updating review', { reviewId, customerId });
+    logger.info({ reviewId, customerId }, 'Updating review');
 
     const review = await this.reviewRepository.getReviewById(reviewId);
     if (!review) {
@@ -132,12 +159,10 @@ export class ReviewService {
       payload.qualityRating,
       payload.professionalismRating,
       payload.timelinessRating,
-    ].filter(r => r !== undefined);
+    ].filter((r) => r !== undefined);
 
-    for (const rating of ratingsToValidate) {
-      if (rating! < 1 || rating! > 5 || !Number.isInteger(rating)) {
-        throw new Error('All ratings must be integers between 1 and 5');
-      }
+    if (ratingsToValidate.length > 0) {
+      this.validateRatings(ratingsToValidate);
     }
 
     // Validate review text length
@@ -147,7 +172,7 @@ export class ReviewService {
 
     const updatedReview = await this.reviewRepository.updateReview(reviewId, payload);
 
-    logger.info('Review updated successfully', { reviewId });
+    logger.info({ reviewId }, 'Review updated successfully');
     return updatedReview;
   }
 
@@ -155,7 +180,7 @@ export class ReviewService {
    * Get reviews for an artist
    */
   async getReviewsForArtist(artistId: string, limit = 20, offset = 0) {
-    logger.debug('Getting reviews for artist', { artistId, limit, offset });
+    logger.debug({ artistId, limit, offset }, 'Getting reviews for artist');
     return await this.reviewRepository.getReviewsForArtist(artistId, limit, offset);
   }
 
@@ -163,7 +188,7 @@ export class ReviewService {
    * Get reviews for a customer
    */
   async getReviewsForCustomer(customerId: string, limit = 20, offset = 0) {
-    logger.debug('Getting reviews for customer', { customerId, limit, offset });
+    logger.debug({ customerId, limit, offset }, 'Getting reviews for customer');
     return await this.reviewRepository.getReviewsForCustomer(customerId, limit, offset);
   }
 
@@ -171,7 +196,7 @@ export class ReviewService {
    * Get a specific review
    */
   async getReviewById(reviewId: string) {
-    logger.debug('Getting review by ID', { reviewId });
+    logger.debug({ reviewId }, 'Getting review by ID');
     return await this.reviewRepository.getReviewById(reviewId);
   }
 }

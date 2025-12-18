@@ -100,3 +100,4 @@ Artists should be able to write one response per review, which will be displayed
 - Consider adding response templates in future (e.g., "Thank you for your feedback")
 - Future enhancement: Allow artists to report inappropriate reviews while responding
 - Responses should be professional and constructive, consider adding guidelines
+

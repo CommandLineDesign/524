@@ -48,6 +48,16 @@ export interface BookingSummary {
   timezone?: string;
   completedAt?: string;
   completedBy?: string;
+  review?: {
+    id: string;
+    overallRating: number;
+    qualityRating: number;
+    professionalismRating: number;
+    timelinessRating: number;
+    reviewText?: string;
+    reviewImages?: string[];
+    createdAt: string;
+  };
 }
 
 export interface UpdateBookingStatusPayload {

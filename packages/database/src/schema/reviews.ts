@@ -6,13 +6,13 @@ import { users } from './users.js';
 export const reviews = pgTable('reviews', {
   id: uuid('id').primaryKey().defaultRandom(),
   bookingId: uuid('booking_id')
-    .references(() => bookings.id, { onDelete: 'no action', onUpdate: 'no action' })
+    .references(() => bookings.id, { onDelete: 'cascade', onUpdate: 'restrict' })
     .notNull(),
   customerId: uuid('customer_id')
-    .references(() => users.id, { onDelete: 'no action', onUpdate: 'no action' })
+    .references(() => users.id, { onDelete: 'restrict', onUpdate: 'restrict' })
     .notNull(),
   artistId: uuid('artist_id')
-    .references(() => users.id, { onDelete: 'no action', onUpdate: 'no action' })
+    .references(() => users.id, { onDelete: 'restrict', onUpdate: 'restrict' })
     .notNull(),
   overallRating: integer('overall_rating').notNull(),
   qualityRating: integer('quality_rating').notNull(),

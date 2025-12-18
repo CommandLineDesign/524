@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ReviewDisplay } from '../components/ReviewDisplay';
 import { BookingStatusBadge } from '../components/bookings/BookingStatusBadge';
 import { BookingStatusHistory } from '../components/bookings/BookingStatusHistory';
 import { formatCurrency, formatSchedule } from '../components/bookings/bookingDisplay';
@@ -20,6 +21,7 @@ import { useBookingDetail } from '../query/bookings';
 import { useCreateConversation } from '../query/messaging';
 import { useAuthStore } from '../store/authStore';
 import { colors } from '../theme/colors';
+import { canLeaveReview } from '../utils/bookingUtils';
 
 type BookingDetailNavProp = NativeStackNavigationProp<RootStackParamList, 'BookingDetail'>;
 type BookingDetailRouteProp = RouteProp<RootStackParamList, 'BookingDetail'>;
@@ -59,15 +61,10 @@ export function BookingDetailScreen() {
   const timezoneLabel = data.timezone?.trim() || '미지정';
   const paymentStatusLabel = data.paymentStatus?.trim() || '정보 없음';
 
-  // Check if review button should be shown
-  const isCustomer = user?.roles?.includes('customer');
-  const isBookingCompleted = data.status === 'completed';
-  const thirtyDaysAgo = new Date();
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-  const isWithinReviewWindow = data.serviceCompletedAt
-    ? new Date(data.serviceCompletedAt) >= thirtyDaysAgo
-    : false;
-  const canLeaveReview = isCustomer && isBookingCompleted && isWithinReviewWindow;
+  // Check if review exists or button should be shown
+  const hasReview = Boolean(data.review);
+  const canLeaveReviewForBooking = !hasReview && canLeaveReview(data, user);
+
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.content}>
@@ -122,6 +119,8 @@ export function BookingDetailScreen() {
           <BookingStatusHistory history={data.statusHistory} />
         </View>
 
+        {hasReview && data.review && <ReviewDisplay review={data.review} />}
+
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>추가 동작</Text>
           <TouchableOpacity
@@ -143,7 +142,9 @@ export function BookingDetailScreen() {
                   bookingId: bookingId,
                 });
               } catch (error) {
-                console.error('Failed to create conversation:', error);
+                if (__DEV__) {
+                  console.error('Failed to create conversation:', error);
+                }
                 Alert.alert(
                   '메시지 시작 실패',
                   '대화를 시작할 수 없습니다. 잠시 후 다시 시도해 주세요.'
@@ -154,7 +155,7 @@ export function BookingDetailScreen() {
             <Text style={styles.messageButtonText}>메시지 보내기</Text>
           </TouchableOpacity>
 
-          {canLeaveReview && (
+          {canLeaveReviewForBooking && (
             <TouchableOpacity
               style={styles.reviewButton}
               onPress={() => navigation.navigate('ReviewSubmission', { bookingId })}
