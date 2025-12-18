@@ -38,7 +38,7 @@ function mapRowToSummary(row: BookingRow): BookingSummary {
     createdAt: row.createdAt?.toISOString(),
     paymentStatus: row.paymentStatus as BookingSummary['paymentStatus'],
     statusHistory: row.statusHistory as BookingSummary['statusHistory'],
-    completedAt: row.completedAt?.toISOString(),
+    completedAt: row.completedAt ?? undefined,
     completedBy: row.completedBy ?? undefined,
   };
 }
@@ -338,8 +338,8 @@ export class BookingRepository {
     if (existing.artistId !== artistId) {
       throw Object.assign(new Error('Forbidden'), { status: 403 });
     }
-    if (!['paid', 'in_progress'].includes(existing.status)) {
-      throw Object.assign(new Error('Only paid or in_progress bookings can be completed'), {
+    if (existing.status !== 'in_progress' || existing.paymentStatus !== 'paid') {
+      throw Object.assign(new Error('Only paid bookings in progress can be completed'), {
         status: 409,
       });
     }

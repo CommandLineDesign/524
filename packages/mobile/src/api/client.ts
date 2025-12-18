@@ -22,6 +22,30 @@ export class ApiError extends Error {
   }
 }
 
+export class AuthenticationError extends ApiError {
+  constructor(message = 'Authentication required') {
+    super(message, 401);
+  }
+}
+
+export class ForbiddenError extends ApiError {
+  constructor(message = 'Access forbidden') {
+    super(message, 403);
+  }
+}
+
+export class NotFoundError extends ApiError {
+  constructor(message = 'Resource not found') {
+    super(message, 404);
+  }
+}
+
+export class ConflictError extends ApiError {
+  constructor(message = 'Request conflicts with current state') {
+    super(message, 409);
+  }
+}
+
 function buildError(message: string | string[] | undefined, status: number, body?: unknown) {
   const normalizedMessage = Array.isArray(message) ? message.join(', ') : message;
   return new ApiError(normalizedMessage || 'Request failed', status, body);
@@ -153,9 +177,34 @@ export async function cancelBooking(bookingId: string) {
 }
 
 export async function completeBooking(bookingId: string) {
-  return request<BookingSummary>(`/api/v1/bookings/${bookingId}/complete`, {
-    method: 'POST',
-    body: JSON.stringify({}),
+  try {
+    return await request<BookingSummary>(`/api/v1/bookings/${bookingId}/complete`, {
+      method: 'POST',
+      body: JSON.stringify({}),
+    });
+  } catch (error) {
+    if (error instanceof ApiError) {
+      switch (error.status) {
+        case 401:
+          throw new AuthenticationError(error.message);
+        case 403:
+          throw new ForbiddenError('You do not have permission to complete this booking');
+        case 404:
+          throw new NotFoundError('Booking not found');
+        case 409:
+          throw new ConflictError('Booking cannot be completed in its current state');
+        default:
+          throw error;
+      }
+    }
+    throw error;
+  }
+}
+
+export async function updateBookingStatus(bookingId: string, status: BookingStatus) {
+  return request<BookingSummary>(`/api/v1/bookings/${bookingId}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status }),
   });
 }
 

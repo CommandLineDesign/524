@@ -1,4 +1,4 @@
-import type { BookingSummary } from './bookings';
+import type { BookingSummary } from './bookings.js';
 
 /**
  * Defines allowed booking status transitions for the booking state machine.
@@ -10,8 +10,7 @@ export const BOOKING_STATUS_TRANSITIONS: Record<
   BookingSummary['status'][]
 > = {
   pending: ['confirmed', 'declined', 'cancelled'],
-  confirmed: ['paid', 'cancelled', 'in_progress'],
-  paid: ['in_progress', 'completed', 'cancelled'],
+  confirmed: ['cancelled', 'in_progress'],
   in_progress: ['completed', 'cancelled'],
   completed: [],
   declined: [],

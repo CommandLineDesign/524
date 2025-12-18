@@ -21,12 +21,16 @@ import {
   useBookingDetail,
   useCompleteBookingMutation,
   useDeclineBookingMutation,
+  useUpdateBookingStatusMutation,
 } from '../query/bookings';
 import { useCreateConversation } from '../query/messaging';
 import { colors } from '../theme/colors';
 
 // Helper function to get user-friendly error messages from API errors
-function getBookingErrorMessage(error: unknown, action: 'accept' | 'decline' | 'complete'): string {
+function getBookingErrorMessage(
+  error: unknown,
+  action: 'accept' | 'decline' | 'complete' | 'start'
+): string {
   if (error instanceof Error) {
     const message = error.message.toLowerCase();
 
@@ -53,6 +57,7 @@ function getBookingErrorMessage(error: unknown, action: 'accept' | 'decline' | '
   if (action === 'accept') return '예약 승인에 실패했습니다.';
   if (action === 'decline') return '예약 거절에 실패했습니다.';
   if (action === 'complete') return '예약 완료 처리에 실패했습니다.';
+  if (action === 'start') return '서비스 시작에 실패했습니다.';
   return '예약 처리에 실패했습니다.';
 }
 
@@ -71,10 +76,12 @@ export function ArtistBookingDetailScreen() {
   const acceptMutation = useAcceptBookingMutation();
   const declineMutation = useDeclineBookingMutation();
   const completeMutation = useCompleteBookingMutation();
+  const updateStatusMutation = useUpdateBookingStatusMutation();
   const createConversationMutation = useCreateConversation();
 
   const isPending = data?.status === 'pending';
-  const canComplete = data?.status === 'paid' || data?.status === 'in_progress';
+  const canStartService = data?.status === 'confirmed' && data?.paymentStatus === 'paid';
+  const canComplete = data?.status === 'in_progress' && data?.paymentStatus === 'paid';
 
   const handleAccept = () => {
     if (!data) return;
@@ -108,26 +115,33 @@ export function ArtistBookingDetailScreen() {
 
   const handleComplete = () => {
     if (!data) return;
-    Alert.alert(
-      '예약 완료 처리',
-      '이 예약을 완료 처리하시겠습니까? 완료 처리 후 고객이 리뷰를 작성할 수 있습니다.',
-      [
-        { text: '취소', style: 'cancel' },
-        {
-          text: '완료',
-          onPress: () => {
-            completeMutation.mutate(data.id, {
-              onSuccess: () => {
-                Alert.alert('예약을 완료 처리했습니다', '고객이 이제 리뷰를 작성할 수 있습니다.');
-              },
-              onError: (error) => {
-                const message = getBookingErrorMessage(error, 'complete');
-                Alert.alert('완료 처리 실패', message);
-              },
-            });
-          },
+    console.log('Completing booking:', data.id);
+    completeMutation.mutate(data.id, {
+      onSuccess: () => {
+        console.log('Booking completed successfully');
+        Alert.alert('예약을 완료 처리했습니다', '고객이 이제 리뷰를 작성할 수 있습니다.');
+      },
+      onError: (error) => {
+        console.log('Booking completion error:', error);
+        const message = getBookingErrorMessage(error, 'complete');
+        Alert.alert('완료 처리 실패', message);
+      },
+    });
+  };
+
+  const handleStartService = () => {
+    if (!data) return;
+    updateStatusMutation.mutate(
+      { bookingId: data.id, status: 'in_progress' },
+      {
+        onSuccess: () => {
+          Alert.alert('서비스가 시작되었습니다');
         },
-      ]
+        onError: (error) => {
+          const message = getBookingErrorMessage(error, 'start');
+          Alert.alert('서비스 시작 실패', message);
+        },
+      }
     );
   };
 
@@ -261,6 +275,22 @@ export function ArtistBookingDetailScreen() {
               </TouchableOpacity>
             </View>
           </View>
+        ) : canStartService ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>서비스 시작</Text>
+            <Text style={styles.secondaryText}>고객이 도착했으면 서비스를 시작하세요.</Text>
+            <TouchableOpacity
+              style={[styles.actionButton, styles.startButton]}
+              onPress={handleStartService}
+              disabled={updateStatusMutation.isPending}
+            >
+              {updateStatusMutation.isPending ? (
+                <ActivityIndicator color={colors.background} />
+              ) : (
+                <Text style={styles.startText}>서비스 시작</Text>
+              )}
+            </TouchableOpacity>
+          </View>
         ) : canComplete ? (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>서비스 완료</Text>
@@ -269,7 +299,10 @@ export function ArtistBookingDetailScreen() {
             </Text>
             <TouchableOpacity
               style={[styles.actionButton, styles.completeButton]}
-              onPress={handleComplete}
+              onPress={() => {
+                console.log('Complete service button pressed');
+                handleComplete();
+              }}
               disabled={completeMutation.isPending}
             >
               {completeMutation.isPending ? (
@@ -418,6 +451,14 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   completeText: {
+    color: colors.background,
+    fontWeight: '700',
+  },
+  startButton: {
+    backgroundColor: colors.primary,
+    marginTop: 8,
+  },
+  startText: {
     color: colors.background,
     fontWeight: '700',
   },

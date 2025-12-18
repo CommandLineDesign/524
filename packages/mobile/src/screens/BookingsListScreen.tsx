@@ -26,7 +26,6 @@ const STATUS_CHIPS: Array<{ value: BookingStatus | 'all'; label: string }> = [
   { value: 'pending', label: STATUS_LABELS.pending },
   { value: 'declined', label: STATUS_LABELS.declined },
   { value: 'confirmed', label: STATUS_LABELS.confirmed },
-  { value: 'paid', label: STATUS_LABELS.paid },
   { value: 'in_progress', label: STATUS_LABELS.in_progress },
   { value: 'completed', label: STATUS_LABELS.completed },
   { value: 'cancelled', label: STATUS_LABELS.cancelled },

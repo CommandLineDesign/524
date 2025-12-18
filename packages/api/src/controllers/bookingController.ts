@@ -4,6 +4,7 @@ import { BOOKING_STATUS } from '@524/shared';
 
 import type { AuthRequest } from '../middleware/auth.js';
 import { BookingService } from '../services/bookingService.js';
+import { validateUUIDParam } from '../utils/validation.js';
 
 const bookingService = new BookingService();
 
@@ -238,6 +239,15 @@ export const BookingController = {
         res.status(401).json({ error: 'User not authenticated' });
         return;
       }
+
+      const bookingIdValidation = validateUUIDParam(req.params.bookingId, 'bookingId');
+      if (!bookingIdValidation.isValid) {
+        res
+          .status(bookingIdValidation.error?.status || 400)
+          .json({ error: bookingIdValidation.error?.message || 'Invalid booking ID' });
+        return;
+      }
+
       const booking = await bookingService.completeBooking(req.params.bookingId, req.user.id);
       res.json(booking);
     } catch (error) {

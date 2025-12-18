@@ -33,13 +33,32 @@ async function httpClient(url: string, options: fetchUtils.Options = {}) {
 
   if (token) {
     headers.set('Authorization', `Bearer ${token}`);
+  } else {
+    console.warn('[AdminDataProvider] No auth token found for request to:', url);
   }
 
-  return fetchUtils.fetchJson(url, { ...options, headers });
+  try {
+    return await fetchUtils.fetchJson(url, { ...options, headers });
+  } catch (error) {
+    console.error('[AdminDataProvider] Request failed:', {
+      url,
+      method: options.method || 'GET',
+      hasToken: !!token,
+      error: error instanceof Error ? error.message : error,
+    });
+    throw error;
+  }
 }
 
 export const adminDataProvider: AdminDataProvider = {
   async getList(resource, params) {
+    console.log(
+      '[AdminDataProvider] getList called for resource:',
+      resource,
+      'with params:',
+      params
+    );
+
     const endpoint = resourceToEndpoint[resource as keyof typeof resourceToEndpoint];
     if (!endpoint) {
       return Promise.reject(new Error(`Unsupported resource: ${resource}`));
@@ -72,6 +91,7 @@ export const adminDataProvider: AdminDataProvider = {
     }
 
     const url = `${endpoint}?${queryParams.toString()}`;
+    console.log('[AdminDataProvider] Making request to:', url);
     const { json } = await httpClient(url);
 
     return {
