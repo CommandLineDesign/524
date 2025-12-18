@@ -105,3 +105,4 @@ The photo upload system uses S3 presigned URLs for direct browser/mobile uploads
 - Photos are immutable after review submission (no editing photos after 24-hour window)
 - Future enhancement: Allow customers to reorder photos before submission
 - Future enhancement: Add photo editing capabilities (crop, rotate, filters)
+

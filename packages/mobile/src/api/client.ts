@@ -208,6 +208,36 @@ export async function updateBookingStatus(bookingId: string, status: BookingStat
   });
 }
 
+export interface SubmitReviewPayload {
+  overallRating: number;
+  qualityRating: number;
+  professionalismRating: number;
+  timelinessRating: number;
+  reviewText?: string;
+  reviewImages?: string[];
+}
+
+export interface ReviewResponse {
+  id: string;
+  bookingId: string;
+  userId: string;
+  overallRating: number;
+  qualityRating: number;
+  professionalismRating: number;
+  timelinessRating: number;
+  reviewText?: string;
+  reviewImages?: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export async function submitReview(bookingId: string, payload: SubmitReviewPayload) {
+  return request<ReviewResponse>(`/api/v1/bookings/${bookingId}/review`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
 export async function signUpUser(payload: SignupPayload): Promise<AuthResponse> {
   return request<AuthResponse>('/api/v1/auth/signup/user', {
     method: 'POST',

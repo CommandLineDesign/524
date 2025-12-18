@@ -2,7 +2,7 @@ import crypto from 'node:crypto';
 
 import { and, desc, eq } from 'drizzle-orm';
 
-import { bookings, users } from '@524/database';
+import { bookings, reviews, users } from '@524/database';
 import type {
   BookedService,
   BookingSummary,
@@ -17,6 +17,16 @@ type BookingRow = typeof bookings.$inferSelect & {
   artistName?: string | null;
   completedAt?: Date | null;
   completedBy?: string | null;
+  review?: {
+    id: string;
+    overallRating: number;
+    qualityRating: number;
+    professionalismRating: number;
+    timelinessRating: number;
+    reviewText: string | null;
+    reviewImages: unknown;
+    createdAt: Date;
+  } | null;
 };
 
 function mapRowToSummary(row: BookingRow): BookingSummary {
@@ -40,6 +50,18 @@ function mapRowToSummary(row: BookingRow): BookingSummary {
     statusHistory: row.statusHistory as BookingSummary['statusHistory'],
     completedAt: row.completedAt?.toISOString() ?? undefined,
     completedBy: row.completedBy ?? undefined,
+    review: row.review
+      ? {
+          id: row.review.id,
+          overallRating: row.review.overallRating,
+          qualityRating: row.review.qualityRating,
+          professionalismRating: row.review.professionalismRating,
+          timelinessRating: row.review.timelinessRating,
+          reviewText: row.review.reviewText ?? undefined,
+          reviewImages: row.review.reviewImages as string[] | undefined,
+          createdAt: row.review.createdAt.toISOString(),
+        }
+      : undefined,
   };
 }
 
@@ -118,9 +140,20 @@ export class BookingRepository {
         createdAt: bookings.createdAt,
         completedAt: bookings.completedAt,
         completedBy: bookings.completedBy,
+        review: {
+          id: reviews.id,
+          overallRating: reviews.overallRating,
+          qualityRating: reviews.qualityRating,
+          professionalismRating: reviews.professionalismRating,
+          timelinessRating: reviews.timelinessRating,
+          reviewText: reviews.reviewText,
+          reviewImages: reviews.reviewImages,
+          createdAt: reviews.createdAt,
+        },
       })
       .from(bookings)
       .leftJoin(users, eq(users.id, bookings.artistId))
+      .leftJoin(reviews, eq(reviews.bookingId, bookings.id))
       .where(eq(bookings.id, bookingId))
       .limit(1);
     return record ? mapRowToSummary(record as BookingRow) : null;

@@ -125,3 +125,4 @@ All moderation actions must be logged with admin ID and timestamp for accountabi
 - Audit log is critical for accountability and dispute resolution
 - Future enhancement: Allow artists to request review moderation with justification
 - Future enhancement: Implement appeal process for moderated reviews
+

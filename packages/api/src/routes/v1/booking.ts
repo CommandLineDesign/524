@@ -77,4 +77,12 @@ router.post(
   BookingController.completeBooking
 );
 
+// Customer action: submit review for completed booking
+router.post(
+  '/:bookingId/review',
+  requireCustomer(),
+  validateBookingId,
+  BookingController.submitReview
+);
+
 export const bookingRouter: ExpressRouter = router;

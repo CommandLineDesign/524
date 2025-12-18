@@ -81,19 +81,19 @@ The review interface should be accessible from the completed booking card and mu
 
 ## Definition of Done
 
-- [ ] "Leave Review" button appears on completed bookings within 30 days
-- [ ] Review form displays four star rating inputs (overall, quality, professionalism, timeliness)
-- [ ] All four ratings are required before submission
-- [ ] Optional text field with 1000 character limit and counter
-- [ ] Form validation prevents submission without required ratings
-- [ ] Review submission saves to database with all fields
-- [ ] Artist receives notification when review is submitted
-- [ ] Customer can view their submitted review on the booking
+- [x] "Leave Review" button appears on completed bookings within 30 days
+- [x] Review form displays four star rating inputs (overall, quality, professionalism, timeliness)
+- [x] All four ratings are required before submission
+- [x] Optional text field with 1000 character limit and counter
+- [x] Form validation prevents submission without required ratings
+- [x] Review submission saves to database with all fields
+- [x] Artist receives notification when review is submitted
+- [x] Customer can view their submitted review on the booking
 - [ ] Customer can edit review within 24 hours of submission
-- [ ] Review option disappears after 30 days from completion
-- [ ] Only one review per booking is allowed
-- [ ] API endpoint validates booking is completed and customer is authorized
-- [ ] Error handling for network failures and validation errors
+- [x] Review option disappears after 30 days from completion
+- [x] Only one review per booking is allowed
+- [x] API endpoint validates booking is completed and customer is authorized
+- [x] Error handling for network failures and validation errors
 
 ## Notes
 
@@ -102,3 +102,4 @@ The review interface should be accessible from the completed booking card and mu
 - 24-hour edit window allows for corrections without allowing indefinite changes
 - Photo upload functionality is handled by a separate story for modularity
 - Consider adding review templates or prompts in future iterations to encourage detailed feedback
+

@@ -4,8 +4,10 @@ import { BOOKING_STATUS } from '@524/shared';
 
 import type { AuthRequest } from '../middleware/auth.js';
 import { BookingService } from '../services/bookingService.js';
+import { ReviewService, type SubmitReviewPayload } from '../services/reviewService.js';
 
 const bookingService = new BookingService();
+const reviewService = new ReviewService();
 
 // Utility function to extract user roles from request
 function getUserRoles(req: AuthRequest): string[] {
@@ -241,6 +243,75 @@ export const BookingController = {
 
       const booking = await bookingService.completeBooking(req.params.bookingId, req.user.id);
       res.json(booking);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async submitReview(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      if (!req.user?.id) {
+        res.status(401).json({ error: 'User not authenticated' });
+        return;
+      }
+
+      const { bookingId } = req.params;
+      const userId = req.user.id;
+
+      // Validate required rating fields
+      if (
+        typeof req.body.overallRating !== 'number' ||
+        typeof req.body.qualityRating !== 'number' ||
+        typeof req.body.professionalismRating !== 'number' ||
+        typeof req.body.timelinessRating !== 'number'
+      ) {
+        res.status(400).json({ error: 'All rating fields are required and must be numbers' });
+        return;
+      }
+
+      // Validate rating ranges
+      if (
+        [
+          req.body.overallRating,
+          req.body.qualityRating,
+          req.body.professionalismRating,
+          req.body.timelinessRating,
+        ].some((r) => r < 1 || r > 5 || !Number.isInteger(r))
+      ) {
+        res.status(400).json({ error: 'All ratings must be integers between 1 and 5' });
+        return;
+      }
+
+      // Validate reviewText
+      if (req.body.reviewText && req.body.reviewText.length > 1000) {
+        res.status(400).json({ error: 'Review text cannot exceed 1000 characters' });
+        return;
+      }
+
+      // Validate reviewImages
+      if (
+        req.body.reviewImages &&
+        (!Array.isArray(req.body.reviewImages) ||
+          req.body.reviewImages.length > 10 ||
+          !req.body.reviewImages.every(
+            (img: unknown) => typeof img === 'string' && img.startsWith('https://')
+          ))
+      ) {
+        res.status(400).json({ error: 'Review images must be valid HTTPS URLs (max 10)' });
+        return;
+      }
+
+      const payload: SubmitReviewPayload = {
+        overallRating: req.body.overallRating,
+        qualityRating: req.body.qualityRating,
+        professionalismRating: req.body.professionalismRating,
+        timelinessRating: req.body.timelinessRating,
+        reviewText: req.body.reviewText,
+        reviewImages: req.body.reviewImages,
+      };
+
+      const review = await reviewService.submitReview(bookingId, userId, payload);
+      res.status(201).json(review);
     } catch (error) {
       next(error);
     }
