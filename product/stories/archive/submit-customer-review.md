@@ -3,7 +3,7 @@
 **Epic**: [Review System](../epics/review-system.md)
 **Role**: Customer
 **Priority**: Critical
-**Status**: 📝 In Progress
+**Status**: ✅ Completed
 **Dependencies**:
 
 - [Mark Booking Complete](./mark-booking-complete.md)
@@ -32,7 +32,6 @@ The review interface should be accessible from the completed booking card and mu
 - **Given** a customer has selected ratings - **When** they enter optional review text - **Then** they can write up to 1000 characters
 - **Given** a customer submits a review - **When** all required fields are complete - **Then** the review is saved and the artist is notified
 - **Given** a booking was completed more than 30 days ago - **When** the customer views it - **Then** the review option is no longer available
-- **Given** a customer submitted a review less than 24 hours ago - **When** they view it - **Then** they can edit the review
 - **Given** a customer already left a review - **When** they view the booking - **Then** they see their existing review instead of the submission form
 
 ### Non-Functional Requirements
@@ -89,7 +88,6 @@ The review interface should be accessible from the completed booking card and mu
 - [x] Review submission saves to database with all fields
 - [x] Artist receives notification when review is submitted
 - [x] Customer can view their submitted review on the booking
-- [ ] Customer can edit review within 24 hours of submission
 - [x] Review option disappears after 30 days from completion
 - [x] Only one review per booking is allowed
 - [x] API endpoint validates booking is completed and customer is authorized
@@ -99,7 +97,7 @@ The review interface should be accessible from the completed booking card and mu
 
 - Multi-dimensional ratings (quality, professionalism, timeliness) provide more detailed feedback than a single overall rating
 - The 30-day window encourages timely reviews while memories are fresh
-- 24-hour edit window allows for corrections without allowing indefinite changes
 - Photo upload functionality is handled by a separate story for modularity
+- Review editing functionality (24-hour edit window) moved to separate backlog story: `add-review-detail-screen-with-edit-delete-actions.md`
 - Consider adding review templates or prompts in future iterations to encourage detailed feedback
 
