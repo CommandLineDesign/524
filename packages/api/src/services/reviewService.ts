@@ -192,7 +192,29 @@ export class ReviewService {
   }
 
   /**
-   * Get reviews for an artist
+   * Get reviews for an artist with hasMore detection
+   * @param artistId The artist ID
+   * @param limit The number of reviews to return (excluding the extra item for hasMore detection)
+   * @param offset The pagination offset
+   * @returns Object with reviews array and hasMore boolean
+   */
+  async getReviewsForArtistWithPagination(artistId: string, limit = 20, offset = 0) {
+    logger.debug({ artistId, limit, offset }, 'Getting reviews for artist with pagination');
+
+    // Fetch limit + 1 items to detect if there are more results
+    const reviews = await this.reviewRepository.getReviewsForArtist(artistId, limit + 1, offset);
+
+    const hasMore = reviews.length > limit;
+    const reviewsToReturn = hasMore ? reviews.slice(0, limit) : reviews;
+
+    return {
+      reviews: reviewsToReturn,
+      hasMore,
+    };
+  }
+
+  /**
+   * Get reviews for an artist (legacy method - prefer getReviewsForArtistWithPagination)
    */
   async getReviewsForArtist(artistId: string, limit = 20, offset = 0) {
     logger.debug({ artistId, limit, offset }, 'Getting reviews for artist');

@@ -138,14 +138,16 @@ export const ArtistController = {
       // Parse pagination params
       const { limit, offset } = parsePaginationParams(req.query, { limit: 10, maxLimit: 50 });
 
-      if (process.env.NODE_ENV === 'development') {
-        logger.debug({ artistId, limit, offset }, 'Getting artist reviews');
-      }
+      logger.debug({ artistId, limit, offset }, 'Getting artist reviews');
 
-      const reviews = await reviewService.getReviewsForArtist(artistId, limit + 1, offset);
+      // Using +1 pagination pattern for hasMore detection
+      // Tradeoff: fetches one extra record that's discarded to avoid separate COUNT query
+      // Acceptable since review objects are lightweight and this avoids N+1 query problem
+      const { reviews: reviewsToReturn, hasMore } =
+        await reviewService.getReviewsForArtistWithPagination(artistId, limit, offset);
 
-      const hasMore = reviews.length > limit;
-      const reviewsToReturn = hasMore ? reviews.slice(0, limit) : reviews;
+      // Cache reviews for 1 minute (client) and 5 minutes (CDN) to reduce backend load
+      res.set('Cache-Control', 'public, max-age=60, s-maxage=300');
 
       res.json({
         reviews: reviewsToReturn,
@@ -169,11 +171,13 @@ export const ArtistController = {
     try {
       const { artistId } = req.params;
 
-      if (process.env.NODE_ENV === 'development') {
-        logger.debug({ artistId }, 'Getting artist review stats');
-      }
+      logger.debug({ artistId }, 'Getting artist review stats');
 
       const stats = await reviewService.getArtistReviewStats(artistId);
+
+      // Cache stats for 1 minute (client) and 5 minutes (CDN) to reduce backend load
+      res.set('Cache-Control', 'public, max-age=60, s-maxage=300');
+
       res.json(stats);
     } catch (error) {
       logger.error({ error, artistId: req.params.artistId }, 'Failed to get artist review stats');

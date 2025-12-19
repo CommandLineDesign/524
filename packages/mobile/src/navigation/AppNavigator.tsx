@@ -283,6 +283,16 @@ export function AppNavigator() {
                   component={ArtistProfileScreen}
                   options={{ title: '아티스트 프로필' }}
                 />
+                {/*
+                  Navigation entry points for ArtistProfile screen:
+                  - From search results when users tap on artist cards
+                  - From booking details when viewing artist information
+                  - From review listings when users want to see artist's profile
+                  - From artist selection flows during booking process
+
+                  Navigation call: navigation.navigate('ArtistProfile', { artistId })
+                  Expected to be implemented in upcoming stories for search and booking flows.
+                */}
                 <Stack.Screen
                   name="ChatsList"
                   component={ChatsListScreen}

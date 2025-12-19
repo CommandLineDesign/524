@@ -42,7 +42,7 @@ Defines how a local AI agent (in Cursor) is manually prompted to pick a story wi
 1. Mark In Progress
    - Update story `**Status**` → `📝 In Progress`.
    - Regenerate planning docs: `product/stories.md`.
-   - Commit and push the planning updates on the feature branch using `git push --no-verify` to skip pre-push hooks for this initial branch creation push.
+   - Commit and push the planning updates on the feature branch. For the initial push to a new remote branch, use `git push --no-verify` to skip pre-push hooks (acceptable since planning commits contain only documentation). For subsequent pushes, use normal `git push` to ensure code quality checks run.
 
 2. Kickoff PR
    - Create a draft PR (via `gh pr create` when available).

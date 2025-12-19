@@ -395,9 +395,6 @@ export async function getArtistReviews(artistId: string, params: GetReviewsParam
   if (params.offset) {
     query.append('offset', params.offset.toString());
   }
-  if (params.role) {
-    query.append('role', params.role);
-  }
 
   const path = query.size
     ? `/api/v1/artists/${artistId}/reviews?${query.toString()}`

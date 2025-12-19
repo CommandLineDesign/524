@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -43,10 +43,12 @@ export function ArtistProfileScreen({ route }: ArtistProfileScreenProps) {
   } = useArtistProfileReviews(artistId, { limit: 10 });
 
   const reviews = reviewsData?.pages.flatMap((page) => page.reviews) ?? [];
-  const isRefreshing = false;
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const onRefresh = async () => {
+    setIsRefreshing(true);
     await Promise.all([refetchStats(), refetchReviews()]);
+    setIsRefreshing(false);
   };
 
   const onEndReached = () => {
@@ -55,7 +57,8 @@ export function ArtistProfileScreen({ route }: ArtistProfileScreenProps) {
     }
   };
 
-  if (statsLoading || reviewsLoading) {
+  // Allow progressive rendering: show stats when available, even if reviews are still loading
+  if (statsLoading && reviewsLoading) {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" color={colors.primary} />
@@ -104,7 +107,7 @@ export function ArtistProfileScreen({ route }: ArtistProfileScreenProps) {
                           />
                         </View>
                         <Text style={styles.dimensionScore}>
-                          {stats.averageQualityRating.toFixed(1)}
+                          {stats.averageQualityRating?.toFixed(1) ?? 'N/A'}
                         </Text>
                       </View>
                     </View>
@@ -120,7 +123,7 @@ export function ArtistProfileScreen({ route }: ArtistProfileScreenProps) {
                           />
                         </View>
                         <Text style={styles.dimensionScore}>
-                          {stats.averageProfessionalismRating.toFixed(1)}
+                          {stats.averageProfessionalismRating?.toFixed(1) ?? 'N/A'}
                         </Text>
                       </View>
                     </View>
@@ -136,7 +139,7 @@ export function ArtistProfileScreen({ route }: ArtistProfileScreenProps) {
                           />
                         </View>
                         <Text style={styles.dimensionScore}>
-                          {stats.averageTimelinessRating.toFixed(1)}
+                          {stats.averageTimelinessRating?.toFixed(1) ?? 'N/A'}
                         </Text>
                       </View>
                     </View>
@@ -153,12 +156,19 @@ export function ArtistProfileScreen({ route }: ArtistProfileScreenProps) {
         }
         renderItem={({ item }) => <ReviewCard review={item} containerStyle={styles.reviewCard} />}
         ListEmptyComponent={
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyStateTitle}>아직 리뷰가 없습니다</Text>
-            <Text style={styles.emptyStateDescription}>
-              첫 번째 예약을 완료하고 리뷰를 받아보세요
-            </Text>
-          </View>
+          reviewsLoading ? (
+            <View style={styles.emptyState}>
+              <ActivityIndicator size="small" color={colors.primary} />
+              <Text style={styles.emptyStateDescription}>리뷰를 불러오는 중...</Text>
+            </View>
+          ) : (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyStateTitle}>아직 리뷰가 없습니다</Text>
+              <Text style={styles.emptyStateDescription}>
+                첫 번째 예약을 완료하고 리뷰를 받아보세요
+              </Text>
+            </View>
+          )
         }
         ListFooterComponent={
           isFetchingNextPage ? (
