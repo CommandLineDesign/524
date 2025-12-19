@@ -35,7 +35,7 @@ Master tracking file for all user stories, organized by epic.
 | ✅ | [View Customer Review History](./stories/view-customer-review-history.md) | Medium | S |
 | ✅ | [View Artist Reviews](./stories/view-artist-reviews.md) | High | M |
 | ⏳ | [Respond to Review](./stories/respond-to-review.md) | High | S |
-| ⏳ | [Display Reviews on Artist Profile](./stories/display-reviews-on-profile.md) | Critical | M |
+| 📝 | [Display Reviews on Artist Profile](./stories/display-reviews-on-profile.md) | Critical | M |
 | ⏳ | [Moderate Reviews](./stories/moderate-reviews.md) | Medium | M |
 
 ---
@@ -45,8 +45,8 @@ Master tracking file for all user stories, organized by epic.
 | Metric | Count |
 |--------|-------|
 | **Total Stories** | 16 |
-| **Not Started** | 4 |
-| **In Progress** | 1 |
+| **Not Started** | 3 |
+| **In Progress** | 2 |
 | **Completed** | 11 |
 | **Completion Rate** | 69% |
 
