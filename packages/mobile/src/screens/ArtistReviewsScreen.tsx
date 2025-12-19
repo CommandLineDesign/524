@@ -13,7 +13,6 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { Review } from '../api/client';
-import { StarRating } from '../components/StarRating';
 import { ReviewCard } from '../components/reviews/ReviewCard';
 import type { RootStackParamList } from '../navigation/AppNavigator';
 import { useArtistReviewStats, useArtistReviews } from '../query/reviews';
@@ -22,6 +21,18 @@ import { colors } from '../theme/colors';
 type ArtistReviewsNavProp = NativeStackNavigationProp<RootStackParamList, 'ArtistReviews'>;
 
 const PAGE_SIZE = 20;
+
+function renderStars(rating: number): string {
+  const fullStars = Math.floor(rating);
+  const hasHalfStar = rating % 1 >= 0.5;
+  const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+
+  let stars = '★'.repeat(fullStars);
+  if (hasHalfStar) stars += '☆';
+  stars += '☆'.repeat(emptyStars);
+
+  return stars;
+}
 
 export function ArtistReviewsScreen() {
   const navigation = useNavigation<ArtistReviewsNavProp>();
@@ -97,7 +108,7 @@ export function ArtistReviewsScreen() {
         <View style={styles.statsHeader}>
           <View style={styles.overallRating}>
             <Text style={styles.ratingNumber}>{stats.averageOverallRating.toFixed(1)}</Text>
-            <StarRating rating={stats.averageOverallRating} size="medium" />
+            <Text style={styles.stars}>{renderStars(stats.averageOverallRating)}</Text>
             <Text style={styles.reviewCount}>총 {stats.totalReviews}개의 리뷰</Text>
           </View>
         </View>
@@ -105,17 +116,17 @@ export function ArtistReviewsScreen() {
         <View style={styles.detailRatings}>
           <View style={styles.ratingRow}>
             <Text style={styles.ratingLabel}>품질</Text>
-            <StarRating rating={stats.averageQualityRating} size="small" />
+            <Text style={styles.starsSmall}>{renderStars(stats.averageQualityRating)}</Text>
             <Text style={styles.ratingValue}>{stats.averageQualityRating.toFixed(1)}</Text>
           </View>
           <View style={styles.ratingRow}>
             <Text style={styles.ratingLabel}>전문성</Text>
-            <StarRating rating={stats.averageProfessionalismRating} size="small" />
+            <Text style={styles.starsSmall}>{renderStars(stats.averageProfessionalismRating)}</Text>
             <Text style={styles.ratingValue}>{stats.averageProfessionalismRating.toFixed(1)}</Text>
           </View>
           <View style={styles.ratingRow}>
             <Text style={styles.ratingLabel}>시간 엄수</Text>
-            <StarRating rating={stats.averageTimelinessRating} size="small" />
+            <Text style={styles.starsSmall}>{renderStars(stats.averageTimelinessRating)}</Text>
             <Text style={styles.ratingValue}>{stats.averageTimelinessRating.toFixed(1)}</Text>
           </View>
         </View>
@@ -205,6 +216,14 @@ const styles = StyleSheet.create({
     fontSize: 48,
     fontWeight: '700',
     color: colors.text,
+  },
+  stars: {
+    fontSize: 24,
+    color: '#FFB800',
+  },
+  starsSmall: {
+    fontSize: 16,
+    color: '#FFB800',
   },
   reviewCount: {
     fontSize: 14,
