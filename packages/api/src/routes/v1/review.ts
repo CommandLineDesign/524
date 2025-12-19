@@ -22,6 +22,9 @@ function validateReviewId(req: Request, res: Response, next: NextFunction) {
   next();
 }
 
+// Get aggregate review statistics for authenticated artist
+router.get('/stats', requireAuth(['artist']), ReviewController.getReviewStats);
+
 // Get reviews for authenticated user
 // - Customers see reviews they've written
 // - Artists see reviews they've received

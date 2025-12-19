@@ -276,4 +276,42 @@ export class ReviewRepository {
       publicUrl: s3PublicBaseUrl ? `${s3PublicBaseUrl}/${image.s3Key}` : null,
     }));
   }
+
+  async getArtistReviewStats(artistId: string) {
+    validateUUID(artistId, 'artistId');
+
+    logger.debug({ artistId }, 'Getting review statistics for artist');
+
+    const artistReviews = await db
+      .select()
+      .from(reviews)
+      .where(and(eq(reviews.artistId, artistId), eq(reviews.isVisible, true)));
+
+    if (artistReviews.length === 0) {
+      return {
+        totalReviews: 0,
+        averageOverallRating: 0,
+        averageQualityRating: 0,
+        averageProfessionalismRating: 0,
+        averageTimelinessRating: 0,
+      };
+    }
+
+    const totalReviews = artistReviews.length;
+    const sumOverallRating = artistReviews.reduce((sum, r) => sum + r.overallRating, 0);
+    const sumQualityRating = artistReviews.reduce((sum, r) => sum + r.qualityRating, 0);
+    const sumProfessionalismRating = artistReviews.reduce(
+      (sum, r) => sum + r.professionalismRating,
+      0
+    );
+    const sumTimelinessRating = artistReviews.reduce((sum, r) => sum + r.timelinessRating, 0);
+
+    return {
+      totalReviews,
+      averageOverallRating: Number((sumOverallRating / totalReviews).toFixed(1)),
+      averageQualityRating: Number((sumQualityRating / totalReviews).toFixed(1)),
+      averageProfessionalismRating: Number((sumProfessionalismRating / totalReviews).toFixed(1)),
+      averageTimelinessRating: Number((sumTimelinessRating / totalReviews).toFixed(1)),
+    };
+  }
 }
