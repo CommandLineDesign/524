@@ -22,6 +22,7 @@ function validateReviewId(req: Request, res: Response, next: NextFunction) {
   next();
 }
 
+// Route ordering: /stats must come before parameterized routes (/:id) to prevent conflicts
 // Get aggregate review statistics for authenticated artist
 router.get('/stats', requireAuth(['artist']), ReviewController.getReviewStats);
 

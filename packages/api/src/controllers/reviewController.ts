@@ -151,7 +151,7 @@ export const ReviewController = {
       const stats = await reviewService.getArtistReviewStats(req.user.id);
       res.json(stats);
     } catch (error) {
-      logger.error({ error, userId: req.user?.id }, 'Failed to get review stats');
+      logger.error({ error }, 'Failed to get review stats');
       next(error);
     }
   },

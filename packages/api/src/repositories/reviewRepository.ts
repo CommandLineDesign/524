@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm';
+import { and, count, eq, sql } from 'drizzle-orm';
 
 import { type Review, reviewImages, reviews } from '@524/database';
 import { db } from '../db/client.js';
@@ -280,38 +280,23 @@ export class ReviewRepository {
   async getArtistReviewStats(artistId: string) {
     validateUUID(artistId, 'artistId');
 
-    logger.debug({ artistId }, 'Getting review statistics for artist');
-
-    const artistReviews = await db
-      .select()
+    const [stats] = await db
+      .select({
+        totalReviews: count(),
+        averageOverallRating: sql<number>`ROUND(AVG(${reviews.overallRating}), 1)`,
+        averageQualityRating: sql<number>`ROUND(AVG(${reviews.qualityRating}), 1)`,
+        averageProfessionalismRating: sql<number>`ROUND(AVG(${reviews.professionalismRating}), 1)`,
+        averageTimelinessRating: sql<number>`ROUND(AVG(${reviews.timelinessRating}), 1)`,
+      })
       .from(reviews)
       .where(and(eq(reviews.artistId, artistId), eq(reviews.isVisible, true)));
 
-    if (artistReviews.length === 0) {
-      return {
-        totalReviews: 0,
-        averageOverallRating: 0,
-        averageQualityRating: 0,
-        averageProfessionalismRating: 0,
-        averageTimelinessRating: 0,
-      };
-    }
-
-    const totalReviews = artistReviews.length;
-    const sumOverallRating = artistReviews.reduce((sum, r) => sum + r.overallRating, 0);
-    const sumQualityRating = artistReviews.reduce((sum, r) => sum + r.qualityRating, 0);
-    const sumProfessionalismRating = artistReviews.reduce(
-      (sum, r) => sum + r.professionalismRating,
-      0
-    );
-    const sumTimelinessRating = artistReviews.reduce((sum, r) => sum + r.timelinessRating, 0);
-
     return {
-      totalReviews,
-      averageOverallRating: Number((sumOverallRating / totalReviews).toFixed(1)),
-      averageQualityRating: Number((sumQualityRating / totalReviews).toFixed(1)),
-      averageProfessionalismRating: Number((sumProfessionalismRating / totalReviews).toFixed(1)),
-      averageTimelinessRating: Number((sumTimelinessRating / totalReviews).toFixed(1)),
+      totalReviews: stats.totalReviews ?? 0,
+      averageOverallRating: stats.averageOverallRating ?? 0,
+      averageQualityRating: stats.averageQualityRating ?? 0,
+      averageProfessionalismRating: stats.averageProfessionalismRating ?? 0,
+      averageTimelinessRating: stats.averageTimelinessRating ?? 0,
     };
   }
 }

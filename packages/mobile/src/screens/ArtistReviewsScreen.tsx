@@ -17,22 +17,11 @@ import { ReviewCard } from '../components/reviews/ReviewCard';
 import type { RootStackParamList } from '../navigation/AppNavigator';
 import { useArtistReviewStats, useArtistReviews } from '../query/reviews';
 import { colors } from '../theme/colors';
+import { renderStars } from '../utils/starUtils';
 
 type ArtistReviewsNavProp = NativeStackNavigationProp<RootStackParamList, 'ArtistReviews'>;
 
 const PAGE_SIZE = 20;
-
-function renderStars(rating: number): string {
-  const fullStars = Math.floor(rating);
-  const hasHalfStar = rating % 1 >= 0.5;
-  const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
-
-  let stars = '★'.repeat(fullStars);
-  if (hasHalfStar) stars += '☆';
-  stars += '☆'.repeat(emptyStars);
-
-  return stars;
-}
 
 export function ArtistReviewsScreen() {
   const navigation = useNavigation<ArtistReviewsNavProp>();
@@ -100,14 +89,21 @@ export function ArtistReviewsScreen() {
     }
 
     if (stats.totalReviews === 0) {
-      return null;
+      return (
+        <View style={styles.statsContainer}>
+          <View style={styles.emptyStats}>
+            <Text style={styles.emptyStatsText}>아직 받은 리뷰가 없습니다</Text>
+            <Text style={styles.emptyStatsSubtext}>첫 리뷰를 기다리고 있어요!</Text>
+          </View>
+        </View>
+      );
     }
 
     return (
       <View style={styles.statsContainer}>
         <View style={styles.statsHeader}>
           <View style={styles.overallRating}>
-            <Text style={styles.ratingNumber}>{stats.averageOverallRating.toFixed(1)}</Text>
+            <Text style={styles.ratingNumber}>{stats.averageOverallRating}</Text>
             <Text style={styles.stars}>{renderStars(stats.averageOverallRating)}</Text>
             <Text style={styles.reviewCount}>총 {stats.totalReviews}개의 리뷰</Text>
           </View>
@@ -117,17 +113,17 @@ export function ArtistReviewsScreen() {
           <View style={styles.ratingRow}>
             <Text style={styles.ratingLabel}>품질</Text>
             <Text style={styles.starsSmall}>{renderStars(stats.averageQualityRating)}</Text>
-            <Text style={styles.ratingValue}>{stats.averageQualityRating.toFixed(1)}</Text>
+            <Text style={styles.ratingValue}>{stats.averageQualityRating}</Text>
           </View>
           <View style={styles.ratingRow}>
             <Text style={styles.ratingLabel}>전문성</Text>
             <Text style={styles.starsSmall}>{renderStars(stats.averageProfessionalismRating)}</Text>
-            <Text style={styles.ratingValue}>{stats.averageProfessionalismRating.toFixed(1)}</Text>
+            <Text style={styles.ratingValue}>{stats.averageProfessionalismRating}</Text>
           </View>
           <View style={styles.ratingRow}>
             <Text style={styles.ratingLabel}>시간 엄수</Text>
             <Text style={styles.starsSmall}>{renderStars(stats.averageTimelinessRating)}</Text>
-            <Text style={styles.ratingValue}>{stats.averageTimelinessRating.toFixed(1)}</Text>
+            <Text style={styles.ratingValue}>{stats.averageTimelinessRating}</Text>
           </View>
         </View>
       </View>
@@ -138,7 +134,7 @@ export function ArtistReviewsScreen() {
     <SafeAreaView style={styles.container} edges={['top', 'bottom', 'left', 'right']}>
       <View style={styles.header}>
         <Text style={styles.title}>내 리뷰</Text>
-        <Text style={styles.subtitle}>받은 리뷰를 확인하고 답변을 작성하세요.</Text>
+        <Text style={styles.subtitle}>받은 리뷰를 확인하세요.</Text>
       </View>
 
       {isLoading ? (
@@ -305,5 +301,23 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: colors.primary,
+  },
+  emptyStats: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+    paddingHorizontal: 20,
+  },
+  emptyStatsText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  emptyStatsSubtext: {
+    fontSize: 14,
+    color: colors.subtle,
+    textAlign: 'center',
   },
 });

@@ -219,7 +219,6 @@ export class ReviewService {
    * Get aggregate statistics for an artist's reviews
    */
   async getArtistReviewStats(artistId: string) {
-    logger.debug({ artistId }, 'Getting review statistics for artist');
     return await this.reviewRepository.getArtistReviewStats(artistId);
   }
 }
