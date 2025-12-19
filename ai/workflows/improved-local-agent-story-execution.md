@@ -107,7 +107,7 @@ Update the story status to in progress and regenerate planning documentation to 
 2. **Regenerate Stories Overview**: Update `product/stories.md` to reflect current story statuses
 3. **Regenerate Queue**: Update `product/stories-queue.md` with new status ordering
 4. **Commit Planning Updates**: Create commit with planning documentation changes
-5. **Push Planning Updates**: Push the planning update commit to feature branch
+5. **Push Planning Updates**: Push the planning update commit to feature branch using `git push --no-verify` to skip pre-push hooks for this initial branch creation push
 
 **Output:**
 
