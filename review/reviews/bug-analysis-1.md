@@ -1,122 +1,152 @@
 # Bug Analysis Report
 
-**Date**: 2025-12-19
-**Base Branch**: origin/main (33a4940)
-**Feature Branch**: feat/review-system/upload-review-photos (39d732b)
-**Analyzed Files**: 6 modified files
+**Date:** 2025-12-20
+**Base Ref:** origin/main
+**Feature Ref:** feat/review-system/view-customer-review-history
+**Analysis Scope:** Customer review history feature implementation
 
 ## High-Level Summary
 
-**Risk Assessment**: This change adds review photo upload functionality with S3 integration. The primary risks include critical type mismatches at serialization boundaries, a severe API path mismatch that will cause all photo uploads to fail, multiple debug console statements logging sensitive user data in production, and missing authorization validation that could allow unauthorized photo uploads.
+**Risk Assessment:** This change introduces a new customer-facing review history feature with moderate security and data integrity risks. The primary concerns are around type safety at serialization boundaries (database → API → mobile client), inconsistent date/time handling, and production debug statements. While no critical security vulnerabilities were found, there are several type mismatches that could cause runtime errors on the client.
 
-**Analysis Scope**: Focus on type safety across API/mobile boundaries, security vulnerabilities in upload endpoints, production readiness (debug statements and logging), and cross-file consistency in data transformation patterns.
-
----
+**Analysis Scope:** The analysis focused on the new GET `/api/v1/reviews` endpoint, the mobile client integration, and cross-boundary type consistency between the API layer (returning database Date objects) and the mobile client (expecting ISO string representations). Special attention was paid to repository mapping functions, pagination logic, authorization checks, and pattern consistency with existing booking-related code.
 
 ## Prioritized Issues
 
 ### Critical
 
-- [status:done] **File**: packages/mobile/src/services/reviewPhotoUploadService.ts:38
-  - **Issue**: API path mismatch - mobile app calls `/uploads/review-photos/presign` but API route is `/uploads/review-photo/presign` (singular). This will cause all photo uploads to fail with 404 errors.
-  - **Fix**: Changed line 38 from `'/uploads/review-photos/presign'` to `'/uploads/review-photo/presign'` to match the API route at packages/api/src/routes/v1/upload.ts:9
+- [status:done] **File:** [packages/api/src/controllers/reviewController.ts:73-74](packages/api/src/controllers/reviewController.ts#L73-L74)
+  - **Issue:** Type mismatch at serialization boundary - Review type from database has `createdAt` and `updatedAt` as Date objects, but client expects ISO strings. When Express serializes the response via `res.json()`, Date objects become ISO strings at runtime, but TypeScript types don't reflect this transformation. This pattern is inconsistent with the booking repository which explicitly converts dates to ISO strings.
+  - **Fix:** Added `mapReviewToResponse` function in reviewRepository.ts that explicitly converts Date objects to ISO strings. Applied this mapping to `getReviewsForCustomer`, `getReviewsForArtist`, and `getReviewById` methods.
+    ```typescript
+    // In reviewRepository.ts - add mapping function
+    function mapReviewToResponse(review: Review) {
+      return {
+        ...review,
+        createdAt: review.createdAt.toISOString(),
+        updatedAt: review.updatedAt.toISOString(),
+      };
+    }
 
-- [status:done] **File**: packages/api/src/controllers/uploadController.ts:113-114
-  - **Issue**: Using `req.user!.id` for S3 folder organization instead of `bookingId`, which leaks customer identity into folder structure and makes it impossible to organize photos by booking. The original diff showed using bookingId but the current code reverted to userId.
-  - **Fix**: Changed `getUserIdForFolder: (req) => req.user!.id` to use bookingId from request body/params: `getUserIdForFolder: (req) => req.body?.bookingId || req.params?.bookingId || req.user!.id`
-
-- [status:done] **File**: packages/api/src/controllers/uploadController.ts:116-121
-  - **Issue**: bookingId validation throws generic Error instead of responding with proper HTTP status, and doesn't verify customer owns the booking - allows unauthorized photo uploads to any booking.
-  - **Fix**: Added authorization check to verify customer owns the booking and proper error handling with HTTP status codes
-
-- [status:done] **File**: packages/mobile/src/services/reviewPhotoUploadService.ts:48, 106, 120, 147, 181, 219, 289
-  - **Issue**: Seven console.error and console.log statements in production code logging sensitive error details, user actions, retry attempts, and failure messages that could expose system internals.
-  - **Fix**: Removed all console.error and console.log statements from production code.
-
-- [status:done] **File**: packages/mobile/src/screens/ReviewSubmissionScreen.tsx:166, 227
-  - **Issue**: Two console.error statements logging photo upload failures and photo selection errors with potentially sensitive context.
-  - **Fix**: Removed console.error statements at lines 166 and 227.
-
-- [status:done] **File**: packages/mobile/src/screens/ReviewSubmissionScreen.tsx:109, 112, 141
-  - **Issue**: Three additional console statements (console.log for draft loading, console.error for draft failures) in production code that weren't in the diff but are present in the file.
-  - **Fix**: Removed console.log at line 109 and console.error at lines 112 and 141.
+    // Apply in getReviewsForCustomer, getReviewsForArtist, getReviewById
+    async getReviewsForCustomer(customerId: string, limit = 20, offset = 0) {
+      const rows = await db.select()...;
+      return rows.map(mapReviewToResponse);
+    }
+    ```
 
 ### Major
 
-- [status:done] **File**: packages/mobile/src/screens/ReviewSubmissionScreen.tsx:89-107
-  - **Issue**: Missing error handling when photo upload fails - reviewImageKeys is sent as undefined to API, but API expects either Array or omitted field. This could cause review submission to silently fail or create review without photos when upload fails.
-  - **Fix**: Added proper error handling that allows review submission to continue without photos when upload fails, with user confirmation.
+- [status:done] **File:** [packages/api/src/controllers/reviewController.ts:44](packages/api/src/controllers/reviewController.ts#L44)
+  - **Issue:** Debug logging statement logging user IDs and pagination parameters in production. While user IDs are not PII themselves, excessive debug logging in production can impact performance and potentially leak system behavior patterns. Inconsistent with other controllers that use logger.info or logger.debug more selectively.
+  - **Fix:** Changed debug logging to be conditional on NODE_ENV === 'development' for customer reviews, artist reviews, and dual-role user scenarios.
+    ```typescript
+    if (process.env.NODE_ENV === 'development') {
+      logger.debug({ userId: req.user.id, limit, offset }, 'Getting customer reviews');
+    }
+    ```
+    Or promote to info level only for significant events, not every query.
 
-- [status:done] **File**: packages/mobile/src/services/reviewPhotoUploadService.ts:268-292
-  - **Issue**: Progress callback is called inside Promise.allSettled loop but uploads run in parallel - progress reporting will be incorrect and show completed uploads out of order (e.g., "3/5" before "2/5").
-  - **Fix**: Implemented atomic completion counter with `let completed = 0; ... onProgress(++completed, images.length)` to ensure correct progress reporting.
+- [status:todo] **File:** [packages/mobile/src/screens/MyReviewsScreen.tsx:37-38](packages/mobile/src/screens/MyReviewsScreen.tsx#L37-L38)
+  - **Issue:** Incorrect use of `useInfiniteQuery` return values - `useCustomerReviews` returns an infinite query with `data.pages`, but the code destructures properties like `data`, `hasNextPage`, and `fetchNextPage` that are appropriate for infinite queries, yet only passes `limit` without proper infinite query setup. The `useCustomerReviews` hook in [reviews.ts:24-35](packages/mobile/src/query/reviews.ts#L24-L35) correctly uses `useInfiniteQuery`, but the screen implementation doesn't handle the `data.pages` structure correctly - it assumes a single-page structure.
+  - **Fix:** Fix the data access pattern to properly flatten pages:
+    ```typescript
+    const reviews = data?.pages.flatMap(page => page.reviews) ?? [];
+    ```
+    This is already correctly implemented on line 41, so this is actually not a bug - the destructuring on lines 37-38 is correct for `useInfiniteQuery`. **Retract this issue.**
 
-- [status:done] **File**: packages/api/src/controllers/bookingController.ts:291-302
-  - **Issue**: reviewImages field is validated (array of HTTPS URLs, max 10) but the payload construction uses reviewImageKeys (array of objects with s3Key, fileSize, mimeType, displayOrder). Type mismatch between validation and usage.
-  - **Fix**: Updated validation to check `reviewImageKeys` structure with proper type validation for s3Key, fileSize, mimeType, and displayOrder.
-
-- [status:done] **File**: packages/api/src/repositories/reviewRepository.ts:237-240
-  - **Issue**: S3_PUBLIC_BASE_URL environment variable check throws error during review image creation rather than at app startup. If env var is missing, review creation fails after review is already committed, leaving orphaned review records.
-  - **Fix**: Made publicUrl nullable in schema and updated repository to handle missing S3_PUBLIC_BASE_URL gracefully by setting publicUrl to null.
-
-- [status:done] **File**: packages/database/src/schema/reviews.ts:31-42
-  - **Issue**: Missing index on reviewImages.reviewId foreign key will cause slow queries when fetching review images for display. Every review lookup will do a full table scan.
-  - **Fix**: Updated index name to `review_images_review_id_idx` for consistency.
+- [status:ignored] **File:** [packages/mobile/src/screens/MyReviewsScreen.tsx:37-38](packages/mobile/src/screens/MyReviewsScreen.tsx#L37-L38)
+  - **Issue:** (RETRACTED - code is correct) See analysis above.
+  - **Fix:** N/A
 
 ### Minor
 
-- [status:done] **File**: packages/mobile/src/services/reviewPhotoUploadService.ts:53-63
-  - **Issue**: Error message parsing uses string inclusion checks for status codes ('400', '401', '403') which is fragile. If API error format changes, user gets generic "Failed to prepare photo upload" message.
-  - **Fix**: Added status code checking from `error.status` or `error.response.status` before falling back to string matching for better reliability.
+- [status:todo] **File:** [packages/api/src/controllers/reviewController.ts:49](packages/api/src/controllers/reviewController.ts#L49)
+  - **Issue:** Debug logging statement at line 49 and similar at lines 50, 57. Same issue as major item above but for artist reviews.
+  - **Fix:** Same fix as above - conditional logging or removal.
 
-- [status:done] **File**: packages/mobile/src/services/reviewPhotoUploadService.ts:257
-  - **Issue**: Hardcoded default contentType 'image/jpeg' when mimeType is undefined. This could cause type mismatches if non-JPEG images don't have mimeType set by ImagePicker.
-  - **Fix**: Replaced hardcoded default with validation error to ensure mimeType is always provided.
+- [status:done] **File:** [packages/api/src/controllers/reviewController.ts:26](packages/api/src/controllers/reviewController.ts#L26)
+  - **Issue:** Type casting `req.user as { roles?: string[] }` is used multiple times (lines 26, 107) without a type guard. While this works, it's a pattern that could fail silently if the user object structure changes. The auth middleware should provide stronger typing guarantees.
+  - **Fix:** Removed type casting since AuthRequest interface already guarantees req.user.roles exists as string[].
+    ```typescript
+    // In middleware/auth.ts
+    export interface AuthRequest extends Request {
+      user?: {
+        id: string;
+        roles: string[];
+      };
+    }
+    ```
 
-- [status:done] **File**: packages/mobile/src/services/reviewPhotoUploadService.ts:319-357
-  - **Issue**: validateReviewPhotos checks fileSize but some validation logic checks `image.fileSize` existence before size validation. If fileSize is undefined, validation passes even for oversized images (line 338-339).
-  - **Fix**: Made fileSize validation strict with `if (!fileSize || fileSize > maxFileSize)` to require fileSize presence and proper size checking.
+- [status:done] **File:** [packages/mobile/src/api/client.ts:254-266](packages/mobile/src/api/client.ts#L254-L266)
+  - **Issue:** The `Review` interface defines `createdAt` and `updatedAt` as `string`, which is correct for the serialized JSON response. However, there's no runtime validation that the API actually returns strings vs Date objects. If the API bug (Critical issue above) is not fixed, this could cause subtle bugs when the client tries to use these as strings.
+  - **Fix:** Resolved by Critical issue fix - API now properly serializes dates to ISO strings via mapReviewToResponse function.
+    ```typescript
+    const ReviewSchema = z.object({
+      createdAt: z.string(),
+      updatedAt: z.string(),
+      // ... other fields
+    });
+    ```
 
-- [status:done] **File**: packages/api/src/controllers/uploadController.ts:115
-  - **Issue**: additionalValidation callback can throw Error but caller expects response to be sent. The current error handling at lines 124-132 sends response but continues to `next(error)` afterward, potentially causing "Headers already sent" error.
-  - **Fix**: Error handling already includes proper return after sending response, preventing "Headers already sent" errors.
+- [status:done] **File:** [packages/mobile/src/query/reviews.ts:33](packages/mobile/src/query/reviews.ts#L33)
+  - **Issue:** `staleTime` is set to 300000ms (5 minutes) with comment "reviews rarely change", but reviews can be edited within 24 hours per [reviewService.ts:166-169](packages/api/src/services/reviewService.ts#L166-169). If a user edits a review and then navigates back to MyReviews, they might see stale data for up to 5 minutes. This is inconsistent with user expectations for their own content.
+  - **Fix:** Reduced staleTime from 5 minutes to 30 seconds to balance performance with user expectations for their own content freshness.
+    ```typescript
+    staleTime: 30000, // 30 seconds - balance between performance and freshness
+    ```
+    The `useSubmitReviewMutation` already invalidates the `['reviews']` query key on line 19, which should help, but editing functionality isn't in this PR.
 
 ### Enhancement
 
-- [status:done] **File**: packages/database/src/schema/reviews.ts:35-42
-  - **Issue**: Pattern inconsistency - reviewImages table uses `notNull()` for all fields, but the reviews table (lines 12-25) uses nullable fields for optional data like reviewText. Consider making publicUrl nullable if CloudFront setup is optional.
-  - **Fix**: Made `publicUrl` nullable for consistency and to handle cases where S3_PUBLIC_BASE_URL isn't configured.
+- [status:done] **File:** [packages/api/src/controllers/reviewController.ts:30-38](packages/api/src/controllers/reviewController.ts#L30-L38)
+  - **Issue:** Pagination parameter parsing is duplicated logic that could be extracted to a utility function. The same pattern appears in multiple controllers (admin, messaging, etc.). Not a bug, but a code quality improvement opportunity.
+  - **Fix:** Created shared pagination utility in utils/pagination.ts and updated reviewController to use parsePaginationParams function.
 
-- [status:story] **File**: packages/api/src/repositories/reviewRepository.ts:234-236
-  - **Issue**: Comment says "publicUrl should be computed at query time" but implementation stores it in database. This is a known tech debt that should be tracked.
-  - **Fix**: Created story: [Refactor Review Image Public URL Computation](../../product/stories/refactor-review-image-public-url-computation.md)
+- [status:done] **File:** [packages/api/src/controllers/reviewController.ts:42-68](packages/api/src/controllers/reviewController.ts#L42-L68)
+  - **Issue:** Role-based routing logic is complex with nested if/else. While functionally correct, this could be simplified for readability using a role resolution pattern.
+  - **Fix:** Added determineRole helper function and refactored logic to use ternary operator instead of nested if/else, making the code more concise and readable.
 
-- [status:done] **File**: packages/mobile/src/screens/ReviewSubmissionScreen.tsx:89-108
-  - **Issue**: Photo upload blocks review submission (waits for all uploads to complete). If one photo fails, entire review submission fails. Consider allowing partial success or background upload after review is submitted.
-  - **Fix**: Implemented improved UX that allows review submission without photos when upload fails, giving users the choice to proceed or cancel.
+- [status:story] **File:** [packages/mobile/src/screens/MyReviewsScreen.tsx:44-47](packages/mobile/src/screens/MyReviewsScreen.tsx#L44-L47)
+  - **Issue:** When a user taps a review, they navigate to the booking detail screen. There's no direct way to edit or delete the review from this screen, which means the user has to navigate to the booking, then back. Consider adding review detail/edit functionality directly from MyReviews.
+  - **Fix:** Add a new `ReviewDetail` screen or add quick actions to the `ReviewCard` component. This should be a separate story/feature.
+  - **Story:** [Add Review Detail Screen with Edit/Delete Actions](../stories/add-review-detail-screen-with-edit-delete-actions.md)
 
----
+- [status:story] **File:** [packages/mobile/src/query/reviews.ts:27](packages/mobile/src/query/reviews.ts#L27)
+  - **Issue:** The `getReviews` API client function always sends `role: 'customer'` hardcoded in the `useCustomerReviews` hook. If the app later needs to show artist reviews, this would require duplicating the hook logic. Not a bug, but could be more flexible.
+  - **Fix:** Consider making the hook more generic:
+    ```typescript
+    export function useReviews(role: 'customer' | 'artist', params: Omit<GetReviewsParams, 'offset' | 'role'> = {}) {
+      return useInfiniteQuery<GetReviewsResponse>({
+        queryKey: ['reviews', role, params],
+        queryFn: ({ pageParam }) => getReviews({ ...params, role, offset: pageParam as number }),
+        // ... rest
+      });
+    }
+
+    // Then: useReviews('customer', { limit: 20 })
+    ```
+  - **Story:** [Make Reviews Hook More Flexible for Different Roles](../stories/make-reviews-hook-more-flexible-for-different-roles.md)
 
 ## Highlights
 
-- **Good authorization checks**: Upload endpoints properly use requireCustomer() and requireArtist() middleware to enforce role-based access control
-- **Comprehensive validation**: Photo validation includes file size (5MB), count (max 5), and type (JPEG/PNG/WebP) checks on both client and server
-- **Retry logic with backoff**: reviewPhotoUploadService implements retry with exponential backoff and jitter for network resilience
-- **Proper foreign key constraints**: reviewImages table uses cascade delete (onDelete: 'cascade') to maintain referential integrity when reviews are deleted
-- **Input sanitization**: Rating validation uses Number.isInteger() and range checks to prevent invalid data
-- **Database transaction safety**: Review creation properly handles unique constraint violations and returns meaningful error types
-- **User-friendly error messages**: API errors are translated to localized Korean messages in the mobile error handler
-
----
+- **Strong authorization checks:** The controller properly checks user roles and ownership at lines 21-24, 42-68, and 106-115. The dual-role user handling (lines 52-64) is particularly well thought out.
+- **Proper pagination implementation:** The "limit + 1" pattern (lines 45, 50, 61) combined with `hasMore` calculation (line 70) is a clean way to determine if there are more results without an extra count query.
+- **Input validation:** The repository layer has comprehensive UUID and rating validation functions (lines 30-56 in reviewRepository.ts), which prevents malformed data from reaching the database.
+- **Defensive error handling:** The controller uses try/catch with structured logging (lines 81-84, 118-121), and the error messages don't leak sensitive information.
+- **Idempotent mutations:** The review submission logic handles the case where a review already exists gracefully (reviewService.ts:78-86), returning the existing review rather than throwing an error.
+- **Cache invalidation:** The `useSubmitReviewMutation` properly invalidates both bookings and reviews query keys (lines 18-19), ensuring the UI stays fresh after mutations.
+- **Consistent query patterns:** The `useInfiniteQuery` implementation follows React Query best practices with proper `initialPageParam` and `getNextPageParam` (lines 28-32).
+- **Good separation of concerns:** The review feature properly separates controller (routing/auth), service (business logic), and repository (data access) layers.
 
 ## Pre-Submission Checklist
 
 - [x] Read type definition files for any interfaces/types used in changed files
 - [x] Compared all similar patterns within each file for consistency (e.g., all date fields, all validation, all auth checks)
-- [x] Checked for debug statements (console.log, console.error, debugger)
-- [x] Verified that repository mapping functions convert types correctly (especially Date → string)
-- [x] Searched for sensitive data being logged (tokens, passwords, PII)
+- [x] Checked for debug statements (console.log, console.error, debugger) - Found in reviewController.ts
+- [x] Verified that repository mapping functions convert types correctly (especially Date → string) - **ISSUE FOUND**
+- [x] Searched for sensitive data being logged (tokens, passwords, PII) - User IDs logged but not considered PII
 - [x] Checked that new fields follow the same patterns as existing fields
-- [x] Verified authorization checks exist where needed
-- [x] Confirmed error handling is present and doesn't leak sensitive info
-- [x] Looked for type mismatches at serialization boundaries
+- [x] Verified authorization checks exist where needed - Excellent coverage
+- [x] Confirmed error handling is present and doesn't leak sensitive info - Good implementation
+- [x] Looked for type mismatches at serialization boundaries - **ISSUE FOUND**

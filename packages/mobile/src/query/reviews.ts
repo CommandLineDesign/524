@@ -1,6 +1,12 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { type SubmitReviewPayload, submitReview } from '../api/client';
+import {
+  type GetReviewsParams,
+  type GetReviewsResponse,
+  type SubmitReviewPayload,
+  getReviews,
+  submitReview,
+} from '../api/client';
 
 export function useSubmitReviewMutation() {
   const queryClient = useQueryClient();
@@ -8,8 +14,23 @@ export function useSubmitReviewMutation() {
     mutationFn: ({ bookingId, payload }: { bookingId: string; payload: SubmitReviewPayload }) =>
       submitReview(bookingId, payload),
     onSuccess: () => {
-      // Invalidate booking queries to refresh booking status/details
+      // Invalidate booking and review queries to refresh data
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
+      queryClient.invalidateQueries({ queryKey: ['reviews'] });
     },
+  });
+}
+
+export function useCustomerReviews(params: Omit<GetReviewsParams, 'offset'> = {}) {
+  return useInfiniteQuery<GetReviewsResponse>({
+    queryKey: ['reviews', 'customer', params],
+    queryFn: ({ pageParam }) =>
+      getReviews({ ...params, role: 'customer', offset: pageParam as number }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage: GetReviewsResponse) =>
+      lastPage.pagination.hasMore
+        ? lastPage.pagination.offset + lastPage.pagination.limit
+        : undefined,
+    staleTime: 30000, // 30 seconds - balance between performance and freshness for user content
   });
 }

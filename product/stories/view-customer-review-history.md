@@ -3,7 +3,7 @@
 **Epic**: [Review System](../epics/review-system.md)
 **Role**: Customer
 **Priority**: Medium
-**Status**: ⏳ Not Started
+**Status**: ✅ Completed
 **Dependencies**:
 
 - [Submit Customer Review](./submit-customer-review.md)
