@@ -384,6 +384,37 @@ export async function updateArtistProfile(payload: Partial<ArtistProfile>) {
   });
 }
 
+/**
+ * Get reviews for a specific artist (public endpoint)
+ */
+export async function getArtistReviews(artistId: string, params: GetReviewsParams = {}) {
+  const query = new URLSearchParams();
+  if (params.limit) {
+    query.append('limit', params.limit.toString());
+  }
+  if (params.offset) {
+    query.append('offset', params.offset.toString());
+  }
+
+  const path =
+    query.size > 0
+      ? `/api/v1/artists/${artistId}/reviews?${query.toString()}`
+      : `/api/v1/artists/${artistId}/reviews`;
+
+  return request<GetReviewsResponse>(path, {
+    method: 'GET',
+  });
+}
+
+/**
+ * Get review statistics for a specific artist (public endpoint)
+ */
+export async function getArtistReviewStats(artistId: string) {
+  return request<ReviewStats>(`/api/v1/artists/${artistId}/reviews/stats`, {
+    method: 'GET',
+  });
+}
+
 export interface PresignUploadResponse {
   uploadUrl: string;
   key: string;

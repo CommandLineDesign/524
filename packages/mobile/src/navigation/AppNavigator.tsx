@@ -10,6 +10,7 @@ import { ArtistBookingDetailScreen } from '../screens/ArtistBookingDetailScreen'
 import { ArtistBookingsListScreen } from '../screens/ArtistBookingsListScreen';
 import { ArtistOnboardingFlowScreen } from '../screens/ArtistOnboardingFlowScreen';
 import { ArtistPendingScreen } from '../screens/ArtistPendingScreen';
+import { ArtistProfileScreen } from '../screens/ArtistProfileScreen';
 import { ArtistReviewsScreen } from '../screens/ArtistReviewsScreen';
 import { ArtistSignupScreen } from '../screens/ArtistSignupScreen';
 import { BookingDetailScreen } from '../screens/BookingDetailScreen';
@@ -100,6 +101,7 @@ export type RootStackParamList = {
   ReviewSubmission: { bookingId: string };
   ReviewConfirmation: { bookingId: string };
   MyReviews: undefined;
+  ArtistProfile: { artistId: string };
   ArtistOnboarding: undefined;
   ArtistPending: undefined;
   ArtistBookingsList: undefined;
@@ -276,6 +278,21 @@ export function AppNavigator() {
                   component={MyReviewsScreen}
                   options={{ title: '내 리뷰' }}
                 />
+                <Stack.Screen
+                  name="ArtistProfile"
+                  component={ArtistProfileScreen}
+                  options={{ title: '아티스트 프로필' }}
+                />
+                {/*
+                  Navigation entry points for ArtistProfile screen:
+                  - From search results when users tap on artist cards
+                  - From booking details when viewing artist information
+                  - From review listings when users want to see artist's profile
+                  - From artist selection flows during booking process
+
+                  Navigation call: navigation.navigate('ArtistProfile', { artistId })
+                  Expected to be implemented in upcoming stories for search and booking flows.
+                */}
                 <Stack.Screen
                   name="ChatsList"
                   component={ChatsListScreen}

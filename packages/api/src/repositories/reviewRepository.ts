@@ -1,4 +1,4 @@
-import { and, count, eq, sql } from 'drizzle-orm';
+import { and, count, desc, eq, sql } from 'drizzle-orm';
 
 import { type Review, reviewImages, reviews } from '@524/database';
 import { db } from '../db/client.js';
@@ -210,7 +210,7 @@ export class ReviewRepository {
       .select()
       .from(reviews)
       .where(and(eq(reviews.artistId, artistId), eq(reviews.isVisible, true)))
-      .orderBy(reviews.createdAt)
+      .orderBy(desc(reviews.createdAt))
       .limit(limit)
       .offset(offset);
 

@@ -4,6 +4,8 @@ import {
   type GetReviewsParams,
   type GetReviewsResponse,
   type SubmitReviewPayload,
+  getArtistReviewStats,
+  getArtistReviews,
   getReviewStats,
   getReviews,
   submitReview,
@@ -50,6 +52,39 @@ export function useArtistReviewStats() {
   return useQuery({
     queryKey: ['reviews', 'stats'],
     queryFn: () => getReviewStats(),
+    staleTime: 300000, // 5 minutes - stats change infrequently
+  });
+}
+
+/**
+ * Hook to fetch reviews for a specific artist profile (public endpoint)
+ * Used on artist profile screens to display reviews to customers
+ */
+export function useArtistProfileReviews(
+  artistId: string,
+  params: Omit<GetReviewsParams, 'offset'> = {}
+) {
+  return useInfiniteQuery<GetReviewsResponse>({
+    queryKey: ['artists', artistId, 'reviews', params],
+    queryFn: ({ pageParam }) =>
+      getArtistReviews(artistId, { ...params, offset: pageParam as number }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage: GetReviewsResponse) =>
+      lastPage?.pagination?.hasMore === true
+        ? lastPage.pagination.offset + lastPage.pagination.limit
+        : undefined,
+    staleTime: 60000, // 1 minute - public reviews can be cached longer
+  });
+}
+
+/**
+ * Hook to fetch review statistics for a specific artist profile (public endpoint)
+ * Used to display aggregate ratings on artist profiles
+ */
+export function useArtistProfileReviewStats(artistId: string) {
+  return useQuery({
+    queryKey: ['artists', artistId, 'reviews', 'stats'],
+    queryFn: () => getArtistReviewStats(artistId),
     staleTime: 300000, // 5 minutes - stats change infrequently
   });
 }
