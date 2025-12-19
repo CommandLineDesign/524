@@ -70,7 +70,7 @@ export function useArtistProfileReviews(
       getArtistReviews(artistId, { ...params, offset: pageParam as number }),
     initialPageParam: 0,
     getNextPageParam: (lastPage: GetReviewsResponse) =>
-      lastPage.pagination.hasMore
+      lastPage?.pagination?.hasMore === true
         ? lastPage.pagination.offset + lastPage.pagination.limit
         : undefined,
     staleTime: 60000, // 1 minute - public reviews can be cached longer

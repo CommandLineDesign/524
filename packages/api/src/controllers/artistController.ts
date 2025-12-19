@@ -138,8 +138,6 @@ export const ArtistController = {
       // Parse pagination params
       const { limit, offset } = parsePaginationParams(req.query, { limit: 10, maxLimit: 50 });
 
-      logger.debug({ artistId, limit, offset }, 'Getting artist reviews');
-
       // Using +1 pagination pattern for hasMore detection
       // Tradeoff: fetches one extra record that's discarded to avoid separate COUNT query
       // Acceptable since review objects are lightweight and this avoids N+1 query problem
@@ -147,7 +145,8 @@ export const ArtistController = {
         await reviewService.getReviewsForArtistWithPagination(artistId, limit, offset);
 
       // Cache reviews for 1 minute (client) and 5 minutes (CDN) to reduce backend load
-      res.set('Cache-Control', 'public, max-age=60, s-maxage=300');
+      // Add stale-while-revalidate for better consistency between client and CDN caching
+      res.set('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=60');
 
       res.json({
         reviews: reviewsToReturn,
@@ -158,7 +157,7 @@ export const ArtistController = {
         },
       });
     } catch (error) {
-      logger.error({ error, artistId: req.params.artistId }, 'Failed to get artist reviews');
+      logger.error({ error }, 'Failed to get artist reviews');
       next(error);
     }
   },
@@ -171,16 +170,15 @@ export const ArtistController = {
     try {
       const { artistId } = req.params;
 
-      logger.debug({ artistId }, 'Getting artist review stats');
-
       const stats = await reviewService.getArtistReviewStats(artistId);
 
       // Cache stats for 1 minute (client) and 5 minutes (CDN) to reduce backend load
-      res.set('Cache-Control', 'public, max-age=60, s-maxage=300');
+      // Add stale-while-revalidate for better consistency between client and CDN caching
+      res.set('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=60');
 
       res.json(stats);
     } catch (error) {
-      logger.error({ error, artistId: req.params.artistId }, 'Failed to get artist review stats');
+      logger.error({ error }, 'Failed to get artist review stats');
       next(error);
     }
   },

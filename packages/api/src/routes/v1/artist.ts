@@ -13,6 +13,18 @@ const router: ExpressRouter = Router();
 function validateArtistId(req: Request, res: Response, next: NextFunction) {
   const artistId = req.params.artistId;
 
+  if (!artistId) {
+    return res.status(400).json({ error: 'artistId parameter is required' });
+  }
+
+  // Check for reserved keywords that would conflict with route patterns
+  const reservedKeywords = ['reviews', 'stats', 'me'];
+  if (reservedKeywords.includes(artistId.toLowerCase())) {
+    return res.status(400).json({
+      error: `Invalid artist ID: '${artistId}' is a reserved keyword`,
+    });
+  }
+
   const validation = validateUUIDParam(artistId, 'artistId');
   if (!validation.isValid && validation.error) {
     return res.status(validation.error.status).json({

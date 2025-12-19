@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -42,7 +42,10 @@ export function ArtistProfileScreen({ route }: ArtistProfileScreenProps) {
     refetch: refetchReviews,
   } = useArtistProfileReviews(artistId, { limit: 10 });
 
-  const reviews = reviewsData?.pages.flatMap((page) => page.reviews) ?? [];
+  const reviews = useMemo(
+    () => reviewsData?.pages.flatMap((page) => page.reviews) ?? [],
+    [reviewsData]
+  );
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const onRefresh = async () => {
