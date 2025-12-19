@@ -106,3 +106,4 @@ The photo upload system uses S3 presigned URLs for direct browser/mobile uploads
 - Future enhancement: Allow customers to reorder photos before submission
 - Future enhancement: Add photo editing capabilities (crop, rotate, filters)
 
+

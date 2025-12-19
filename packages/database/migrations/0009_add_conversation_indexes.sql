@@ -8,3 +8,4 @@ CREATE INDEX IF NOT EXISTS idx_conversations_artist ON conversations(artist_id, 
 
 -- Index for fast lookup of conversations between specific customer-artist pairs
 CREATE INDEX IF NOT EXISTS idx_conversations_lookup ON conversations(customer_id, artist_id);
+

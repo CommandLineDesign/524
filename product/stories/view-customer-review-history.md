@@ -95,3 +95,4 @@ The review history should be easily accessible from the customer's profile secti
 - Review cards should be visually consistent with review display on artist profiles
 - Empty state could include a call-to-action to complete bookings and leave reviews
 
+

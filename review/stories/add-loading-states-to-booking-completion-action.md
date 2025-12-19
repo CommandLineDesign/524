@@ -63,3 +63,4 @@ When artists mark bookings as completed in the mobile app, they currently see no
 ## Notes
 
 This is a UX enhancement that improves perceived performance during the critical booking completion action. The loading states should follow existing mobile app patterns for consistency.
+

@@ -63,3 +63,4 @@ The new messaging system introduces complex real-time functionality with WebSock
 ## Notes
 
 This story addresses the critical gap in test coverage for the new messaging system. The real-time nature of messaging requires thorough testing to ensure reliability during booking communications.
+

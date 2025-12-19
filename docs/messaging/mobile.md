@@ -637,3 +637,4 @@ logger.enable('websocket');
 ```
 
 This mobile implementation provides a native, performant chat experience with offline support and real-time updates.
+

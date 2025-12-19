@@ -561,3 +561,4 @@ socket.on('message:new', (msg) => {
 ```
 
 This API provides a complete messaging solution with real-time capabilities, offline support, and comprehensive admin oversight.
+

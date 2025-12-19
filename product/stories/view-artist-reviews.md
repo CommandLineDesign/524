@@ -109,3 +109,4 @@ Artists should be able to access reviews both from individual completed booking 
 - Review photos provide valuable context for understanding customer feedback
 - Future enhancement: Analytics dashboard showing rating trends over time
 
+
