@@ -66,3 +66,4 @@ This evaluation should consider:
 ## Notes
 
 This story addresses a code review concern that the WebSocket cleanup logic might be over-engineered for the current system scale. The evaluation should focus on practical benefits vs. complexity trade-offs.
+
