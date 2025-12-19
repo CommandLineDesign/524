@@ -10,6 +10,7 @@ import { ArtistBookingDetailScreen } from '../screens/ArtistBookingDetailScreen'
 import { ArtistBookingsListScreen } from '../screens/ArtistBookingsListScreen';
 import { ArtistOnboardingFlowScreen } from '../screens/ArtistOnboardingFlowScreen';
 import { ArtistPendingScreen } from '../screens/ArtistPendingScreen';
+import { ArtistReviewsScreen } from '../screens/ArtistReviewsScreen';
 import { ArtistSignupScreen } from '../screens/ArtistSignupScreen';
 import { BookingDetailScreen } from '../screens/BookingDetailScreen';
 import { BookingSummaryScreen } from '../screens/BookingSummaryScreen';
@@ -103,6 +104,7 @@ export type RootStackParamList = {
   ArtistPending: undefined;
   ArtistBookingsList: undefined;
   ArtistBookingDetail: { bookingId: string };
+  ArtistReviews: undefined;
   ChatsList: undefined;
   Chat: {
     conversationId?: string;
@@ -228,6 +230,11 @@ export function AppNavigator() {
                   name="ArtistBookingDetail"
                   component={ArtistBookingDetailScreen}
                   options={{ title: '예약 요청 상세' }}
+                />
+                <Stack.Screen
+                  name="ArtistReviews"
+                  component={ArtistReviewsScreen}
+                  options={{ title: '내 리뷰' }}
                 />
                 <Stack.Screen
                   name="ServiceSelection"
