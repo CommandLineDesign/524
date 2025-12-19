@@ -26,9 +26,13 @@ pre-push:
   parallel: true
   commands:
     lint:
-      run: pnpm lint
+      run: pnpm -w lint
     format-check:
-      run: pnpm format:check
+      run: pnpm -w format:check
+    check-fix:
+      run: pnpm -w check:fix
     typecheck:
-      run: pnpm typecheck
+      run: pnpm -w typecheck
+    build:
+      run: pnpm -w build
 
