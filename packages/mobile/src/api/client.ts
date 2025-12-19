@@ -295,6 +295,20 @@ export async function getReviews(params: GetReviewsParams = {}) {
   });
 }
 
+export interface ReviewStats {
+  totalReviews: number;
+  averageOverallRating: number;
+  averageQualityRating: number;
+  averageProfessionalismRating: number;
+  averageTimelinessRating: number;
+}
+
+export async function getReviewStats() {
+  return request<ReviewStats>('/api/v1/reviews/stats', {
+    method: 'GET',
+  });
+}
+
 export async function signUpUser(payload: SignupPayload): Promise<AuthResponse> {
   return request<AuthResponse>('/api/v1/auth/signup/user', {
     method: 'POST',
