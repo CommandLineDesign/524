@@ -31,7 +31,7 @@ Master tracking file for all user stories, organized by epic.
 |--------|-------|----------|--------|
 | 📝 | [Mark Booking Complete](./stories/mark-booking-complete.md) | High | S |
 | ✅ | [Submit Customer Review](./stories/submit-customer-review.md) | Critical | M |
-| 📝 | [Upload Review Photos](./stories/upload-review-photos.md) | High | M |
+| ✅ | [Upload Review Photos](./stories/upload-review-photos.md) | High | M |
 | ⏳ | [View Customer Review History](./stories/view-customer-review-history.md) | Medium | S |
 | ⏳ | [View Artist Reviews](./stories/view-artist-reviews.md) | High | M |
 | ⏳ | [Respond to Review](./stories/respond-to-review.md) | High | S |
@@ -45,10 +45,10 @@ Master tracking file for all user stories, organized by epic.
 | Metric | Count |
 |--------|-------|
 | **Total Stories** | 16 |
-| **Not Started** | 7 |
-| **In Progress** | 2 |
-| **Completed** | 7 |
-| **Completion Rate** | 44% |
+| **Not Started** | 6 |
+| **In Progress** | 1 |
+| **Completed** | 9 |
+| **Completion Rate** | 56% |
 
 ---
 
