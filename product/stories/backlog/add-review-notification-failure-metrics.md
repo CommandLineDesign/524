@@ -3,7 +3,7 @@
 **Epic**: [Review System](../epics/review-system.md)
 **Role**: Developer
 **Priority**: Low
-**Status**: ⏳ Not Started
+**Status**: 📋 Backlog
 **Dependencies**:
 
 - [Submit Customer Review](./submit-customer-review.md)

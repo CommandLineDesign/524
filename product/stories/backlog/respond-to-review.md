@@ -3,7 +3,7 @@
 **Epic**: [Review System](../epics/review-system.md)
 **Role**: Artist
 **Priority**: High
-**Status**: ⏳ Not Started
+**Status**: 📋 Backlog
 **Dependencies**:
 
 - [View Artist Reviews](./view-artist-reviews.md)

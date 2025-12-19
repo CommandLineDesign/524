@@ -2,7 +2,7 @@
 
 **Role**: Shopper
 **Priority**: Medium
-**Status**: ⏳ Not Started
+**Status**: 📋 Backlog
 **Dependencies**:
 
 - [View Customer Review History](./view-customer-review-history.md)
