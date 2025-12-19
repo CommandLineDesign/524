@@ -22,7 +22,7 @@ Defines how a local AI agent (in Cursor) selects, processes, and updates a story
 
 ## Selection Logic
 
-- Auto-select the first story in Global Order with `Status: ⏳ Not Started`
+- Auto-select the first story in Global Order with `Status: ⏳ Not Started` (excluding `📋 Backlog` stories)
 - If none are Not Started, select the first story in the list
 - Override by passing a file or exact title:
   - `pnpm agent:start-local coordinated-build-system.md`

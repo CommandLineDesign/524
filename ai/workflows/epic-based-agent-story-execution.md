@@ -20,8 +20,8 @@ Defines how a local AI agent (in Cursor) is manually prompted to pick a story wi
 ## Selection Logic (Epic-Scoped)
 
 - Filter stories to the epic named in the prompt.
-- Pick the first story in that epic with `Status: ⏳ Not Started`.
-- If none are Not Started, pick the first story in that epic (avoid `✅ Completed` unless nothing else exists).
+- Pick the first story in that epic with `Status: ⏳ Not Started` (excluding `📋 Backlog` stories).
+- If none are Not Started, pick the first story in that epic (avoid `✅ Completed` and `📋 Backlog` unless nothing else exists).
 - If the epic has no candidates, fall back to the global list (Not Started first).
 - Override by passing a story file or exact title:
   - `pnpm agent:start-local product/stories/monorepo-workspace-setup.md`

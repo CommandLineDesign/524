@@ -360,7 +360,7 @@ Conduct comprehensive validation of all updates to ensure quality, consistency, 
 - [ ] **Epic Format Compliance**: All epic files MUST follow exact structure from [Epic Format Specification](../formats/epic-format.md)
 - [ ] **Section Order**: Headers match template exactly in correct order
 - [ ] **Required Sections**: ALL required sections are present and properly filled
-- [ ] **Status Indicators**: Epic status uses correct format and emoji
+- [ ] **Status Indicators**: Epic status uses correct format and emoji (✅ 📝 ⏳ 📋)
 - [ ] **Cross-References**: Links use proper markdown format and point to correct targets
 - [ ] **Metadata Fields**: Category, Priority, Status, Dependencies, Estimated Effort use specified options
 

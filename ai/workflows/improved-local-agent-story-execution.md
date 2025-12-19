@@ -35,7 +35,7 @@ Validate the local development environment and select the appropriate story from
 
 1. **Validate Environment**: Run `pnpm install && pnpm -w -r build` to ensure workspace is functional
 2. **Verify Git Configuration**: Check git remotes and GitHub CLI setup according to repository requirements
-3. **Select Story**: Auto-select first story with `Status: ⏳ Not Started` from `product/stories-queue.md`, or use provided override
+3. **Select Story**: Auto-select first story with `Status: ⏳ Not Started` (excluding `📋 Backlog` stories) from `product/stories-queue.md`, or use provided override
 4. **Load Story Content**: Read the selected story file to understand requirements and acceptance criteria
 5. **Validate Story Format**: Ensure the story follows the canonical story format specification
 

@@ -23,7 +23,7 @@ Epics serve as the primary mechanism for organizing and communicating large-scal
 
 **Priority**: Critical | High | Medium | Low
 
-**Status**: ✅ Completed | 📝 In Progress | ⏳ Not Started
+**Status**: ✅ Completed | 📝 In Progress | ⏳ Not Started | 📋 Backlog
 
 **Dependencies**:
 
@@ -102,6 +102,7 @@ Additional context, implementation notes, or considerations for this epic.
 - **✅ Completed**: Epic specification is complete and ready for implementation
 - **📝 In Progress**: Epic is being worked on or partially complete
 - **⏳ Not Started**: Epic has not been started
+- **📋 Backlog**: Epic is valid but not prioritized for current development cycle
 
 ### Effort Definitions
 

@@ -433,7 +433,7 @@ Validate all dependencies, epic integration, and cross-story consistency to ensu
 - [ ] **Section Order**: Headers match template exactly in correct order
 - [ ] **Required Sections**: ALL required sections are present and properly filled
 - [ ] **Story Statement Format**: Uses exact "As a [Role] I want [Goal] So that [Benefit]" format with bold keywords
-- [ ] **Status Indicators**: Story status uses correct emoji format (✅ 📝 ⏳)
+- [ ] **Status Indicators**: Story status uses correct emoji format (✅ 📝 ⏳ 📋)
 - [ ] **Acceptance Criteria Format**: Uses proper Given-When-Then format with bold keywords
 - [ ] **Dependencies Section**: Not empty (use "None" if no dependencies)
 - [ ] **Cross-References**: Links use proper markdown format and point to correct targets

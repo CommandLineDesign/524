@@ -22,7 +22,7 @@ User stories serve as the primary mechanism for capturing and communicating user
 **Epic**: [Link to Source Epic](../epics/epic-name.md)
 **Role**: Store Owner | Marketer | Shopper | System | Developer | [Other Role]
 **Priority**: Critical | High | Medium | Low
-**Status**: ✅ Completed | 📝 In Progress | ⏳ Not Started
+**Status**: ✅ Completed | 📝 In Progress | ⏳ Not Started | 📋 Backlog
 **Dependencies**:
 
 - [Story Name 1](./story-name-1.md)
@@ -174,6 +174,13 @@ Links to related stories and their relationships:
 - **System**: Automated services (schedulers, webhooks, background jobs)
 - **Developer**: Developers implementing and maintaining the system
 
+### Status Definitions
+
+- **✅ Completed**: Story has been implemented and all acceptance criteria met
+- **📝 In Progress**: Story is currently being worked on
+- **⏳ Not Started**: Story is ready to be worked on when capacity allows
+- **📋 Backlog**: Story is valid but not prioritized for current development cycle
+
 ### Priority Definitions
 
 - **Critical**: Essential for MVP functionality and core experience
@@ -278,7 +285,8 @@ Before finalizing any story, verify:
 - [ ] Story follows exact template format with all required sections
 - [ ] Story follows Role-Goal-Benefit format correctly with proper bold formatting
 - [ ] Story meets all INVEST criteria
-- [ ] Status uses correct emoji format (✅ 📝 ⏳)
+- [ ] Status uses correct emoji format (✅ 📝 ⏳ 📋)
+- [ ] Status appropriately reflects story priority (use 📋 Backlog for deprioritized but valid stories)
 - [ ] Acceptance criteria use proper Given-When-Then format with bold keywords
 - [ ] All required sections are present and in correct order
 - [ ] Dependencies section is not empty (use "None" if no dependencies)
@@ -354,3 +362,4 @@ Use this exact reference in prompts:
 - Regular validation of existing stories against this specification is recommended
 - Changes to this specification should be coordinated with all dependent prompts
 - Story format should evolve based on development team feedback and usage patterns
+- Use `📋 Backlog` status for stories that are valid but not prioritized for the current development cycle
