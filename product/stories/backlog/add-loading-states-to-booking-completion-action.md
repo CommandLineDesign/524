@@ -2,7 +2,7 @@
 
 **Role**: Artist
 **Priority**: Medium
-**Status**: ⏳ Not Started
+**Status**: 📋 Backlog
 **Dependencies**:
 
 - None
