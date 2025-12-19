@@ -10,6 +10,7 @@ import {
 
 import type { Review } from '../../api/client';
 import { colors } from '../../theme/colors';
+import { renderStars } from '../../utils/starUtils';
 
 interface ReviewCardProps {
   review: Review;
@@ -23,12 +24,6 @@ function formatDate(dateString: string): string {
   const month = date.getMonth() + 1;
   const day = date.getDate();
   return `${year}.${month.toString().padStart(2, '0')}.${day.toString().padStart(2, '0')}`;
-}
-
-function renderStars(rating: number): string {
-  const fullStars = '★'.repeat(rating);
-  const emptyStars = '☆'.repeat(5 - rating);
-  return fullStars + emptyStars;
 }
 
 export function ReviewCard({ review, onPress, containerStyle }: ReviewCardProps) {

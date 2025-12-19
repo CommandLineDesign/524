@@ -128,4 +128,31 @@ export const ReviewController = {
       next(error);
     }
   },
+
+  /**
+   * GET /api/v1/reviews/stats
+   * Get aggregate review statistics for the authenticated artist
+   */
+  async getReviewStats(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      if (!req.user?.id) {
+        res.status(401).json({ error: 'User not authenticated' });
+        return;
+      }
+
+      const userRoles = getUserRoles(req);
+      const isArtist = userRoles.includes('artist');
+
+      if (!isArtist) {
+        res.status(403).json({ error: 'User must have artist role' });
+        return;
+      }
+
+      const stats = await reviewService.getArtistReviewStats(req.user.id);
+      res.json(stats);
+    } catch (error) {
+      logger.error({ error }, 'Failed to get review stats');
+      next(error);
+    }
+  },
 };

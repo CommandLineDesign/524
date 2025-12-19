@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm';
+import { and, count, eq, sql } from 'drizzle-orm';
 
 import { type Review, reviewImages, reviews } from '@524/database';
 import { db } from '../db/client.js';
@@ -275,5 +275,28 @@ export class ReviewRepository {
       ...image,
       publicUrl: s3PublicBaseUrl ? `${s3PublicBaseUrl}/${image.s3Key}` : null,
     }));
+  }
+
+  async getArtistReviewStats(artistId: string) {
+    validateUUID(artistId, 'artistId');
+
+    const [stats] = await db
+      .select({
+        totalReviews: count(),
+        averageOverallRating: sql<number>`ROUND(AVG(${reviews.overallRating}), 1)`,
+        averageQualityRating: sql<number>`ROUND(AVG(${reviews.qualityRating}), 1)`,
+        averageProfessionalismRating: sql<number>`ROUND(AVG(${reviews.professionalismRating}), 1)`,
+        averageTimelinessRating: sql<number>`ROUND(AVG(${reviews.timelinessRating}), 1)`,
+      })
+      .from(reviews)
+      .where(and(eq(reviews.artistId, artistId), eq(reviews.isVisible, true)));
+
+    return {
+      totalReviews: stats.totalReviews ?? 0,
+      averageOverallRating: stats.averageOverallRating ?? 0,
+      averageQualityRating: stats.averageQualityRating ?? 0,
+      averageProfessionalismRating: stats.averageProfessionalismRating ?? 0,
+      averageTimelinessRating: stats.averageTimelinessRating ?? 0,
+    };
   }
 }

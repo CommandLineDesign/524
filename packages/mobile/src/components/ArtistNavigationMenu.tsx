@@ -18,6 +18,7 @@ interface ArtistNavigationMenuProps {
 
 const artistMenuItems: Array<{ label: string; screen: SimpleRoute }> = [
   { label: 'My Bookings', screen: 'ArtistBookingsList' },
+  { label: 'My Reviews', screen: 'ArtistReviews' },
   { label: 'Messages', screen: 'ChatsList' },
 ];
 

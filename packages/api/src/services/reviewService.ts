@@ -214,4 +214,11 @@ export class ReviewService {
     logger.debug({ reviewId }, 'Getting review by ID');
     return await this.reviewRepository.getReviewById(reviewId);
   }
+
+  /**
+   * Get aggregate statistics for an artist's reviews
+   */
+  async getArtistReviewStats(artistId: string) {
+    return await this.reviewRepository.getArtistReviewStats(artistId);
+  }
 }
