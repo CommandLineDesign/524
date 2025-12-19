@@ -1,6 +1,6 @@
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useState } from 'react';
+import React from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -24,15 +24,22 @@ const PAGE_SIZE = 20;
 
 export function MyReviewsScreen() {
   const navigation = useNavigation<MyReviewsNavProp>();
-  const [offset, setOffset] = useState(0);
 
-  const { data, isLoading, isError, refetch, isRefetching } = useCustomerReviews({
+  const {
+    data,
+    isLoading,
+    isError,
+    refetch,
+    isRefetching,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useCustomerReviews({
     limit: PAGE_SIZE,
-    offset,
   });
 
-  const reviews = data?.reviews ?? [];
-  const hasMore = data?.pagination?.hasMore ?? false;
+  const reviews = data?.pages.flatMap((page) => page.reviews) ?? [];
+  const hasMore = hasNextPage ?? false;
 
   const handleSelectReview = (review: Review) => {
     // Navigate to booking detail
@@ -40,8 +47,8 @@ export function MyReviewsScreen() {
   };
 
   const handleLoadMore = () => {
-    if (hasMore && !isLoading && !isRefetching) {
-      setOffset((prev) => prev + PAGE_SIZE);
+    if (hasMore && !isFetchingNextPage) {
+      fetchNextPage();
     }
   };
 
@@ -54,8 +61,12 @@ export function MyReviewsScreen() {
 
     return (
       <View style={styles.footer}>
-        <TouchableOpacity style={styles.loadMoreButton} onPress={handleLoadMore}>
-          <Text style={styles.loadMoreText}>더 보기</Text>
+        <TouchableOpacity
+          style={styles.loadMoreButton}
+          onPress={handleLoadMore}
+          disabled={isFetchingNextPage}
+        >
+          <Text style={styles.loadMoreText}>{isFetchingNextPage ? '로딩 중...' : '더 보기'}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -68,7 +79,7 @@ export function MyReviewsScreen() {
         <Text style={styles.subtitle}>작성한 리뷰를 확인하고 아티스트의 답변을 확인하세요.</Text>
       </View>
 
-      {isLoading && offset === 0 ? (
+      {isLoading ? (
         <View style={styles.centered}>
           <ActivityIndicator color={colors.primary} />
           <Text style={styles.mutedText}>리뷰를 불러오는 중...</Text>
@@ -93,15 +104,7 @@ export function MyReviewsScreen() {
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
           renderItem={renderItem}
-          refreshControl={
-            <RefreshControl
-              refreshing={isRefetching}
-              onRefresh={() => {
-                setOffset(0);
-                refetch();
-              }}
-            />
-          }
+          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={() => refetch()} />}
           ListFooterComponent={renderFooter}
         />
       )}

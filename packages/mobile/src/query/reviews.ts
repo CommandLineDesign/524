@@ -1,7 +1,8 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import {
   type GetReviewsParams,
+  type GetReviewsResponse,
   type SubmitReviewPayload,
   getReviews,
   submitReview,
@@ -20,10 +21,16 @@ export function useSubmitReviewMutation() {
   });
 }
 
-export function useCustomerReviews(params: GetReviewsParams = {}) {
-  return useQuery({
+export function useCustomerReviews(params: Omit<GetReviewsParams, 'offset'> = {}) {
+  return useInfiniteQuery<GetReviewsResponse>({
     queryKey: ['reviews', 'customer', params],
-    queryFn: () => getReviews({ ...params, role: 'customer' }),
-    staleTime: 30000, // Consider data fresh for 30 seconds
+    queryFn: ({ pageParam }) =>
+      getReviews({ ...params, role: 'customer', offset: pageParam as number }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage: GetReviewsResponse) =>
+      lastPage.pagination.hasMore
+        ? lastPage.pagination.offset + lastPage.pagination.limit
+        : undefined,
+    staleTime: 30000, // 30 seconds - balance between performance and freshness for user content
   });
 }

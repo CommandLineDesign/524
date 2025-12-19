@@ -1,6 +1,6 @@
 import { and, eq } from 'drizzle-orm';
 
-import { reviewImages, reviews } from '@524/database';
+import { type Review, reviewImages, reviews } from '@524/database';
 import { db } from '../db/client.js';
 import { createLogger } from '../utils/logger.js';
 
@@ -56,6 +56,15 @@ function validatePaginationParams(limit: number, offset: number): void {
 }
 
 const logger = createLogger('review-repository');
+
+// Mapping function to convert database Review to API response format
+function mapReviewToResponse(review: Review) {
+  return {
+    ...review,
+    createdAt: review.createdAt.toISOString(),
+    updatedAt: review.updatedAt.toISOString(),
+  };
+}
 
 export interface CreateReviewPayload {
   bookingId: string;
@@ -136,7 +145,7 @@ export class ReviewRepository {
     logger.debug({ id }, 'Getting review by ID');
 
     const result = await db.select().from(reviews).where(eq(reviews.id, id)).limit(1);
-    return result[0] || null;
+    return result[0] ? mapReviewToResponse(result[0]) : null;
   }
 
   async getReviewByBookingId(bookingId: string) {
@@ -197,13 +206,15 @@ export class ReviewRepository {
 
     logger.debug({ artistId, limit, offset }, 'Getting reviews for artist');
 
-    return await db
+    const rows = await db
       .select()
       .from(reviews)
       .where(and(eq(reviews.artistId, artistId), eq(reviews.isVisible, true)))
       .orderBy(reviews.createdAt)
       .limit(limit)
       .offset(offset);
+
+    return rows.map(mapReviewToResponse);
   }
 
   async getReviewsForCustomer(customerId: string, limit = 20, offset = 0) {
@@ -212,13 +223,15 @@ export class ReviewRepository {
 
     logger.debug({ customerId, limit, offset }, 'Getting reviews for customer');
 
-    return await db
+    const rows = await db
       .select()
       .from(reviews)
       .where(eq(reviews.customerId, customerId))
       .orderBy(reviews.createdAt)
       .limit(limit)
       .offset(offset);
+
+    return rows.map(mapReviewToResponse);
   }
 
   async createReviewImages(reviewId: string, imageKeys: ReviewImagePayload[]) {

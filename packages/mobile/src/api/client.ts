@@ -1,3 +1,5 @@
+// Note: Review type is duplicated from @524/database schema
+// API responses use string dates while database uses Date objects
 import type {
   ArtistProfile,
   ArtistSearchResult,

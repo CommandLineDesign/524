@@ -5,9 +5,39 @@ import type { Review } from '@524/database';
 import type { AuthRequest } from '../middleware/auth.js';
 import { ReviewService } from '../services/reviewService.js';
 import { createLogger } from '../utils/logger.js';
+import { parsePaginationParams } from '../utils/pagination.js';
 
 const reviewService = new ReviewService();
 const logger = createLogger('review-controller');
+
+/**
+ * Safely extract user roles from request
+ */
+function getUserRoles(req: AuthRequest): string[] {
+  return (
+    (Array.isArray((req.user as { roles?: string[] } | undefined)?.roles) &&
+      ((req.user as { roles?: string[] }).roles as string[])) ||
+    []
+  );
+}
+
+/**
+ * Determine the effective role for review fetching
+ */
+function determineRole(
+  isCustomer: boolean,
+  isArtist: boolean,
+  queryRole?: string
+): 'customer' | 'artist' | null {
+  // If user has both roles, use query param, default to customer
+  if (isCustomer && isArtist) {
+    return queryRole === 'artist' ? 'artist' : 'customer';
+  }
+  // Single role users
+  if (isCustomer) return 'customer';
+  if (isArtist) return 'artist';
+  return null;
+}
 
 export const ReviewController = {
   /**
@@ -23,56 +53,37 @@ export const ReviewController = {
         return;
       }
 
-      const userRoles = (req.user as { roles?: string[] }).roles || [];
+      const userRoles = getUserRoles(req);
       const isCustomer = userRoles.includes('customer');
       const isArtist = userRoles.includes('artist');
 
       // Parse pagination params
-      const MAX_LIMIT = 50;
-      const DEFAULT_LIMIT = 20;
-      const rawLimit = Number(req.query.limit);
-      const rawOffset = Number(req.query.offset);
-      const limit = Number.isFinite(rawLimit)
-        ? Math.min(Math.max(rawLimit, 1), MAX_LIMIT)
-        : DEFAULT_LIMIT;
-      const offset = Number.isFinite(rawOffset) ? Math.max(rawOffset, 0) : 0;
+      const { limit, offset } = parsePaginationParams(req.query, { limit: 20, maxLimit: 50 });
 
-      let reviews: Review[];
-
-      // Customers see reviews they've written
-      if (isCustomer && !isArtist) {
-        logger.debug({ userId: req.user.id, limit, offset }, 'Getting customer reviews');
-        reviews = await reviewService.getReviewsForCustomer(req.user.id, limit, offset);
-      }
-      // Artists see reviews they've received
-      else if (isArtist && !isCustomer) {
-        logger.debug({ userId: req.user.id, limit, offset }, 'Getting artist reviews');
-        reviews = await reviewService.getReviewsForArtist(req.user.id, limit, offset);
-      }
-      // If user has both roles, allow them to specify via query param
-      else if (isCustomer && isArtist) {
-        const role = req.query.role === 'artist' ? 'artist' : 'customer';
-        logger.debug(
-          { userId: req.user.id, role, limit, offset },
-          'Getting reviews for dual-role user'
-        );
-
-        if (role === 'artist') {
-          reviews = await reviewService.getReviewsForArtist(req.user.id, limit, offset);
-        } else {
-          reviews = await reviewService.getReviewsForCustomer(req.user.id, limit, offset);
-        }
-      } else {
+      const role = determineRole(isCustomer, isArtist, req.query.role as string);
+      if (!role) {
         res.status(403).json({ error: 'User must have customer or artist role' });
         return;
       }
 
+      if (process.env.NODE_ENV === 'development') {
+        logger.debug({ userId: req.user.id, role, limit, offset }, 'Getting reviews');
+      }
+
+      const reviews =
+        role === 'artist'
+          ? await reviewService.getReviewsForArtist(req.user.id, limit + 1, offset)
+          : await reviewService.getReviewsForCustomer(req.user.id, limit + 1, offset);
+
+      const hasMore = reviews.length > limit;
+      const reviewsToReturn = hasMore ? reviews.slice(0, limit) : reviews;
+
       res.json({
-        reviews,
+        reviews: reviewsToReturn,
         pagination: {
           limit,
           offset,
-          hasMore: reviews.length === limit,
+          hasMore,
         },
       });
     } catch (error) {
@@ -101,7 +112,7 @@ export const ReviewController = {
       }
 
       // Authorization: user must be the customer or artist in the review
-      const userRoles = (req.user as { roles?: string[] }).roles || [];
+      const userRoles = getUserRoles(req);
       const isAdmin = userRoles.includes('admin');
       const isReviewCustomer = review.customerId === req.user.id;
       const isReviewArtist = review.artistId === req.user.id;
