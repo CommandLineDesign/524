@@ -6,6 +6,7 @@ import authRouter from './auth.js';
 import { bookingRouter } from './booking.js';
 import { messagingRouter } from './messaging.js';
 import { onboardingRouter } from './onboarding.js';
+import { reviewRouter } from './review.js';
 import { uploadRouter } from './upload.js';
 
 const router: ExpressRouter = Router();
@@ -15,6 +16,7 @@ router.use('/bookings', bookingRouter);
 router.use('/artists', artistRouter);
 router.use('/admin', adminRouter);
 router.use('/onboarding', onboardingRouter);
+router.use('/reviews', reviewRouter);
 router.use('/uploads', uploadRouter);
 router.use('/', messagingRouter);
 
