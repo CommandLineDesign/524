@@ -4,7 +4,7 @@
 
 **Priority**: Medium
 
-**Status**: ⏳ Not Started
+**Status**: 📝 In Progress
 
 **Dependencies**:
 
@@ -35,37 +35,36 @@ The review system is tightly integrated with the booking lifecycle, requiring bo
 ## Acceptance Criteria
 
 ### Booking Completion
-- [ ] Artists can mark a booking as "Completed" from their booking management interface
-- [ ] Marking a booking as "Completed" triggers the booking status change workflow
-- [ ] Only bookings in appropriate states (e.g., "in_progress", "paid") can be marked as completed
-- [ ] Completion action is logged with timestamp and artist ID
+- [x] Artists can mark a booking as "Completed" from their booking management interface
+- [x] Marking a booking as "Completed" triggers the booking status change workflow
+- [x] Only bookings in appropriate states (e.g., "in_progress", "paid") can be marked as completed
+- [x] Completion action is logged with timestamp and artist ID
 
 ### Customer Review Submission
-- [ ] Customers can only leave a review after a booking is in "Completed" status
-- [ ] Review interface is accessible from the completed booking card
-- [ ] Reviews include overall rating (1-5 stars) and dimension ratings (Quality, Professionalism, Timeliness)
-- [ ] Customers can add optional text review (up to 1000 characters)
-- [ ] Customers can upload up to 5 photos with their review
-- [ ] Reviews must be submitted within 30 days of service completion
-- [ ] After 30 days, the review option is no longer available
-- [ ] Customers can edit their review within 24 hours of submission
-- [ ] Review submission triggers notification to the artist
+- [x] Customers can only leave a review after a booking is in "Completed" status
+- [x] Review interface is accessible from the completed booking card
+- [x] Reviews include overall rating (1-5 stars) and dimension ratings (Quality, Professionalism, Timeliness)
+- [x] Customers can add optional text review (up to 1000 characters)
+- [x] Customers can upload up to 5 photos with their review
+- [x] Reviews must be submitted within 30 days of service completion
+- [x] After 30 days, the review option is no longer available
+- [x] Review submission triggers notification to the artist
 
 ### Customer Review History
-- [ ] Customers have a "My Reviews" section in their profile
-- [ ] "My Reviews" displays all reviews the customer has written, sorted by date (newest first)
-- [ ] Each review entry shows the artist, service details, rating, and review text
-- [ ] Customers can view artist responses to their reviews
-- [ ] Customers can navigate to the original booking from the review
+- [x] Customers have a "My Reviews" section in their profile
+- [x] "My Reviews" displays all reviews the customer has written, sorted by date (newest first)
+- [x] Each review entry shows the artist, service details, rating, and review text
+- [x] Customers can view artist responses to their reviews
+- [x] Customers can navigate to the original booking from the review
 
 ### Artist Review Management
-- [ ] Artists can view reviews from completed booking cards
-- [ ] Artists have a "My Reviews" section showing all reviews they've received
-- [ ] Reviews display customer name (or anonymous if preferred), rating, text, and photos
-- [ ] Artists can respond publicly to any review
-- [ ] Artist responses are displayed below the customer review
-- [ ] Artists receive notifications when new reviews are posted
-- [ ] Artists can edit their response within 24 hours of posting
+- [x] Artists can view reviews from completed booking cards
+- [x] Artists have a "My Reviews" section showing all reviews they've received
+- [x] Reviews display customer name (or anonymous if preferred), rating, text, and photos
+- [x] Artists receive notifications when new reviews are posted
+- [ ] Artists can respond publicly to any review (moved to backlog)
+- [ ] Artist responses are displayed below the customer review (moved to backlog)
+- [ ] Artists can edit their response within 24 hours of posting (moved to backlog)
 
 ### Review Display
 - [ ] Artist public profiles display aggregate rating (average of all reviews)
@@ -76,12 +75,12 @@ The review system is tightly integrated with the booking lifecycle, requiring bo
 - [ ] Reviews show verified booking badge to indicate authenticity
 
 ### Photo Upload Integration
-- [ ] Review photo uploads use S3 presigned URLs (following S3_UPLOAD_SETUP.md)
-- [ ] Photos are stored in `review-photos/{booking_id}/` folder structure
-- [ ] Maximum 5 photos per review, 5MB per photo
-- [ ] Supported formats: JPEG, PNG, WebP
-- [ ] Client-side image compression before upload
-- [ ] Photos are publicly accessible via CDN after upload
+- [x] Review photo uploads use S3 presigned URLs (following S3_UPLOAD_SETUP.md)
+- [x] Photos are stored in `review-photos/{booking_id}/` folder structure
+- [x] Maximum 5 photos per review, 5MB per photo
+- [x] Supported formats: JPEG, PNG, WebP
+- [x] Client-side image compression before upload
+- [x] Photos are publicly accessible via CDN after upload
 
 ### Zero State Handling
 - [ ] Remove all placeholder/mock review data from the system
@@ -118,16 +117,16 @@ The review system is tightly integrated with the booking lifecycle, requiring bo
 
 ### API Endpoints
 ```
-POST   /api/v1/bookings/:id/complete              # Artist marks booking complete
-POST   /api/v1/bookings/:id/review                # Customer submits review
-GET    /api/v1/reviews                            # Get user's reviews (customer or artist)
-GET    /api/v1/reviews/:id                        # Get specific review details
-PUT    /api/v1/reviews/:id                        # Update review (within 24h)
-DELETE /api/v1/reviews/:id                        # Delete review (customer only)
-POST   /api/v1/reviews/:id/response               # Artist responds to review
-PUT    /api/v1/reviews/:id/response               # Update artist response (within 24h)
-POST   /api/v1/reviews/:id/photos/presign         # Get presigned URL for photo upload
-GET    /api/v1/artists/:id/reviews                # Get all reviews for an artist
+POST   /api/v1/bookings/:id/complete              # Artist marks booking complete ✅
+POST   /api/v1/bookings/:id/review                # Customer submits review ✅
+GET    /api/v1/reviews                            # Get user's reviews (customer or artist) ✅
+GET    /api/v1/reviews/:id                        # Get specific review details ✅
+GET    /api/v1/artists/:id/reviews                # Get all reviews for an artist ✅
+POST   /api/v1/reviews/:id/photos/presign         # Get presigned URL for photo upload ✅
+POST   /api/v1/reviews/:id/response               # Artist responds to review (backlog)
+PUT    /api/v1/reviews/:id/response               # Update artist response (within 24h) (backlog)
+PUT    /api/v1/reviews/:id                        # Update review (within 24h) (backlog)
+DELETE /api/v1/reviews/:id                        # Delete review (customer only) (backlog)
 POST   /api/v1/admin/reviews/:id/flag             # Admin flags review
 POST   /api/v1/admin/reviews/:id/hide             # Admin hides review
 DELETE /api/v1/admin/reviews/:id                  # Admin deletes review
@@ -177,14 +176,14 @@ GET    /api/v1/admin/reviews/flagged              # Get flagged reviews queue
 ## User Stories
 
 ### Core Review Flow
-- [Mark Booking Complete](../stories/mark-booking-complete.md): Artist marks booking as completed to enable review submission
-- [Submit Customer Review](../stories/submit-customer-review.md): Customer leaves multi-dimensional review after service completion
-- [Upload Review Photos](../stories/upload-review-photos.md): Customer uploads photos with review to showcase artist work
+- [Mark Booking Complete](../stories/archive/mark-booking-complete.md): Artist marks booking as completed to enable review submission ✅
+- [Submit Customer Review](../stories/archive/submit-customer-review.md): Customer leaves multi-dimensional review after service completion ✅
+- [Upload Review Photos](../stories/archive/upload-review-photos.md): Customer uploads photos with review to showcase artist work ✅
 
 ### Review Management
-- [View Customer Review History](../stories/view-customer-review-history.md): Customer views all reviews they've written
-- [View Artist Reviews](../stories/view-artist-reviews.md): Artist views all reviews they've received
-- [Respond to Review](../stories/respond-to-review.md): Artist responds publicly to customer reviews
+- [View Customer Review History](../stories/archive/view-customer-review-history.md): Customer views all reviews they've written ✅
+- [View Artist Reviews](../stories/archive/view-artist-reviews.md): Artist views all reviews they've received ✅
+- [Respond to Review](../stories/backlog/respond-to-review.md): Artist responds publicly to customer reviews (backlog)
 
 ### Review Display & Moderation
 - [Display Reviews on Artist Profile](../stories/display-reviews-on-profile.md): Reviews and ratings displayed on artist profiles for customer decision-making
@@ -215,13 +214,34 @@ GET    /api/v1/admin/reviews/flagged              # Get flagged reviews queue
 
 ## Notes
 
+### Current Status
+**Core review functionality is MVP-ready!** ✅
+- Booking completion and review submission working end-to-end
+- Customer and artist review history implemented
+- Photo upload integration complete
+- Basic review display on profiles in progress
+
+**Remaining for MVP:**
+- Display reviews on artist profiles (`display-reviews-on-profile.md`)
+- Admin moderation tools (`moderate-reviews.md`)
+- Payment holds release for declined bookings (`release-payment-holds-on-booking-declines.md`)
+
+**Backlog Enhancements:**
+- Artist responses to reviews
+- Review editing within 24 hours
+- Advanced moderation features
+- Performance optimizations
+
 ### Implementation Phases
-1. **Phase 1 - Core Review Submission**: Booking completion, customer review submission, basic display
-2. **Phase 2 - Review Management**: Artist responses, customer/artist review history sections
+1. **Phase 1 - Core Review Submission**: Booking completion, customer review submission, basic display ✅ **COMPLETED**
+2. **Phase 2 - Review Management**: Artist responses (backlog), customer/artist review history sections ✅ **COMPLETED**
 3. **Phase 3 - Admin Moderation**: Admin tools, flagging, hiding, deletion, audit logs
-4. **Phase 4 - Polish**: Zero state handling, remove placeholder data, notifications, performance optimization
+4. **Phase 4 - Review Display**: Display reviews on artist profiles, aggregate ratings
+5. **Phase 5 - Polish**: Zero state handling, remove placeholder data, notifications, performance optimization
 
 ### Future Enhancements (Post-MVP)
+- Artist responses to reviews (currently in backlog)
+- Review editing within 24 hours (currently in backlog)
 - Double-blind reviews (neither side sees review until both submit)
 - Review incentives (discounts for leaving reviews)
 - Review helpfulness voting
