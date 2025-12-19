@@ -58,11 +58,29 @@ pnpm --filter @524/mobile start
 
 ## Quality checks
 
+### Individual Checks
 - Lint: `pnpm lint`
 - Format write: `pnpm format`
 - Format check: `pnpm format:check`
 - Typecheck: `pnpm typecheck`
 - One-off Biome check+fix: `pnpm check:fix`
+
+### Pre-deployment Quality Check
+Run all quality checks to ensure code is ready for deployment:
+
+```bash
+pnpm run ci:quality-check
+```
+
+This runs the comprehensive quality assurance process that includes:
+- Dependency installation verification
+- Code formatting validation
+- Import organization checking
+- Linting validation
+- Type checking across all packages
+- Full build verification
+
+See [`ai/workflows/pre-deployment-quality-check.md`](./ai/workflows/pre-deployment-quality-check.md) for detailed workflow documentation.
 
 ## Git hooks
 
