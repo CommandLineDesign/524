@@ -3,7 +3,7 @@
 **Epic**: [Review System](../epics/review-system.md)
 **Role**: Artist
 **Priority**: High
-**Status**: ⏳ Not Started
+**Status**: 📝 In Progress
 **Dependencies**:
 
 - [Submit Customer Review](./submit-customer-review.md)
