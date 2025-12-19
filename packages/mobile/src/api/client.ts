@@ -243,6 +243,56 @@ export async function submitReview(bookingId: string, payload: SubmitReviewPaylo
   });
 }
 
+export interface GetReviewsParams {
+  limit?: number;
+  offset?: number;
+  role?: 'customer' | 'artist';
+}
+
+export interface Review {
+  id: string;
+  bookingId: string;
+  customerId: string;
+  artistId: string;
+  overallRating: number;
+  qualityRating: number;
+  professionalismRating: number;
+  timelinessRating: number;
+  reviewText?: string | null;
+  artistResponse?: string | null;
+  isVisible: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GetReviewsResponse {
+  reviews: Review[];
+  pagination: {
+    limit: number;
+    offset: number;
+    hasMore: boolean;
+  };
+}
+
+export async function getReviews(params: GetReviewsParams = {}) {
+  const query = new URLSearchParams();
+  if (params.limit) {
+    query.append('limit', params.limit.toString());
+  }
+  if (params.offset) {
+    query.append('offset', params.offset.toString());
+  }
+  if (params.role) {
+    query.append('role', params.role);
+  }
+
+  const path = query.size ? `/api/v1/reviews?${query.toString()}` : '/api/v1/reviews';
+
+  return request<GetReviewsResponse>(path, {
+    method: 'GET',
+  });
+}
+
 export async function signUpUser(payload: SignupPayload): Promise<AuthResponse> {
   return request<AuthResponse>('/api/v1/auth/signup/user', {
     method: 'POST',

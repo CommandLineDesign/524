@@ -1,6 +1,11 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { type SubmitReviewPayload, submitReview } from '../api/client';
+import {
+  type GetReviewsParams,
+  type SubmitReviewPayload,
+  getReviews,
+  submitReview,
+} from '../api/client';
 
 export function useSubmitReviewMutation() {
   const queryClient = useQueryClient();
@@ -8,8 +13,17 @@ export function useSubmitReviewMutation() {
     mutationFn: ({ bookingId, payload }: { bookingId: string; payload: SubmitReviewPayload }) =>
       submitReview(bookingId, payload),
     onSuccess: () => {
-      // Invalidate booking queries to refresh booking status/details
+      // Invalidate booking and review queries to refresh data
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
+      queryClient.invalidateQueries({ queryKey: ['reviews'] });
     },
+  });
+}
+
+export function useCustomerReviews(params: GetReviewsParams = {}) {
+  return useQuery({
+    queryKey: ['reviews', 'customer', params],
+    queryFn: () => getReviews({ ...params, role: 'customer' }),
+    staleTime: 30000, // Consider data fresh for 30 seconds
   });
 }
