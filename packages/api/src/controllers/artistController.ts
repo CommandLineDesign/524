@@ -3,8 +3,13 @@ import { z } from 'zod';
 
 import type { AuthRequest } from '../middleware/auth.js';
 import { ArtistService } from '../services/artistService.js';
+import { ReviewService } from '../services/reviewService.js';
+import { createLogger } from '../utils/logger.js';
+import { parsePaginationParams } from '../utils/pagination.js';
 
 const artistService = new ArtistService();
+const reviewService = new ReviewService();
+const logger = createLogger('artist-controller');
 
 const artistProfileUpdateSchema = z
   .object({
@@ -118,6 +123,60 @@ export const ArtistController = {
       });
       res.json(results);
     } catch (error) {
+      next(error);
+    }
+  },
+
+  /**
+   * GET /api/v1/artists/:artistId/reviews
+   * Get reviews for a specific artist (public endpoint)
+   */
+  async getArtistReviews(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { artistId } = req.params;
+
+      // Parse pagination params
+      const { limit, offset } = parsePaginationParams(req.query, { limit: 10, maxLimit: 50 });
+
+      if (process.env.NODE_ENV === 'development') {
+        logger.debug({ artistId, limit, offset }, 'Getting artist reviews');
+      }
+
+      const reviews = await reviewService.getReviewsForArtist(artistId, limit + 1, offset);
+
+      const hasMore = reviews.length > limit;
+      const reviewsToReturn = hasMore ? reviews.slice(0, limit) : reviews;
+
+      res.json({
+        reviews: reviewsToReturn,
+        pagination: {
+          limit,
+          offset,
+          hasMore,
+        },
+      });
+    } catch (error) {
+      logger.error({ error, artistId: req.params.artistId }, 'Failed to get artist reviews');
+      next(error);
+    }
+  },
+
+  /**
+   * GET /api/v1/artists/:artistId/reviews/stats
+   * Get aggregate review statistics for a specific artist (public endpoint)
+   */
+  async getArtistReviewStats(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { artistId } = req.params;
+
+      if (process.env.NODE_ENV === 'development') {
+        logger.debug({ artistId }, 'Getting artist review stats');
+      }
+
+      const stats = await reviewService.getArtistReviewStats(artistId);
+      res.json(stats);
+    } catch (error) {
+      logger.error({ error, artistId: req.params.artistId }, 'Failed to get artist review stats');
       next(error);
     }
   },
