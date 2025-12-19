@@ -1,9 +1,12 @@
+import { Ionicons } from '@expo/vector-icons';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import * as ImagePicker from 'expo-image-picker';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Image,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -18,6 +21,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StarRating } from '../components/StarRating';
 import type { RootStackParamList } from '../navigation/AppNavigator';
 import { useSubmitReviewMutation } from '../query/reviews';
+import {
+  pickReviewPhotos,
+  uploadReviewPhotos,
+  validateReviewPhotos,
+} from '../services/reviewPhotoUploadService';
 import { colors } from '../theme/colors';
 
 type ReviewSubmissionNavProp = NativeStackNavigationProp<RootStackParamList, 'ReviewSubmission'>;
@@ -33,11 +41,46 @@ export function ReviewSubmissionScreen() {
   const [professionalismRating, setProfessionalismRating] = useState(0);
   const [timelinessRating, setTimelinessRating] = useState(0);
   const [reviewText, setReviewText] = useState('');
+  const [selectedPhotos, setSelectedPhotos] = useState<ImagePicker.ImagePickerAsset[]>([]);
+  const [uploadProgress, setUploadProgress] = useState<{
+    current: number;
+    total: number;
+  } | null>(null);
 
   const submitReviewMutation = useSubmitReviewMutation();
 
   const allRatingsProvided =
     overallRating > 0 && qualityRating > 0 && professionalismRating > 0 && timelinessRating > 0;
+
+  const handlePickPhotos = async () => {
+    try {
+      const maxPhotos = 5 - selectedPhotos.length;
+      if (maxPhotos <= 0) {
+        Alert.alert('사진 제한', '최대 5장까지만 추가할 수 있습니다.');
+        return;
+      }
+
+      const photos = await pickReviewPhotos(maxPhotos);
+      if (photos.length > 0) {
+        const allPhotos = [...selectedPhotos, ...photos];
+        const validation = validateReviewPhotos(allPhotos);
+
+        if (!validation.valid) {
+          Alert.alert('사진 오류', validation.error || '사진 검증에 실패했습니다.');
+          return;
+        }
+
+        setSelectedPhotos(allPhotos);
+      }
+    } catch (error) {
+      console.error('Failed to pick photos:', error);
+      Alert.alert('사진 선택 실패', '사진을 선택하는 중 오류가 발생했습니다.');
+    }
+  };
+
+  const handleRemovePhoto = (index: number) => {
+    setSelectedPhotos((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const handleSubmit = async () => {
     if (!allRatingsProvided) {
@@ -46,6 +89,24 @@ export function ReviewSubmissionScreen() {
     }
 
     try {
+      let reviewImages: string[] | undefined;
+
+      // Upload photos if any are selected
+      if (selectedPhotos.length > 0) {
+        setUploadProgress({ current: 0, total: selectedPhotos.length });
+
+        const uploadedPhotos = await uploadReviewPhotos(
+          selectedPhotos,
+          bookingId,
+          (current, total) => {
+            setUploadProgress({ current, total });
+          }
+        );
+
+        reviewImages = uploadedPhotos.map((photo) => photo.publicUrl);
+        setUploadProgress(null);
+      }
+
       await submitReviewMutation.mutateAsync({
         bookingId,
         payload: {
@@ -54,12 +115,14 @@ export function ReviewSubmissionScreen() {
           professionalismRating,
           timelinessRating,
           reviewText: reviewText.trim() || undefined,
+          reviewImages,
         },
       });
 
       // Navigate to confirmation screen
       navigation.navigate('ReviewConfirmation', { bookingId });
     } catch (error) {
+      setUploadProgress(null);
       Alert.alert('제출 실패', '리뷰 제출에 실패했습니다. 잠시 후 다시 시도해 주세요.');
     }
   };
@@ -116,6 +179,46 @@ export function ReviewSubmissionScreen() {
               textAlignVertical="top"
             />
             <Text style={styles.charCount}>{reviewText.length}/1000</Text>
+          </View>
+
+          <View style={styles.photoSection}>
+            <Text style={styles.textLabel}>사진 추가 (선택사항, 최대 5장)</Text>
+
+            {selectedPhotos.length > 0 && (
+              <View style={styles.photoGrid}>
+                {selectedPhotos.map((photo, index) => (
+                  <View key={photo.uri} style={styles.photoThumbnail}>
+                    <Image source={{ uri: photo.uri }} style={styles.photoImage} />
+                    <TouchableOpacity
+                      style={styles.removePhotoButton}
+                      onPress={() => handleRemovePhoto(index)}
+                    >
+                      <Ionicons name="close-circle" size={24} color="white" />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            {selectedPhotos.length < 5 && (
+              <TouchableOpacity
+                style={styles.addPhotoButton}
+                onPress={handlePickPhotos}
+                disabled={submitReviewMutation.isPending || uploadProgress !== null}
+              >
+                <Ionicons name="camera-outline" size={24} color={colors.primary} />
+                <Text style={styles.addPhotoText}>사진 추가 ({selectedPhotos.length}/5)</Text>
+              </TouchableOpacity>
+            )}
+
+            {uploadProgress && (
+              <View style={styles.uploadProgressContainer}>
+                <ActivityIndicator size="small" color={colors.primary} />
+                <Text style={styles.uploadProgressText}>
+                  사진 업로드 중... {uploadProgress.current}/{uploadProgress.total}
+                </Text>
+              </View>
+            )}
           </View>
 
           <View style={styles.buttonSection}>
@@ -231,5 +334,62 @@ const styles = StyleSheet.create({
   cancelButtonText: {
     color: colors.text,
     fontSize: 16,
+  },
+  photoSection: {
+    marginBottom: 32,
+  },
+  photoGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    marginBottom: 12,
+  },
+  photoThumbnail: {
+    width: 100,
+    height: 100,
+    borderRadius: 8,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  photoImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  removePhotoButton: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    borderRadius: 12,
+  },
+  addPhotoButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 12,
+    borderStyle: 'dashed',
+    gap: 8,
+  },
+  addPhotoText: {
+    fontSize: 16,
+    color: colors.text,
+  },
+  uploadProgressContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 12,
+    gap: 8,
+    backgroundColor: colors.surface,
+    borderRadius: 8,
+    marginTop: 12,
+  },
+  uploadProgressText: {
+    fontSize: 14,
+    color: colors.textSecondary,
   },
 });
