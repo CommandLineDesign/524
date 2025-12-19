@@ -14,6 +14,7 @@
     "check:fix": "biome check --write .",
     "typecheck": "pnpm --filter \"./packages/*\" run typecheck",
     "test": "pnpm --filter \"./packages/*\" run test",
+    "ci:quality-check": "./scripts/ci-quality-check.sh",
     "dev": "concurrently \"pnpm --filter @524/api dev\" \"pnpm --filter @524/web dev\" \"pnpm --filter @524/mobile start\" --names \"API,WEB,MOBILE\" --prefix-colors \"blue,green,yellow\"",
     "dev:api": "./scripts/dev-api.sh",
     "dev:api:direct": "pnpm --filter @524/api dev",

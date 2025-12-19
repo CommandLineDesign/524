@@ -17,6 +17,7 @@
   "dependencies": {
     "@524/shared": "file:../shared",
     "@expo/metro-runtime": "~6.1.2",
+    "@expo/vector-icons": "~14.0.2",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/datetimepicker": "8.2.0",
     "@react-native-community/netinfo": "11.3.1",

@@ -1,6 +1,6 @@
 import { and, eq } from 'drizzle-orm';
 
-import { reviews } from '@524/database';
+import { reviewImages, reviews } from '@524/database';
 import { db } from '../db/client.js';
 import { createLogger } from '../utils/logger.js';
 
@@ -66,7 +66,13 @@ export interface CreateReviewPayload {
   professionalismRating: number;
   timelinessRating: number;
   reviewText?: string;
-  reviewImages?: string[];
+}
+
+export interface ReviewImagePayload {
+  s3Key: string;
+  fileSize: number;
+  mimeType: string;
+  displayOrder: number;
 }
 
 export interface UpdateReviewPayload {
@@ -110,7 +116,6 @@ export class ReviewRepository {
           professionalismRating: payload.professionalismRating,
           timelinessRating: payload.timelinessRating,
           reviewText: payload.reviewText,
-          reviewImages: payload.reviewImages,
         })
         .returning();
 
@@ -214,5 +219,48 @@ export class ReviewRepository {
       .orderBy(reviews.createdAt)
       .limit(limit)
       .offset(offset);
+  }
+
+  async createReviewImages(reviewId: string, imageKeys: ReviewImagePayload[]) {
+    validateUUID(reviewId, 'reviewId');
+
+    if (!imageKeys.length) {
+      return;
+    }
+
+    logger.info({ reviewId, imageCount: imageKeys.length }, 'Creating review images');
+
+    try {
+      // Store only s3Key - publicUrl will be computed at query time
+      const imageRecords = imageKeys.map((image) => ({
+        reviewId,
+        s3Key: image.s3Key,
+        fileSize: image.fileSize,
+        mimeType: image.mimeType,
+        displayOrder: image.displayOrder,
+        publicUrl: null, // Will be computed at query time from s3Key + S3_PUBLIC_BASE_URL
+      }));
+
+      await db.insert(reviewImages).values(imageRecords);
+    } catch (error) {
+      logger.error({ error, reviewId }, 'Failed to create review images');
+      throw error;
+    }
+  }
+
+  async getReviewImages(reviewId: string) {
+    validateUUID(reviewId, 'reviewId');
+
+    logger.debug({ reviewId }, 'Getting review images');
+
+    const images = await db.select().from(reviewImages).where(eq(reviewImages.reviewId, reviewId));
+
+    // Compute publicUrl at query time from s3Key + S3_PUBLIC_BASE_URL
+    const s3PublicBaseUrl = process.env.S3_PUBLIC_BASE_URL;
+
+    return images.map((image) => ({
+      ...image,
+      publicUrl: s3PublicBaseUrl ? `${s3PublicBaseUrl}/${image.s3Key}` : null,
+    }));
   }
 }
