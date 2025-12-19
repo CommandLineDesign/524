@@ -10,6 +10,7 @@ import { ArtistBookingDetailScreen } from '../screens/ArtistBookingDetailScreen'
 import { ArtistBookingsListScreen } from '../screens/ArtistBookingsListScreen';
 import { ArtistOnboardingFlowScreen } from '../screens/ArtistOnboardingFlowScreen';
 import { ArtistPendingScreen } from '../screens/ArtistPendingScreen';
+import { ArtistProfileScreen } from '../screens/ArtistProfileScreen';
 import { ArtistReviewsScreen } from '../screens/ArtistReviewsScreen';
 import { ArtistSignupScreen } from '../screens/ArtistSignupScreen';
 import { BookingDetailScreen } from '../screens/BookingDetailScreen';
@@ -100,6 +101,7 @@ export type RootStackParamList = {
   ReviewSubmission: { bookingId: string };
   ReviewConfirmation: { bookingId: string };
   MyReviews: undefined;
+  ArtistProfile: { artistId: string };
   ArtistOnboarding: undefined;
   ArtistPending: undefined;
   ArtistBookingsList: undefined;
@@ -275,6 +277,11 @@ export function AppNavigator() {
                   name="MyReviews"
                   component={MyReviewsScreen}
                   options={{ title: '내 리뷰' }}
+                />
+                <Stack.Screen
+                  name="ArtistProfile"
+                  component={ArtistProfileScreen}
+                  options={{ title: '아티스트 프로필' }}
                 />
                 <Stack.Screen
                   name="ChatsList"
