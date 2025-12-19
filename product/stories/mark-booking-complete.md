@@ -3,7 +3,7 @@
 **Epic**: [Review System](../epics/review-system.md)
 **Role**: Artist
 **Priority**: High
-**Status**: 📝 In Progress
+**Status**: ✅ Completed
 **Dependencies**:
 
 - None
@@ -71,16 +71,16 @@ Marking a booking complete is the final step in the service delivery lifecycle a
 
 ## Definition of Done
 
-- [ ] "Mark as Complete" button visible on booking detail screen for eligible bookings
-- [ ] Button only appears for bookings in "paid" or "in_progress" status
-- [ ] Confirmation dialog displays before status change
-- [ ] Booking status updates to "completed" when confirmed
-- [ ] Completion timestamp and artist ID recorded in database
-- [ ] Notification sent to customer after completion
-- [ ] Completed bookings display completion badge with date
-- [ ] Artist cannot mark other artists' bookings as complete
-- [ ] API endpoint includes proper authorization and validation
-- [ ] Status change is logged for audit purposes
+- [x] "Mark as Complete" button visible on booking detail screen for eligible bookings
+- [x] Button only appears for bookings in "paid" or "in_progress" status
+- [x] Confirmation dialog displays before status change
+- [x] Booking status updates to "completed" when confirmed
+- [x] Completion timestamp and artist ID recorded in database
+- [x] Notification sent to customer after completion
+- [x] Completed bookings display completion badge with date
+- [x] Artist cannot mark other artists' bookings as complete
+- [x] API endpoint includes proper authorization and validation
+- [x] Status change is logged for audit purposes
 
 ## Notes
 
