@@ -214,7 +214,12 @@ export interface SubmitReviewPayload {
   professionalismRating: number;
   timelinessRating: number;
   reviewText?: string;
-  reviewImages?: string[];
+  reviewImageKeys?: Array<{
+    s3Key: string;
+    fileSize: number;
+    mimeType: string;
+    displayOrder: number;
+  }>;
 }
 
 export interface ReviewResponse {

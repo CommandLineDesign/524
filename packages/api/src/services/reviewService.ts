@@ -17,7 +17,12 @@ export interface SubmitReviewPayload {
   professionalismRating: number;
   timelinessRating: number;
   reviewText?: string;
-  reviewImages?: string[];
+  reviewImageKeys?: Array<{
+    s3Key: string;
+    fileSize: number;
+    mimeType: string;
+    displayOrder: number;
+  }>;
 }
 
 export class ReviewService {
@@ -94,13 +99,23 @@ export class ReviewService {
       throw new Error('Review text cannot exceed 1000 characters');
     }
 
-    // Create the review
+    // Create the review (without images first)
     const review = await this.reviewRepository.createReview({
       bookingId,
       customerId,
       artistId: booking.artistId,
-      ...payload,
+      overallRating: payload.overallRating,
+      qualityRating: payload.qualityRating,
+      professionalismRating: payload.professionalismRating,
+      timelinessRating: payload.timelinessRating,
+      reviewText: payload.reviewText,
+      // reviewImages will be handled separately
     });
+
+    // Create review image records if any photos were uploaded
+    if (payload.reviewImageKeys && payload.reviewImageKeys.length > 0) {
+      await this.reviewRepository.createReviewImages(review.id, payload.reviewImageKeys);
+    }
 
     // Send notification to artist
     try {

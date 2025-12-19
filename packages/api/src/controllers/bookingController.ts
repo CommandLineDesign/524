@@ -6,6 +6,13 @@ import type { AuthRequest } from '../middleware/auth.js';
 import { BookingService } from '../services/bookingService.js';
 import { ReviewService, type SubmitReviewPayload } from '../services/reviewService.js';
 
+interface ReviewImageKey {
+  s3Key: string;
+  fileSize: number;
+  mimeType: string;
+  displayOrder: number;
+}
+
 const bookingService = new BookingService();
 const reviewService = new ReviewService();
 
@@ -288,16 +295,25 @@ export const BookingController = {
         return;
       }
 
-      // Validate reviewImages
+      // Validate reviewImageKeys
       if (
-        req.body.reviewImages &&
-        (!Array.isArray(req.body.reviewImages) ||
-          req.body.reviewImages.length > 10 ||
-          !req.body.reviewImages.every(
-            (img: unknown) => typeof img === 'string' && img.startsWith('https://')
+        req.body.reviewImageKeys &&
+        (!Array.isArray(req.body.reviewImageKeys) ||
+          req.body.reviewImageKeys.length > 10 ||
+          !req.body.reviewImageKeys.every(
+            (img: unknown): img is ReviewImageKey =>
+              typeof img === 'object' &&
+              img !== null &&
+              typeof (img as ReviewImageKey).s3Key === 'string' &&
+              typeof (img as ReviewImageKey).fileSize === 'number' &&
+              typeof (img as ReviewImageKey).mimeType === 'string' &&
+              typeof (img as ReviewImageKey).displayOrder === 'number'
           ))
       ) {
-        res.status(400).json({ error: 'Review images must be valid HTTPS URLs (max 10)' });
+        res.status(400).json({
+          error:
+            'Review image keys must be valid objects with s3Key, fileSize, mimeType, and displayOrder (max 10)',
+        });
         return;
       }
 
@@ -307,7 +323,7 @@ export const BookingController = {
         professionalismRating: req.body.professionalismRating,
         timelinessRating: req.body.timelinessRating,
         reviewText: req.body.reviewText,
-        reviewImages: req.body.reviewImages,
+        reviewImageKeys: req.body.reviewImageKeys,
       };
 
       const review = await reviewService.submitReview(bookingId, userId, payload);

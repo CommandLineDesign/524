@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as ImagePicker from 'expo-image-picker';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -19,13 +19,16 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { StarRating } from '../components/StarRating';
+import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import type { RootStackParamList } from '../navigation/AppNavigator';
 import { useSubmitReviewMutation } from '../query/reviews';
+import { OfflineReviewDraftService } from '../services/offlineReviewDraftService';
 import {
   pickReviewPhotos,
   uploadReviewPhotos,
   validateReviewPhotos,
 } from '../services/reviewPhotoUploadService';
+import { ReviewUploadQueueService } from '../services/reviewUploadQueueService';
 import { colors } from '../theme/colors';
 
 type ReviewSubmissionNavProp = NativeStackNavigationProp<RootStackParamList, 'ReviewSubmission'>;
@@ -45,12 +48,97 @@ export function ReviewSubmissionScreen() {
   const [uploadProgress, setUploadProgress] = useState<{
     current: number;
     total: number;
+    failedPhotos: number[];
   } | null>(null);
+  const [draftId, setDraftId] = useState<string | null>(null);
+  const [isLoadingDraft, setIsLoadingDraft] = useState(true);
 
   const submitReviewMutation = useSubmitReviewMutation();
+  const networkStatus = useNetworkStatus();
 
   const allRatingsProvided =
     overallRating > 0 && qualityRating > 0 && professionalismRating > 0 && timelinessRating > 0;
+
+  // Load existing draft on mount
+  useEffect(() => {
+    loadDraft();
+
+    // Start background processing service
+    const uploadQueueService = ReviewUploadQueueService.getInstance();
+    uploadQueueService.startAutoProcessing();
+
+    return () => {
+      // Clean up old drafts when unmounting
+      const draftService = OfflineReviewDraftService.getInstance();
+      draftService.cleanupOldDrafts();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Auto-save draft when form changes
+  useEffect(() => {
+    if (!isLoadingDraft && allRatingsProvided) {
+      saveDraftDebounced();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoadingDraft, allRatingsProvided]);
+
+  const loadDraft = async () => {
+    try {
+      const draftService = OfflineReviewDraftService.getInstance();
+      const existingDraft = await draftService.getDraftForBooking(bookingId);
+
+      if (existingDraft) {
+        setDraftId(existingDraft.id);
+        setOverallRating(existingDraft.overallRating);
+        setQualityRating(existingDraft.qualityRating);
+        setProfessionalismRating(existingDraft.professionalismRating);
+        setTimelinessRating(existingDraft.timelinessRating);
+        setReviewText(existingDraft.reviewText);
+
+        // Restore photos from draft
+        const photos: ImagePicker.ImagePickerAsset[] = existingDraft.photos.map((p) => ({
+          uri: p.uri,
+          width: 0,
+          height: 0,
+          fileSize: p.fileSize,
+          mimeType: p.mimeType,
+        }));
+        setSelectedPhotos(photos);
+      }
+    } catch (error) {
+      // Failed to load draft - continue without draft data
+    } finally {
+      setIsLoadingDraft(false);
+    }
+  };
+
+  let saveTimer: ReturnType<typeof setTimeout> | null = null;
+  const saveDraftDebounced = () => {
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      saveDraft();
+    }, 1000); // Save after 1 second of inactivity
+  };
+
+  const saveDraft = async () => {
+    try {
+      const draftService = OfflineReviewDraftService.getInstance();
+      const savedDraftId = await draftService.saveDraft({
+        bookingId,
+        overallRating,
+        qualityRating,
+        professionalismRating,
+        timelinessRating,
+        reviewText,
+        photos: selectedPhotos,
+        draftId: draftId || undefined,
+      });
+      setDraftId(savedDraftId);
+    } catch (error) {
+      // Failed to save draft - continue silently
+    }
+  };
 
   const handlePickPhotos = async () => {
     try {
@@ -73,7 +161,6 @@ export function ReviewSubmissionScreen() {
         setSelectedPhotos(allPhotos);
       }
     } catch (error) {
-      console.error('Failed to pick photos:', error);
       Alert.alert('사진 선택 실패', '사진을 선택하는 중 오류가 발생했습니다.');
     }
   };
@@ -88,25 +175,86 @@ export function ReviewSubmissionScreen() {
       return;
     }
 
+    // Save draft first
+    await saveDraft();
+
+    // Check network connectivity
+    if (!networkStatus.isConnected || !networkStatus.isInternetReachable) {
+      Alert.alert(
+        '오프라인 모드',
+        '인터넷 연결이 없습니다. 리뷰가 저장되었으며 연결이 복원되면 자동으로 제출됩니다.',
+        [
+          {
+            text: '확인',
+            onPress: () => {
+              // Navigate back - the queue processor will handle submission later
+              navigation.goBack();
+            },
+          },
+        ]
+      );
+      return;
+    }
+
     try {
-      let reviewImages: string[] | undefined;
+      let reviewImageKeys:
+        | Array<{ s3Key: string; fileSize: number; mimeType: string; displayOrder: number }>
+        | undefined;
 
-      // Upload photos if any are selected
+      // Upload photos if any are selected (Phase 1: Upload to S3)
       if (selectedPhotos.length > 0) {
-        setUploadProgress({ current: 0, total: selectedPhotos.length });
+        setUploadProgress({ current: 0, total: selectedPhotos.length, failedPhotos: [] });
 
-        const uploadedPhotos = await uploadReviewPhotos(
-          selectedPhotos,
-          bookingId,
-          (current, total) => {
-            setUploadProgress({ current, total });
-          }
-        );
+        try {
+          const uploadedPhotos = await uploadReviewPhotos(
+            selectedPhotos,
+            bookingId,
+            (current, total) => {
+              setUploadProgress({ current, total, failedPhotos: [] });
+            }
+          );
 
-        reviewImages = uploadedPhotos.map((photo) => photo.publicUrl);
-        setUploadProgress(null);
+          // Store S3 keys instead of public URLs for the review submission
+          reviewImageKeys = uploadedPhotos.map((photo, index) => ({
+            s3Key: photo.key,
+            fileSize: photo.fileSize,
+            mimeType: photo.mimeType,
+            displayOrder: index, // Explicit display order based on upload sequence
+          }));
+          setUploadProgress(null);
+        } catch (error) {
+          // If upload fails, allow review submission without photos
+          setUploadProgress(null);
+
+          // Use a promise to wait for user decision
+          await new Promise<void>((resolve) => {
+            Alert.alert(
+              '사진 업로드 실패',
+              '사진 업로드를 실패했지만 리뷰는 사진 없이 제출할 수 있습니다. 계속하시겠습니까?',
+              [
+                {
+                  text: '취소',
+                  style: 'cancel',
+                  onPress: () => {
+                    navigation.goBack();
+                    resolve();
+                  },
+                },
+                {
+                  text: '사진 없이 제출',
+                  onPress: () => {
+                    // Continue with review submission without photos
+                    reviewImageKeys = undefined;
+                    resolve();
+                  },
+                },
+              ]
+            );
+          });
+        }
       }
 
+      // Phase 2: Submit review with S3 keys - backend will create review_images rows only if validation passes
       await submitReviewMutation.mutateAsync({
         bookingId,
         payload: {
@@ -115,17 +263,47 @@ export function ReviewSubmissionScreen() {
           professionalismRating,
           timelinessRating,
           reviewText: reviewText.trim() || undefined,
-          reviewImages,
+          reviewImageKeys, // Changed from reviewImages to reviewImageKeys
         },
       });
+
+      // Delete draft on successful submission
+      if (draftId) {
+        const draftService = OfflineReviewDraftService.getInstance();
+        await draftService.deleteDraft(draftId);
+      }
 
       // Navigate to confirmation screen
       navigation.navigate('ReviewConfirmation', { bookingId });
     } catch (error) {
       setUploadProgress(null);
-      Alert.alert('제출 실패', '리뷰 제출에 실패했습니다. 잠시 후 다시 시도해 주세요.');
+      Alert.alert(
+        '제출 실패',
+        '리뷰 제출에 실패했습니다. 리뷰가 저장되었으며 나중에 다시 시도할 수 있습니다.',
+        [
+          {
+            text: '나중에',
+            onPress: () => navigation.goBack(),
+          },
+          {
+            text: '다시 시도',
+            onPress: () => handleSubmit(),
+          },
+        ]
+      );
     }
   };
+
+  if (isLoadingDraft) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top', 'bottom', 'left', 'right']}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={styles.loadingText}>리뷰 불러오는 중...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom', 'left', 'right']}>
@@ -134,6 +312,24 @@ export function ReviewSubmissionScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <ScrollView contentContainerStyle={styles.content}>
+          {/* Offline indicator */}
+          {!networkStatus.isConnected && (
+            <View style={styles.offlineBanner}>
+              <Ionicons name="cloud-offline-outline" size={20} color="white" />
+              <Text style={styles.offlineBannerText}>
+                오프라인 모드 - 연결 복원 시 자동 제출됩니다
+              </Text>
+            </View>
+          )}
+
+          {/* Draft restored indicator */}
+          {draftId && (
+            <View style={styles.draftBanner}>
+              <Ionicons name="save-outline" size={20} color={colors.primary} />
+              <Text style={styles.draftBannerText}>저장된 리뷰를 불러왔습니다</Text>
+            </View>
+          )}
+
           <Text style={styles.title}>서비스 리뷰</Text>
           <Text style={styles.subtitle}>
             이 서비스는 어떠셨나요? 여러분의 솔직한 평가가 다른 고객들에게 도움이 됩니다.
@@ -263,6 +459,48 @@ const styles = StyleSheet.create({
   content: {
     padding: 20,
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 12,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: colors.textSecondary,
+  },
+  offlineBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FF6B6B',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+    gap: 8,
+  },
+  offlineBannerText: {
+    flex: 1,
+    fontSize: 14,
+    color: 'white',
+    fontWeight: '500',
+  },
+  draftBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  draftBannerText: {
+    flex: 1,
+    fontSize: 14,
+    color: colors.primary,
+    fontWeight: '500',
+  },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
@@ -354,7 +592,7 @@ const styles = StyleSheet.create({
   photoImage: {
     width: '100%',
     height: '100%',
-    resizeMode: 'cover',
+    resizeMode: 'contain', // Show full image within bounds to avoid unexpected cropping
   },
   removePhotoButton: {
     position: 'absolute',

@@ -40,6 +40,8 @@ const mockReviewRepository = {
   updateReview: createMock({ id: 'test-review-id', updatedAt: new Date() }),
   getReviewsForArtist: createMock([]),
   getReviewsForCustomer: createMock([]),
+  createReviewImages: createMock(),
+  getReviewImages: createMock([]),
 };
 
 const mockBookingRepository = {

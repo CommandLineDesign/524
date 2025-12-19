@@ -6,6 +6,6 @@ import { requireArtist, requireCustomer } from '../../middleware/auth.js';
 const router: ExpressRouter = Router();
 
 router.post('/profile-photo/presign', requireArtist(), UploadController.presignProfilePhoto);
-router.post('/review-photo/presign', requireCustomer(), UploadController.presignReviewPhoto);
+router.post('/review-photos/presign', requireCustomer(), UploadController.presignReviewPhoto);
 
 export const uploadRouter: ExpressRouter = router;
