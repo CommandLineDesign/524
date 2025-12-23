@@ -140,7 +140,7 @@ export function DevLoginScreen() {
           <View style={styles.infoBox}>
             <Text style={styles.infoTitle}>🔐 개발 전용 로그인</Text>
             <Text style={styles.infoText}>
-              모든 테스트 계정의 비밀번호는 {config.testPassword} 입니다.
+              개발 환경에서만 사용할 수 있는 테스트 로그인 화면입니다.
             </Text>
           </View>
         </View>

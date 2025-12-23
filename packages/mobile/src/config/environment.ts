@@ -19,6 +19,6 @@ function getStringEnvVar(name: string, defaultValue = ''): string {
 // Environment configuration with type safety and validation
 export const config: EnvironmentConfig = {
   useDevLogin: getBooleanEnvVar('USE_DEV_LOGIN', false),
-  // Dev-only test password - ensure this file is excluded from production builds
-  testPassword: getStringEnvVar('TEST_PASSWORD', 'password@1234'),
+  // Dev-only test password - requires explicit environment variable, no defaults allowed
+  testPassword: getStringEnvVar('TEST_PASSWORD'),
 };

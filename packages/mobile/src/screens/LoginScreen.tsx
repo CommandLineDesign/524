@@ -12,7 +12,7 @@ import { NewLoginScreen } from './NewLoginScreen';
  * - When USE_DEV_LOGIN=false or undefined: Shows the production login screen from Figma design
  */
 export function LoginScreen() {
-  if (config.useDevLogin) {
+  if (__DEV__ && config.useDevLogin) {
     return <DevLoginScreen />;
   }
 
