@@ -1,7 +1,8 @@
 import React from 'react';
 import { StyleSheet, Text, TextInput, TextInputProps, View } from 'react-native';
 
-import { theme } from '../../theme/colors';
+import { colors } from '../../theme';
+import { spacing } from '../../theme';
 import { HelperStatus } from './validation';
 
 type FormFieldProps = {
@@ -27,7 +28,7 @@ export const FormField = React.memo(function FormField({
       <Text style={styles.label}>{label}</Text>
       <TextInput
         style={styles.input}
-        placeholderTextColor={theme.colors.textSecondary}
+        placeholderTextColor={colors.textSecondary}
         {...textInputProps}
       />
       {renderHelper()}
@@ -37,20 +38,20 @@ export const FormField = React.memo(function FormField({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: theme.spacing.md,
+    marginBottom: spacing.md,
   },
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: theme.colors.text,
-    marginBottom: theme.spacing.xs,
+    color: colors.text,
+    marginBottom: spacing.xs,
   },
   input: {
     height: 50,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: colors.border,
     borderRadius: 8,
-    paddingHorizontal: theme.spacing.md,
+    paddingHorizontal: spacing.md,
     fontSize: 16,
     backgroundColor: '#fff',
   },

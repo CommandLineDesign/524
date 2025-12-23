@@ -1,7 +1,8 @@
 import React from 'react';
 import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { theme } from '../../theme/colors';
+import { colors } from '../../theme';
+import { spacing } from '../../theme';
 
 type OnboardingLayoutProps = {
   title: string;
@@ -41,44 +42,44 @@ export function OnboardingLayout({
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: colors.background,
   },
   progressTrack: {
     height: 6,
-    backgroundColor: theme.colors.border,
-    marginHorizontal: theme.spacing.md,
+    backgroundColor: colors.border,
+    marginHorizontal: spacing.md,
     borderRadius: 999,
     overflow: 'hidden',
-    marginTop: theme.spacing.sm,
+    marginTop: spacing.sm,
   },
   progressBar: {
     height: '100%',
-    backgroundColor: theme.colors.accent,
+    backgroundColor: colors.accent,
   },
   content: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingTop: theme.spacing.lg,
-    paddingBottom: theme.spacing.xl,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.xl,
   },
   stepLabel: {
     fontSize: 14,
-    color: theme.colors.textSecondary,
-    marginBottom: theme.spacing.sm,
+    color: colors.textSecondary,
+    marginBottom: spacing.sm,
   },
   title: {
     fontSize: 24,
     fontWeight: '700',
-    color: theme.colors.text,
-    marginBottom: theme.spacing.sm,
+    color: colors.text,
+    marginBottom: spacing.sm,
   },
   subtitle: {
     fontSize: 16,
-    color: theme.colors.subtle,
-    marginBottom: theme.spacing.lg,
+    color: colors.subtle,
+    marginBottom: spacing.lg,
   },
   body: {},
   footer: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingBottom: theme.spacing.lg,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.lg,
   },
 });

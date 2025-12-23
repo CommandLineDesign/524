@@ -1,22 +1,14 @@
 export const colors = {
   background: '#ffffff',
-  primary: '#111827',
+  primary: '#19191b',
   accent: '#f59e0b',
   muted: '#6b7280',
-  text: '#111827',
+  text: '#19191b',
   textSecondary: '#6b7280',
   subtle: '#4b5563',
   surface: '#f9fafb',
   border: '#e5e7eb',
+  borderDark: '#19191b',
 };
 
-export const theme = {
-  colors,
-  spacing: {
-    xs: 4,
-    sm: 8,
-    md: 16,
-    lg: 24,
-    xl: 32,
-  },
-};
+// Note: spacing is now exported from the dedicated spacing.ts file
