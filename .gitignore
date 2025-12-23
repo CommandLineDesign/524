@@ -17,8 +17,6 @@ package-lock.json
 .vercel/
 **/.vercel/
 
-# Next.js generated type declarations
-packages/web/next-env.d.ts
 
 # Environment variables
 .env
