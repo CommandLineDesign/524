@@ -158,7 +158,7 @@ export function ChatScreen() {
 
     const options = {
       mediaType: 'photo' as const,
-      quality: 1,
+      quality: 1 as any,
       includeBase64: false,
     };
 

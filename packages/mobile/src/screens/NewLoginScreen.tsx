@@ -272,7 +272,7 @@ const styles = StyleSheet.create({
   },
   logo: {
     fontSize: typography.sizes.title,
-    fontWeight: typography.weights.bold,
+    fontWeight: typography.weights.bold as any,
     color: colors.text,
     textAlign: 'center',
     marginBottom: spacing.xl + spacing.md,
@@ -287,7 +287,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: typography.sizes.md,
     // biome-ignore lint/suspicious/noExplicitAny: typography weights are strings but RN expects specific literals
-    fontWeight: typography.weights.regular,
+    fontWeight: typography.weights.regular as any,
     color: colors.text,
   },
   input: {
@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
   },
   linkText: {
     fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.regular, // biome-ignore lint/suspicious/noExplicitAny: typography weights are strings but RN expects specific literals
+    fontWeight: typography.weights.regular as any, // biome-ignore lint/suspicious/noExplicitAny: typography weights are strings but RN expects specific literals
     color: colors.text,
   },
   divider: {
@@ -384,7 +384,7 @@ const styles = StyleSheet.create({
   },
   snsLabel: {
     fontSize: typography.sizes.base,
-    fontWeight: typography.weights.regular, // biome-ignore lint/suspicious/noExplicitAny: typography weights are strings but RN expects specific literals
+    fontWeight: typography.weights.regular as any, // biome-ignore lint/suspicious/noExplicitAny: typography weights are strings but RN expects specific literals
     color: colors.text,
   },
 });
