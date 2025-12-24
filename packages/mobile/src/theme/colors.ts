@@ -8,15 +8,9 @@ export const colors = {
   subtle: '#4b5563',
   surface: '#f9fafb',
   border: '#e5e7eb',
-};
-
-export const theme = {
-  colors,
-  spacing: {
-    xs: 4,
-    sm: 8,
-    md: 16,
-    lg: 24,
-    xl: 32,
-  },
+  borderDark: '#19191b',
+  /** Placeholder text color from Figma design */
+  placeholder: '#afb1b6',
+  /** Success state color (Figma: teal checkmark) */
+  success: '#10b981',
 };
