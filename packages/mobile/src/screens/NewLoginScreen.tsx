@@ -52,24 +52,15 @@ const SNSLogo: React.FC<SNSLogoProps> = ({ source, fallbackText, style }) => {
   );
 };
 
-// Local SNS logo assets (currently placeholders - replace with actual logos from Figma)
-// Try to require assets - if they fail, they'll be null and fallbacks will be used
-let NAVER_LOGO: ImageSourcePropType | null = null;
-let KAKAO_LOGO: ImageSourcePropType | null = null;
+// Local SNS logo assets
+// TODO: Add actual logos from Figma to packages/mobile/src/assets/icons/
+// Once added, uncomment the require statements below:
+// const NAVER_LOGO: ImageSourcePropType = require('../assets/icons/naver-logo.png');
+// const KAKAO_LOGO: ImageSourcePropType = require('../assets/icons/kakao-logo.png');
 
-try {
-  NAVER_LOGO = require('../assets/icons/naver-logo.png');
-} catch {
-  // Asset is missing or invalid - fallback UI will be used
-  // TODO: Add dev-only logging when assets fail to load for easier debugging
-}
-
-try {
-  KAKAO_LOGO = require('../assets/icons/kakao-logo.png');
-} catch {
-  // Asset is missing or invalid - fallback UI will be used
-  // TODO: Add dev-only logging when assets fail to load for easier debugging
-}
+// Using null for now - the SNSLogo component will render fallback UI
+const NAVER_LOGO: ImageSourcePropType | null = null;
+const KAKAO_LOGO: ImageSourcePropType | null = null;
 
 // Component-specific dimensions
 const DIVIDER_HEIGHT = 11;
