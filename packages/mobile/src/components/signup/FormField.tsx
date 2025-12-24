@@ -1,5 +1,13 @@
-import React from 'react';
-import { StyleSheet, Text, TextInput, TextInputProps, View } from 'react-native';
+import React, { ReactNode } from 'react';
+import {
+  StyleProp,
+  StyleSheet,
+  Text,
+  TextInput,
+  TextInputProps,
+  View,
+  ViewStyle,
+} from 'react-native';
 
 import { colors } from '../../theme';
 import { spacing } from '../../theme';
@@ -9,12 +17,18 @@ type FormFieldProps = {
   label: string;
   helper?: string;
   status?: HelperStatus;
+  /** Optional accessory component (e.g., icon) aligned to the right of the input */
+  rightAccessory?: ReactNode;
+  /** Container style override */
+  containerStyle?: StyleProp<ViewStyle>;
 } & TextInputProps;
 
 export const FormField = React.memo(function FormField({
   label,
   helper,
   status,
+  rightAccessory,
+  containerStyle,
   ...textInputProps
 }: FormFieldProps) {
   const renderHelper = () => {
@@ -24,13 +38,16 @@ export const FormField = React.memo(function FormField({
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.label}>{label}</Text>
-      <TextInput
-        style={styles.input}
-        placeholderTextColor={colors.textSecondary}
-        {...textInputProps}
-      />
+    <View style={[styles.container, containerStyle]}>
+      {label ? <Text style={styles.label}>{label}</Text> : null}
+      <View style={styles.inputRow}>
+        <TextInput
+          style={[styles.input, rightAccessory ? styles.inputWithAccessory : null]}
+          placeholderTextColor={colors.textSecondary}
+          {...textInputProps}
+        />
+        {rightAccessory}
+      </View>
       {renderHelper()}
     </View>
   );
@@ -46,7 +63,12 @@ const styles = StyleSheet.create({
     color: colors.text,
     marginBottom: spacing.xs,
   },
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   input: {
+    flex: 1,
     height: 50,
     borderWidth: 1,
     borderColor: colors.border,
@@ -54,6 +76,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     fontSize: 16,
     backgroundColor: '#fff',
+  },
+  inputWithAccessory: {
+    paddingRight: 40, // Space for the accessory
   },
   helperError: {
     color: '#d32f2f',

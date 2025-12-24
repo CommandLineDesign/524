@@ -9,6 +9,8 @@ export const colors = {
   surface: '#f9fafb',
   border: '#e5e7eb',
   borderDark: '#19191b',
+  success: '#2e7d32',
+  error: '#d32f2f',
 };
 
 // Note: spacing is now exported from the dedicated spacing.ts file

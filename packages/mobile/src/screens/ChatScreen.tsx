@@ -82,23 +82,20 @@ export function ChatScreen() {
     }
 
     // Map messages to GiftedChat format
-    const mapped = allMessages.map(
-      // biome-ignore lint/suspicious/noExplicitAny: GiftedChat message transformation
-      (message): any => ({
-        _id: message.id,
-        text: message.content || '',
-        createdAt: new Date(message.sentAt),
-        user: {
-          _id: message.senderId,
-          name: message.senderRole === 'artist' ? 'Artist' : 'Customer', // TODO: Get actual names
-          avatar: undefined, // TODO: Add user avatars
-        },
-        image: message.images?.[0], // Use first image if present
-        // Add custom properties
-        messageType: message.messageType,
-        bookingId: message.bookingId,
-      })
-    );
+    const mapped = allMessages.map((message) => ({
+      _id: message.id,
+      text: message.content || '',
+      createdAt: new Date(message.sentAt),
+      user: {
+        _id: message.senderId,
+        name: message.senderRole === 'artist' ? 'Artist' : 'Customer', // TODO: Get actual names
+        avatar: undefined, // TODO: Add user avatars
+      },
+      image: message.images?.[0], // Use first image if present
+      // Add custom properties
+      messageType: message.messageType,
+      bookingId: message.bookingId,
+    }));
 
     // GiftedChat expects messages sorted in DESCENDING order by createdAt
     // (newest message at index 0, which displays at bottom of screen)
@@ -126,10 +123,7 @@ export function ChatScreen() {
   }, [messagesData, user]);
 
   const handleSend = useCallback(
-    async (
-      // biome-ignore lint/suspicious/noExplicitAny: GiftedChat send callback parameter
-      messages: any[] = []
-    ) => {
+    async (messages: IMessage[] = []) => {
       if (!conversationIdToUse || !user) return;
 
       const message = messages[0];
@@ -162,8 +156,7 @@ export function ChatScreen() {
       includeBase64: false,
     };
 
-    // biome-ignore lint/suspicious/noExplicitAny: react-native-image-picker response
-    launchImageLibrary(options, async (response: any) => {
+    launchImageLibrary(options, async (response) => {
       if (response.didCancel || response.errorMessage || !response.assets?.[0]) {
         return;
       }
@@ -220,10 +213,7 @@ export function ChatScreen() {
 
   // Custom send button
   const renderSend = useCallback(
-    (
-      // biome-ignore lint/suspicious/noExplicitAny: GiftedChat render prop
-      props: any
-    ) => (
+    (props: React.ComponentProps<typeof Send>) => (
       <Send {...props}>
         <View style={styles.sendButton}>
           <Text style={styles.sendButtonText}>Send</Text>
@@ -235,10 +225,7 @@ export function ChatScreen() {
 
   // Custom input toolbar with image button
   const renderInputToolbar = useCallback(
-    (
-      // biome-ignore lint/suspicious/noExplicitAny: GiftedChat render prop
-      props: any
-    ) => (
+    (props: React.ComponentProps<typeof InputToolbar>) => (
       <View>
         <View style={styles.inputToolbar}>
           <TouchableOpacity style={styles.imageButton} onPress={handleImagePicker}>

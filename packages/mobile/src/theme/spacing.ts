@@ -6,4 +6,5 @@ export const spacing = {
   xl: 32,
   xxl: 48,
   inputHeight: 52,
+  labelGap: 10, // Figma: 10px gap between label and input
 };

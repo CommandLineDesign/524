@@ -8,8 +8,7 @@ import { useAuthStore } from '../store/authStore';
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:5240';
 
 interface SocketContextValue {
-  // biome-ignore lint/suspicious/noExplicitAny: socket.io Socket type from third-party library
-  socket: any | null;
+  socket: Socket | null;
   isConnected: boolean;
   connectionError: string | null;
   reconnect: () => void;
@@ -20,8 +19,7 @@ const SocketContext = createContext<SocketContextValue | undefined>(undefined);
 
 export function SocketProvider({ children }: { children: React.ReactNode }) {
   const { user, token } = useAuthStore();
-  // biome-ignore lint/suspicious/noExplicitAny: socket.io Socket type from third-party library
-  const socketRef = useRef<any>(null);
+  const socketRef = useRef<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [, forceUpdate] = useState({});
@@ -68,71 +66,56 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       setConnectionError(null);
     });
 
-    newSocket.on(
-      'disconnect',
-      (
-        // biome-ignore lint/suspicious/noExplicitAny: socket.io event handler parameter
-        reason: any
-      ) => {
-        console.log('Socket disconnected:', reason);
-        setIsConnected(false);
+    newSocket.on('disconnect', (reason) => {
+      console.log('Socket disconnected:', reason);
+      setIsConnected(false);
 
-        if (reason === 'io server disconnect') {
-          // Server disconnected, manual reconnection needed
-          setConnectionError('Connection lost. Please refresh.');
-        }
+      if (reason === 'io server disconnect') {
+        // Server disconnected, manual reconnection needed
+        setConnectionError('Connection lost. Please refresh.');
       }
-    );
+    });
 
-    // biome-ignore lint/suspicious/noExplicitAny: socket.io event handler parameter
-    newSocket.on('connect_error', (error: any) => {
+    newSocket.on('connect_error', (error) => {
       console.error('Socket connection error:', error);
       setConnectionError(error.message);
       setIsConnected(false);
     });
 
-    // biome-ignore lint/suspicious/noExplicitAny: socket.io event handler parameter
-    newSocket.on('reconnect', (attemptNumber: any) => {
+    newSocket.io.on('reconnect', (attemptNumber) => {
       console.log('Socket reconnected after', attemptNumber, 'attempts');
       setIsConnected(true);
       setConnectionError(null);
     });
 
-    // biome-ignore lint/suspicious/noExplicitAny: socket.io event handler parameter
-    newSocket.on('reconnect_error', (error: any) => {
+    newSocket.io.on('reconnect_error', (error) => {
       console.error('Socket reconnection error:', error);
       setConnectionError('Failed to reconnect');
     });
 
     // Message event handlers
-    // biome-ignore lint/suspicious/noExplicitAny: socket.io event handler parameter
-    newSocket.on('message:new', (message: any) => {
+    newSocket.on('message:new', (message) => {
       console.log('New message received:', message);
       // This will be handled by React Query cache updates
     });
 
-    // biome-ignore lint/suspicious/noExplicitAny: socket.io event handler parameter
-    newSocket.on('message:delivered', (data: any) => {
+    newSocket.on('message:delivered', (data) => {
       console.log('Message delivered:', data);
     });
 
-    // biome-ignore lint/suspicious/noExplicitAny: socket.io event handler parameter
-    newSocket.on('message:read', (data: any) => {
+    newSocket.on('message:read', (data) => {
       console.log('Message read:', data);
     });
 
-    // biome-ignore lint/suspicious/noExplicitAny: socket.io event handler parameter
-    newSocket.on('user:typing', (data: any) => {
+    newSocket.on('user:typing', (data) => {
       console.log('User typing:', data);
     });
 
-    // biome-ignore lint/suspicious/noExplicitAny: socket.io event handler parameter
-    newSocket.on('conversation:joined', (data: any) => {
+    newSocket.on('conversation:joined', (data) => {
       console.log('Joined conversation:', data);
     });
 
-    // biome-ignore lint/suspicious/noExplicitAny: socket.io event handler parameter
-    newSocket.on('error', (error: any) => {
+    newSocket.on('error', (error) => {
       console.error('Socket error:', error);
     });
 
