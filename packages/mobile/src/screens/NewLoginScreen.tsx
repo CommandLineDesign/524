@@ -4,77 +4,39 @@ import {
   ActivityIndicator,
   Alert,
   Image,
-  ImageSourcePropType,
-  ImageStyle,
-  StyleProp,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
-  ViewStyle,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { isValidEmail } from '../components/signup/validation';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { loginWithKakao, loginWithNaver } from '../services/snsAuth';
 import { useAuthStore } from '../store/authStore';
-import { borderRadius } from '../theme/borderRadius';
-import { colors } from '../theme/colors';
-import { spacing } from '../theme/spacing';
-import { typography } from '../theme/typography';
+import { borderRadius, colors, spacing, typography } from '../theme';
 
-// SNS Logo Component with fallback for missing assets
-interface SNSLogoProps {
-  source: ImageSourcePropType | null;
-  fallbackText: string;
-  style: StyleProp<ImageStyle | ViewStyle>;
-}
+// Local SNS logo assets
+// TODO: Add actual logos from Figma to packages/mobile/src/assets/icons/
+// Once added, uncomment the require statements below:
+// const NAVER_LOGO = require('../assets/icons/naver-logo.png');
+// const KAKAO_LOGO = require('../assets/icons/kakao-logo.png');
 
-const SNSLogo: React.FC<SNSLogoProps> = ({ source, fallbackText, style }) => {
-  const [imageError, setImageError] = useState(false);
-
-  const handleImageError = () => {
-    setImageError(true);
-  };
-
-  if (imageError || !source) {
-    return (
-      <View style={[style, styles.fallbackLogo]}>
-        <Text style={styles.fallbackLogoText}>{fallbackText}</Text>
-      </View>
-    );
-  }
-
-  return (
-    <Image source={source} style={style as StyleProp<ImageStyle>} onError={handleImageError} />
-  );
-};
-
-// Local SNS logo assets (currently placeholders - replace with actual logos from Figma)
-// Try to require assets - if they fail, they'll be null and fallbacks will be used
-let NAVER_LOGO: ImageSourcePropType | null = null;
-let KAKAO_LOGO: ImageSourcePropType | null = null;
-
-try {
-  NAVER_LOGO = require('../assets/icons/naver-logo.png');
-} catch {
-  // Asset is missing or invalid - fallback UI will be used
-  // TODO: Add dev-only logging when assets fail to load for easier debugging
-}
-
-try {
-  KAKAO_LOGO = require('../assets/icons/kakao-logo.png');
-} catch {
-  // Asset is missing or invalid - fallback UI will be used
-  // TODO: Add dev-only logging when assets fail to load for easier debugging
-}
+// Using null for now - fallback text will be shown
+const NAVER_LOGO = null;
+const KAKAO_LOGO = null;
 
 // Component-specific dimensions
 const DIVIDER_HEIGHT = 11;
 const SNS_BUTTON_SIZE = 54;
 const SNS_LOGO_SIZE = 20;
+
+// Email validation helper
+const isValidEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
 
 export function NewLoginScreen() {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
@@ -118,18 +80,6 @@ export function NewLoginScreen() {
 
   const handleFindPassword = () => {
     Alert.alert('비밀번호 찾기', '비밀번호 찾기 기능은 곧 제공될 예정입니다.');
-  };
-
-  const handleNaverLogin = async () => {
-    setIsLoading(true);
-    await loginWithNaver();
-    setIsLoading(false);
-  };
-
-  const handleKakaoLogin = async () => {
-    setIsLoading(true);
-    await loginWithKakao();
-    setIsLoading(false);
   };
 
   return (
@@ -231,12 +181,23 @@ export function NewLoginScreen() {
           <View style={styles.snsButtonWrapper}>
             <TouchableOpacity
               style={styles.snsButton}
-              onPress={handleNaverLogin}
+              onPress={loginWithNaver}
               disabled={isLoading}
               accessibilityRole="button"
               accessibilityLabel="네이버로 로그인"
             >
-              <SNSLogo source={NAVER_LOGO} fallbackText="N" style={styles.snsLogo} />
+              {NAVER_LOGO ? (
+                <Image
+                  source={NAVER_LOGO}
+                  style={styles.snsLogo}
+                  accessibilityRole="image"
+                  accessibilityLabel="네이버 로고"
+                />
+              ) : (
+                <View style={styles.fallbackLogo}>
+                  <Text style={styles.fallbackLogoText}>N</Text>
+                </View>
+              )}
             </TouchableOpacity>
             <Text style={styles.snsLabel}>네이버</Text>
           </View>
@@ -245,12 +206,23 @@ export function NewLoginScreen() {
           <View style={styles.snsButtonWrapper}>
             <TouchableOpacity
               style={styles.snsButton}
-              onPress={handleKakaoLogin}
+              onPress={loginWithKakao}
               disabled={isLoading}
               accessibilityRole="button"
               accessibilityLabel="카카오로 로그인"
             >
-              <SNSLogo source={KAKAO_LOGO} fallbackText="K" style={styles.snsLogo} />
+              {KAKAO_LOGO ? (
+                <Image
+                  source={KAKAO_LOGO}
+                  style={styles.snsLogo}
+                  accessibilityRole="image"
+                  accessibilityLabel="카카오 로고"
+                />
+              ) : (
+                <View style={styles.fallbackLogo}>
+                  <Text style={styles.fallbackLogoText}>K</Text>
+                </View>
+              )}
             </TouchableOpacity>
             <Text style={styles.snsLabel}>카카오</Text>
           </View>
@@ -272,7 +244,7 @@ const styles = StyleSheet.create({
   },
   logo: {
     fontSize: typography.sizes.title,
-    fontWeight: typography.weights.bold as any,
+    fontWeight: typography.weights.bold,
     color: colors.text,
     textAlign: 'center',
     marginBottom: spacing.xl + spacing.md,
@@ -286,8 +258,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: typography.sizes.md,
-    // biome-ignore lint/suspicious/noExplicitAny: typography weights are strings but RN expects specific literals
-    fontWeight: typography.weights.regular as any,
+    fontWeight: typography.weights.regular,
     color: colors.text,
   },
   input: {
@@ -301,7 +272,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   loginButton: {
-    height: spacing.inputHeight,
+    height: 52,
     backgroundColor: colors.primary,
     borderRadius: borderRadius.xl,
     justifyContent: 'center',
@@ -313,7 +284,7 @@ const styles = StyleSheet.create({
   },
   loginButtonText: {
     fontSize: typography.sizes.md,
-    fontWeight: typography.weights.bold as any, // biome-ignore lint/suspicious/noExplicitAny: typography weights are strings but RN expects specific literals
+    fontWeight: typography.weights.bold,
     color: colors.background,
   },
   linksContainer: {
@@ -325,7 +296,7 @@ const styles = StyleSheet.create({
   },
   linkText: {
     fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.regular as any, // biome-ignore lint/suspicious/noExplicitAny: typography weights are strings but RN expects specific literals
+    fontWeight: typography.weights.regular,
     color: colors.text,
   },
   divider: {
@@ -340,7 +311,7 @@ const styles = StyleSheet.create({
   },
   snsTitle: {
     fontSize: typography.sizes.base,
-    fontWeight: typography.weights.bold as any, // biome-ignore lint/suspicious/noExplicitAny: typography weights are strings but RN expects specific literals
+    fontWeight: typography.weights.bold,
     color: colors.text,
     textAlign: 'center',
     marginBottom: spacing.md,
@@ -348,7 +319,6 @@ const styles = StyleSheet.create({
   snsButtonsContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    // Design: 48px gap between SNS buttons (xl + md = 32 + 16) for visual balance
     gap: spacing.xl + spacing.md,
   },
   snsButtonWrapper: {
@@ -379,12 +349,12 @@ const styles = StyleSheet.create({
   },
   fallbackLogoText: {
     fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.bold as any, // biome-ignore lint/suspicious/noExplicitAny: typography weights are strings but RN expects specific literals
+    fontWeight: typography.weights.bold,
     color: colors.background,
   },
   snsLabel: {
     fontSize: typography.sizes.base,
-    fontWeight: typography.weights.regular as any, // biome-ignore lint/suspicious/noExplicitAny: typography weights are strings but RN expects specific literals
+    fontWeight: typography.weights.regular,
     color: colors.text,
   },
 });

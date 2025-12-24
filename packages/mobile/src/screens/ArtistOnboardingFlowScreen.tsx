@@ -11,8 +11,8 @@ import { OnboardingLayout } from '../components/onboarding/OnboardingLayout';
 import type { RootStackParamList } from '../navigation/AppNavigator';
 import { useUpdateArtistProfile } from '../query/artist';
 import { useAuthStore } from '../store/authStore';
-import { colors } from '../theme/colors';
-import { spacing } from '../theme/spacing';
+import { colors } from '../theme';
+import { spacing } from '../theme';
 
 type StepKey = 'basic' | 'specialties' | 'service_area' | 'photo';
 

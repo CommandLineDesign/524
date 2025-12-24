@@ -1,8 +1,8 @@
 import React from 'react';
 import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { colors } from '../../theme/colors';
-import { spacing } from '../../theme/spacing';
+import { colors } from '../../theme';
+import { spacing } from '../../theme';
 
 type OnboardingLayoutProps = {
   title: string;

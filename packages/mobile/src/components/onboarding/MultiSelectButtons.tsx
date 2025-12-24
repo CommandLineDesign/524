@@ -1,8 +1,8 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import { colors } from '../../theme/colors';
-import { spacing } from '../../theme/spacing';
+import { colors } from '../../theme';
+import { spacing } from '../../theme';
 
 export type MultiSelectOption = {
   id: string;

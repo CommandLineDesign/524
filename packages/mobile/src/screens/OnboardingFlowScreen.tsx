@@ -27,8 +27,8 @@ import {
   useSaveOnboardingResponse,
 } from '../query/onboarding';
 import { useAuthStore } from '../store/authStore';
-import { colors } from '../theme/colors';
-import { spacing } from '../theme/spacing';
+import { colors } from '../theme';
+import { spacing } from '../theme';
 
 // Temporary internal-testing images from Wikimedia Commons (CC BY / CC BY-SA).
 // For production, replace with licensed/hosted assets.

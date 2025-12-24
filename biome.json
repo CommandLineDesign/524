@@ -22,7 +22,8 @@
       "**/migrations/**",
       "**/meta/**",
       "**/package-lock.json",
-      "**/yarn.lock"
+      "**/yarn.lock",
+      "**/next-env.d.ts"
     ]
   },
   "formatter": {

@@ -1,24 +1,24 @@
 export const typography = {
   sizes: {
     xs: 12,
-    sm: 14,
+    sm: 13,
+    base: 14,
     md: 16,
     lg: 18,
     xl: 20,
     xxl: 24,
-    title: 24,
-    base: 16,
+    xxxl: 32,
+    title: 50,
   },
   weights: {
-    normal: '400',
-    regular: '400',
-    medium: '500',
-    semibold: '600',
-    bold: '700',
+    regular: '400' as const,
+    medium: '500' as const,
+    semibold: '600' as const,
+    bold: '700' as const,
   },
   lineHeights: {
     tight: 1.2,
     normal: 1.5,
-    relaxed: 1.6,
+    relaxed: 1.75,
   },
 };

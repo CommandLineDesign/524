@@ -519,18 +519,6 @@ Use this checklist when creating or reviewing React Native components to ensure 
 
 - [ ] **Render props used when needed** (for flexibility)
 
-### Form Components
-
-- [ ] **FormRow used for input + button layouts**
-  ```tsx
-  // For input fields with adjacent buttons (verify, search, etc.)
-  <FormRow label="이메일 주소" rightAccessory={<Button />}>
-    <FormField label="" {...props} containerStyle={{ marginBottom: 0 }} />
-  </FormRow>
-  ```
-
-- [ ] **FormField label conditionally rendered** (empty string = no label element)
-
 ---
 
 ## 📚 Documentation

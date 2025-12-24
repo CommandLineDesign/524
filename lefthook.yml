@@ -19,7 +19,8 @@ pre-commit:
           .*\.expo.*|
           .*\.turbo.*|
           .*migrations.*|
-          .*meta.*
+          .*meta.*|
+          .*next-env\.d\.ts$
         )
 
 pre-push:

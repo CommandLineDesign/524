@@ -51,9 +51,6 @@ export const useAuthStore = create<AuthState>((set) => ({
       await AsyncStorage.setItem('user', JSON.stringify(data.user));
 
       set({ user: data.user, token: data.token, isLoading: false });
-    } catch (error) {
-      console.error('Login error:', error);
-      throw error;
     } finally {
       set((state) => ({ ...state, isLoading: false }));
     }
@@ -65,9 +62,6 @@ export const useAuthStore = create<AuthState>((set) => ({
       await AsyncStorage.setItem('auth_token', data.token);
       await AsyncStorage.setItem('user', JSON.stringify(data.user));
       set({ user: data.user, token: data.token, isLoading: false });
-    } catch (error) {
-      console.error('Signup user error:', error);
-      throw error;
     } finally {
       set((state) => ({ ...state, isLoading: false }));
     }
@@ -79,9 +73,6 @@ export const useAuthStore = create<AuthState>((set) => ({
       await AsyncStorage.setItem('auth_token', data.token);
       await AsyncStorage.setItem('user', JSON.stringify(data.user));
       set({ user: data.user, token: data.token, isLoading: false });
-    } catch (error) {
-      console.error('Signup artist error:', error);
-      throw error;
     } finally {
       set((state) => ({ ...state, isLoading: false }));
     }
@@ -122,9 +113,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         set({ isLoading: false });
       }
     } catch (error) {
-      // TODO: Implement proper error monitoring for session loading failures
-      // Currently swallows errors to avoid exposing sensitive details to users
-      // Consider adding non-sensitive error tracking (e.g., "session_load_failed")
+      // Error logging removed for production security
       set({ isLoading: false });
     }
   },

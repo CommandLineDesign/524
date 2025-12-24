@@ -403,8 +403,7 @@ export function useMarkAsRead() {
 
   return useMutation({
     mutationFn: async (conversationId: string) => {
-      // biome-ignore lint/suspicious/noExplicitAny: response data type for mark as read
-      const response = await apiClient.put<{ success: boolean; data: any }>(
+      const response = await apiClient.put<{ success: boolean; data: unknown }>(
         `/api/v1/messaging/conversations/${conversationId}/read`
       );
       return response.data;

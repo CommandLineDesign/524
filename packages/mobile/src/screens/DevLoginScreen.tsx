@@ -15,8 +15,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { config } from '../config/environment';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { useAuthStore } from '../store/authStore';
-import { colors } from '../theme/colors';
-import { spacing } from '../theme/spacing';
+import { colors } from '../theme';
+import { spacing } from '../theme';
 
 // Quick-select buttons for development convenience
 // These must match actual users in the database (created by seed script)
@@ -86,7 +86,7 @@ export function DevLoginScreen() {
               style={styles.input}
               value={password}
               onChangeText={setPassword}
-              placeholder="비밀번호"
+              placeholder="password@1234"
               secureTextEntry
               editable={!isLoading}
             />

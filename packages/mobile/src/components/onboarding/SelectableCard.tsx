@@ -1,8 +1,8 @@
 import React from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import { colors } from '../../theme/colors';
-import { spacing } from '../../theme/spacing';
+import { colors } from '../../theme';
+import { spacing } from '../../theme';
 
 type SelectableCardProps = {
   title?: string;

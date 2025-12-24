@@ -9,8 +9,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { colors } from '../../theme/colors';
-import { spacing } from '../../theme/spacing';
+import { colors } from '../../theme';
+import { spacing } from '../../theme';
 import { FormField } from './FormField';
 import { HelperStatus } from './validation';
 

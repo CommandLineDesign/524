@@ -1,8 +1,8 @@
 import React from 'react';
 import { Image, Text, View } from 'react-native';
 
-import { colors } from '../theme/colors';
-import { spacing } from '../theme/spacing';
+import { colors } from '../theme';
+import { spacing } from '../theme';
 
 export function ArtistPendingScreen() {
   return (

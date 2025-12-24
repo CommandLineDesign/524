@@ -17,6 +17,7 @@ package-lock.json
 .vercel/
 **/.vercel/
 
+
 # Environment variables
 .env
 .env.local
@@ -28,5 +29,9 @@ packages/*/.env.local
 *.p8
 *.pem
 *.key
+
+# Temporary account checking scripts
+check-actual-recent-accounts.js
+check-december-accounts.js
 
 

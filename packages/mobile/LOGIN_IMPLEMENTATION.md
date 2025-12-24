@@ -168,4 +168,3 @@ This implementation follows the 524 Frontend Standards:
 9. Test on various device sizes
 10. Conduct accessibility audit with screen readers
 
-
