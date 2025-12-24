@@ -31,6 +31,9 @@ import { SignupScreen } from '../screens/SignupScreen';
 import { WelcomeScreen } from '../screens/WelcomeScreen';
 import { useAuthStore } from '../store/authStore';
 
+// Feature flag to control customer onboarding visibility
+const isCustomerOnboardingEnabled = process.env.EXPO_PUBLIC_SHOW_CUSTOMER_ONBOARDING === 'true';
+
 // Custom hook to determine initial navigation route based on user state
 function useInitialRoute() {
   const { user } = useAuthStore();
@@ -63,7 +66,10 @@ function useInitialRoute() {
     !requiresArtistProfile &&
     artistProfile?.verificationStatus === 'pending_review';
   const shouldShowCustomerOnboarding =
-    Boolean(user) && !effectiveIsArtist && !(user?.onboardingCompleted || onboarding?.completed);
+    isCustomerOnboardingEnabled &&
+    Boolean(user) &&
+    !effectiveIsArtist &&
+    !(user?.onboardingCompleted || onboarding?.completed);
 
   return useMemo(() => {
     if (!user) return 'Login';
@@ -153,7 +159,10 @@ export function AppNavigator() {
     !requiresArtistProfile &&
     artistProfile?.verificationStatus === 'pending_review';
   const shouldShowCustomerOnboarding =
-    Boolean(user) && !effectiveIsArtist && !(user?.onboardingCompleted || onboarding?.completed);
+    isCustomerOnboardingEnabled &&
+    Boolean(user) &&
+    !effectiveIsArtist &&
+    !(user?.onboardingCompleted || onboarding?.completed);
 
   useEffect(() => {
     loadSession();

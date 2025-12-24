@@ -4,7 +4,7 @@ export interface ImageCompressionOptions {
   maxWidth?: number;
   maxHeight?: number;
   quality?: number;
-  format?: 'jpeg' | 'png' | 'webp';
+  format?: 'jpeg' | 'png';
 }
 
 export interface CompressedImageResult {
@@ -37,7 +37,7 @@ export async function compressImageForMessaging(
       ],
       {
         compress: quality,
-        format,
+        format: format as any,
       }
     );
 

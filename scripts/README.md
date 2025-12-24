@@ -15,6 +15,8 @@ Utility scripts for bootstrapping and maintaining the 524 monorepo.
 - `setup-env.sh` – Set up environment variables for local development
 - `generate-secrets.sh` – Generate secure secrets for JWT and encryption
 
+> **Note**: For database inspection and debugging, use the Neon MCP tools available in Cursor instead of creating ad-hoc scripts.
+
 ### Suggested Future Scripts
 
 - `setup.mjs` – install dependencies, generate env files, and prepare local dev services
