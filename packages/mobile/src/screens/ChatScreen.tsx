@@ -82,22 +82,20 @@ export function ChatScreen() {
     }
 
     // Map messages to GiftedChat format
-    const mapped = allMessages.map(
-      (message): IMessage => ({
-        _id: message.id,
-        text: message.content || '',
-        createdAt: new Date(message.sentAt),
-        user: {
-          _id: message.senderId,
-          name: message.senderRole === 'artist' ? 'Artist' : 'Customer', // TODO: Get actual names
-          avatar: undefined, // TODO: Add user avatars
-        },
-        image: message.images?.[0], // Use first image if present
-        // Add custom properties
-        messageType: message.messageType,
-        bookingId: message.bookingId,
-      })
-    );
+    const mapped = allMessages.map((message) => ({
+      _id: message.id,
+      text: message.content || '',
+      createdAt: new Date(message.sentAt),
+      user: {
+        _id: message.senderId,
+        name: message.senderRole === 'artist' ? 'Artist' : 'Customer', // TODO: Get actual names
+        avatar: undefined, // TODO: Add user avatars
+      },
+      image: message.images?.[0], // Use first image if present
+      // Add custom properties
+      messageType: message.messageType,
+      bookingId: message.bookingId,
+    }));
 
     // GiftedChat expects messages sorted in DESCENDING order by createdAt
     // (newest message at index 0, which displays at bottom of screen)
@@ -215,7 +213,7 @@ export function ChatScreen() {
 
   // Custom send button
   const renderSend = useCallback(
-    (props: Send['props']) => (
+    (props: React.ComponentProps<typeof Send>) => (
       <Send {...props}>
         <View style={styles.sendButton}>
           <Text style={styles.sendButtonText}>Send</Text>
@@ -227,7 +225,7 @@ export function ChatScreen() {
 
   // Custom input toolbar with image button
   const renderInputToolbar = useCallback(
-    (props: InputToolbar['props']) => (
+    (props: React.ComponentProps<typeof InputToolbar>) => (
       <View>
         <View style={styles.inputToolbar}>
           <TouchableOpacity style={styles.imageButton} onPress={handleImagePicker}>
