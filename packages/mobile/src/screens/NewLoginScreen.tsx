@@ -17,9 +17,15 @@ import { loginWithKakao, loginWithNaver } from '../services/snsAuth';
 import { useAuthStore } from '../store/authStore';
 import { borderRadius, colors, spacing, typography } from '../theme';
 
-// Local SNS logo assets (replace placeholder files with actual logos from Figma)
-const NAVER_LOGO = require('../assets/icons/naver-logo.png');
-const KAKAO_LOGO = require('../assets/icons/kakao-logo.png');
+// Local SNS logo assets
+// TODO: Add actual logos from Figma to packages/mobile/src/assets/icons/
+// Once added, uncomment the require statements below:
+// const NAVER_LOGO = require('../assets/icons/naver-logo.png');
+// const KAKAO_LOGO = require('../assets/icons/kakao-logo.png');
+
+// Using null for now - fallback text will be shown
+const NAVER_LOGO = null;
+const KAKAO_LOGO = null;
 
 // Component-specific dimensions
 const DIVIDER_HEIGHT = 11;
@@ -180,12 +186,18 @@ export function NewLoginScreen() {
               accessibilityRole="button"
               accessibilityLabel="네이버로 로그인"
             >
-              <Image
-                source={NAVER_LOGO}
-                style={styles.snsLogo}
-                accessibilityRole="image"
-                accessibilityLabel="네이버 로고"
-              />
+              {NAVER_LOGO ? (
+                <Image
+                  source={NAVER_LOGO}
+                  style={styles.snsLogo}
+                  accessibilityRole="image"
+                  accessibilityLabel="네이버 로고"
+                />
+              ) : (
+                <View style={styles.fallbackLogo}>
+                  <Text style={styles.fallbackLogoText}>N</Text>
+                </View>
+              )}
             </TouchableOpacity>
             <Text style={styles.snsLabel}>네이버</Text>
           </View>
@@ -199,12 +211,18 @@ export function NewLoginScreen() {
               accessibilityRole="button"
               accessibilityLabel="카카오로 로그인"
             >
-              <Image
-                source={KAKAO_LOGO}
-                style={styles.snsLogo}
-                accessibilityRole="image"
-                accessibilityLabel="카카오 로고"
-              />
+              {KAKAO_LOGO ? (
+                <Image
+                  source={KAKAO_LOGO}
+                  style={styles.snsLogo}
+                  accessibilityRole="image"
+                  accessibilityLabel="카카오 로고"
+                />
+              ) : (
+                <View style={styles.fallbackLogo}>
+                  <Text style={styles.fallbackLogoText}>K</Text>
+                </View>
+              )}
             </TouchableOpacity>
             <Text style={styles.snsLabel}>카카오</Text>
           </View>
@@ -320,6 +338,19 @@ const styles = StyleSheet.create({
   snsLogo: {
     width: SNS_LOGO_SIZE,
     height: SNS_LOGO_SIZE,
+  },
+  fallbackLogo: {
+    width: SNS_LOGO_SIZE,
+    height: SNS_LOGO_SIZE,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.primary,
+    borderRadius: borderRadius.sm,
+  },
+  fallbackLogoText: {
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.bold,
+    color: colors.background,
   },
   snsLabel: {
     fontSize: typography.sizes.base,
