@@ -31,8 +31,8 @@ export function ServiceSelectionScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom', 'left', 'right']}>
       <View style={styles.header}>
-        <View style={styles.headerSpacer} />
         <MenuButton onPress={() => setMenuVisible(true)} />
+        <View style={styles.headerSpacer} />
       </View>
 
       <View style={styles.content}>

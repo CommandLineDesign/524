@@ -188,10 +188,10 @@ export function SignupScreen() {
         birthYear,
       });
 
-      // Navigate to Welcome screen after successful signup
+      // Navigate to confirmation screen after successful signup
       navigation.reset({
         index: 0,
-        routes: [{ name: 'Welcome' }],
+        routes: [{ name: 'SignupConfirmation' }],
       });
     } catch (error) {
       // Handle specific error codes from backend

@@ -40,15 +40,23 @@ Master tracking file for all user stories, organized by epic.
 
 ---
 
+## Foundation Setup
+
+| Status | Story | Priority | Effort |
+|--------|-------|----------|--------|
+| 📋 | [Navigation Reconsideration](./stories/navigation-reconsideration.md) | Low | M |
+
+---
+
 ## Statistics
 
 | Metric | Count |
 |--------|-------|
-| **Total Stories** | 16 |
+| **Total Stories** | 17 |
 | **Not Started** | 3 |
 | **In Progress** | 1 |
 | **Completed** | 12 |
-| **Completion Rate** | 75% |
+| **Completion Rate** | 71% |
 
 ---
 
@@ -58,3 +66,4 @@ Master tracking file for all user stories, organized by epic.
 |------|---------|
 | [Admin Dashboard](./epics/admin-dashboard.md) | 8 |
 | [Review System](./epics/review-system.md) | 8 |
+| [Foundation Setup](./epics/foundation-setup.md) | 1 |
