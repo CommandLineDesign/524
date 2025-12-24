@@ -30,4 +30,8 @@ packages/*/.env.local
 *.pem
 *.key
 
+# Temporary account checking scripts
+check-actual-recent-accounts.js
+check-december-accounts.js
+
 
