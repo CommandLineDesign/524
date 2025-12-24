@@ -29,7 +29,7 @@ import { typography } from '../theme/typography';
 interface SNSLogoProps {
   source: ImageSourcePropType | null;
   fallbackText: string;
-  style: StyleProp<ViewStyle>;
+  style: StyleProp<ImageStyle | ViewStyle>;
 }
 
 const SNSLogo: React.FC<SNSLogoProps> = ({ source, fallbackText, style }) => {
@@ -47,7 +47,9 @@ const SNSLogo: React.FC<SNSLogoProps> = ({ source, fallbackText, style }) => {
     );
   }
 
-  return <Image source={source} style={style} onError={handleImageError} />;
+  return (
+    <Image source={source} style={style as StyleProp<ImageStyle>} onError={handleImageError} />
+  );
 };
 
 // Local SNS logo assets (currently placeholders - replace with actual logos from Figma)
@@ -284,6 +286,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: typography.sizes.md,
+    // biome-ignore lint/suspicious/noExplicitAny: typography weights are strings but RN expects specific literals
     fontWeight: typography.weights.regular,
     color: colors.text,
   },
@@ -310,7 +313,7 @@ const styles = StyleSheet.create({
   },
   loginButtonText: {
     fontSize: typography.sizes.md,
-    fontWeight: typography.weights.bold,
+    fontWeight: typography.weights.bold as any, // biome-ignore lint/suspicious/noExplicitAny: typography weights are strings but RN expects specific literals
     color: colors.background,
   },
   linksContainer: {
@@ -322,7 +325,7 @@ const styles = StyleSheet.create({
   },
   linkText: {
     fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.regular,
+    fontWeight: typography.weights.regular, // biome-ignore lint/suspicious/noExplicitAny: typography weights are strings but RN expects specific literals
     color: colors.text,
   },
   divider: {
@@ -337,7 +340,7 @@ const styles = StyleSheet.create({
   },
   snsTitle: {
     fontSize: typography.sizes.base,
-    fontWeight: typography.weights.bold,
+    fontWeight: typography.weights.bold as any, // biome-ignore lint/suspicious/noExplicitAny: typography weights are strings but RN expects specific literals
     color: colors.text,
     textAlign: 'center',
     marginBottom: spacing.md,
@@ -376,12 +379,12 @@ const styles = StyleSheet.create({
   },
   fallbackLogoText: {
     fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.bold,
+    fontWeight: typography.weights.bold as any, // biome-ignore lint/suspicious/noExplicitAny: typography weights are strings but RN expects specific literals
     color: colors.background,
   },
   snsLabel: {
     fontSize: typography.sizes.base,
-    fontWeight: typography.weights.regular,
+    fontWeight: typography.weights.regular, // biome-ignore lint/suspicious/noExplicitAny: typography weights are strings but RN expects specific literals
     color: colors.text,
   },
 });

@@ -432,7 +432,7 @@ export function OnboardingFlowScreen() {
           flex: 1,
           justifyContent: 'center',
           alignItems: 'center',
-          padding: theme.spacing.lg,
+          padding: spacing.lg,
         }}
       >
         <Text style={{ color: colors.text, fontSize: 16, textAlign: 'center' }}>

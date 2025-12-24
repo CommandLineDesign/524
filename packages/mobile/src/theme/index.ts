@@ -1,3 +1,5 @@
+import { colors } from './colors';
+import { spacing } from './spacing';
 export { colors } from './colors';
 export { spacing } from './spacing';
 export { borderRadius } from './borderRadius';

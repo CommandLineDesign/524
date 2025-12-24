@@ -158,7 +158,7 @@ export function ChatScreen() {
 
     const options = {
       mediaType: 'photo' as const,
-      quality: 1, // We'll handle compression ourselves
+      quality: 1,
       includeBase64: false,
     };
 
@@ -292,7 +292,7 @@ export function ChatScreen() {
   }
 
   const currentUser = {
-    _id: user?.id,
+    _id: user?.id || 'unknown',
     name: user?.primaryRole === 'artist' ? 'You (Artist)' : 'You (Customer)',
     avatar: undefined, // TODO: Add user avatar
   };
@@ -315,7 +315,6 @@ export function ChatScreen() {
           renderSend={renderSend}
           renderInputToolbar={renderInputToolbar}
           messagesContainerStyle={styles.messagesContainer}
-          textInputStyle={styles.textInput}
           placeholder="Type a message..."
           showAvatarForEveryMessage={false}
           renderAvatar={null} // Disable avatars for now

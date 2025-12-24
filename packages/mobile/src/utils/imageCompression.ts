@@ -37,7 +37,7 @@ export async function compressImageForMessaging(
       ],
       {
         compress: quality,
-        format,
+        format: format,
       }
     );
 
