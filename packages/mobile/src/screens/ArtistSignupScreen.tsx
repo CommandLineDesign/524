@@ -67,7 +67,7 @@ export function ArtistSignupScreen() {
       // Ensure we land on the authenticated stack explicitly after signup
       navigation.reset({
         index: 0,
-        routes: [{ name: 'Welcome' }],
+        routes: [{ name: 'Home' }],
       });
     } catch (error) {
       Alert.alert(

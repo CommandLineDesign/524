@@ -41,11 +41,9 @@ This epic establishes the core technical foundation for the 524 Beauty Marketpla
 - **Cache**: Redis 7+.
 - **Node Version**: Node.js 20 LTS.
 
-## User Stories (Examples)
+## User Stories
 
-- As a developer, I want to run a single command to start the entire stack locally so that I can develop features efficiently.
-- As a developer, I want shared types available in both frontend and backend so that I don't have to duplicate type definitions.
-- As a DevOps engineer, I want automated builds on every commit so that I can catch integration issues early.
+- [Navigation Reconsideration](../stories/navigation-reconsideration.md): Evaluate whether to re-build or remove the current navigation system
 
 ## Risks and Assumptions
 

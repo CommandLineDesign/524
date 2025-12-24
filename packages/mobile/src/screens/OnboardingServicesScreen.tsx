@@ -51,7 +51,7 @@ export function OnboardingServicesScreen() {
       await setUserOnboardingComplete(true);
       navigation.reset({
         index: 0,
-        routes: [{ name: 'Welcome' }],
+        routes: [{ name: 'Home' }],
       });
     } catch (error) {
       Alert.alert('Could not save', (error as Error)?.message ?? 'Please try again.');

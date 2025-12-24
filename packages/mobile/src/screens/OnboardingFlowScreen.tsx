@@ -390,7 +390,7 @@ export function OnboardingFlowScreen() {
       setUserOnboardingComplete(true);
       navigation.reset({
         index: 0,
-        routes: [{ name: 'Welcome' }],
+        routes: [{ name: 'Home' }],
       });
     }
   }, [data?.completed, navigation, setUserOnboardingComplete]);
@@ -403,7 +403,7 @@ export function OnboardingFlowScreen() {
       await setUserOnboardingComplete(true);
       navigation.reset({
         index: 0,
-        routes: [{ name: 'Welcome' }],
+        routes: [{ name: 'Home' }],
       });
       return;
     }

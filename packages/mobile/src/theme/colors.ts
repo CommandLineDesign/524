@@ -7,6 +7,7 @@ export const colors = {
   textSecondary: '#6b7280',
   subtle: '#4b5563',
   surface: '#f9fafb',
+  surfaceAlt: '#efeff0',
   border: '#e5e7eb',
   borderDark: '#19191b',
   success: '#2e7d32',

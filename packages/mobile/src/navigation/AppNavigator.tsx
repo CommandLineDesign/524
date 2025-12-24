@@ -18,6 +18,7 @@ import { BookingSummaryScreen } from '../screens/BookingSummaryScreen';
 import { BookingsListScreen } from '../screens/BookingsListScreen';
 import { ChatScreen } from '../screens/ChatScreen';
 import { ChatsListScreen } from '../screens/ChatsListScreen';
+import { HomeScreen } from '../screens/HomeScreen';
 import { LoginScreen } from '../screens/LoginScreen';
 import { MyReviewsScreen } from '../screens/MyReviewsScreen';
 import { OccasionSelectionScreen } from '../screens/OccasionSelectionScreen';
@@ -27,8 +28,8 @@ import { OnboardingServicesScreen } from '../screens/OnboardingServicesScreen';
 import { ReviewConfirmationScreen } from '../screens/ReviewConfirmationScreen';
 import { ReviewSubmissionScreen } from '../screens/ReviewSubmissionScreen';
 import { ServiceSelectionScreen } from '../screens/ServiceSelectionScreen';
+import { SignupConfirmationScreen } from '../screens/SignupConfirmationScreen';
 import { SignupScreen } from '../screens/SignupScreen';
-import { WelcomeScreen } from '../screens/WelcomeScreen';
 import { useAuthStore } from '../store/authStore';
 
 // Feature flag to control customer onboarding visibility
@@ -74,13 +75,13 @@ function useInitialRoute() {
   return useMemo(() => {
     if (!user) return 'Login';
 
-    if (lostArtistAccess) return 'Welcome';
+    if (lostArtistAccess) return 'Home';
     if (requiresArtistProfile) return 'ArtistOnboarding';
     if (artistPendingReview) return 'ArtistPending';
     if (effectiveIsArtist) return 'ArtistBookingsList';
     if (shouldShowCustomerOnboarding) return 'OnboardingFlow';
 
-    return 'Welcome';
+    return 'Home';
   }, [
     user,
     lostArtistAccess,
@@ -94,8 +95,9 @@ function useInitialRoute() {
 export type RootStackParamList = {
   Login: undefined;
   Signup: undefined;
+  SignupConfirmation: undefined;
   ArtistSignup: undefined;
-  Welcome: undefined;
+  Home: undefined;
   ServiceSelection: undefined;
   OccasionSelection: undefined;
   BookingSummary: undefined;
@@ -186,6 +188,11 @@ export function AppNavigator() {
             <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
             <Stack.Screen name="Signup" component={SignupScreen} options={{ headerShown: false }} />
             <Stack.Screen
+              name="SignupConfirmation"
+              component={SignupConfirmationScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
               name="ArtistSignup"
               component={ArtistSignupScreen}
               options={{ headerShown: false }}
@@ -227,11 +234,7 @@ export function AppNavigator() {
               </>
             ) : (
               <>
-                <Stack.Screen
-                  name="Welcome"
-                  component={WelcomeScreen}
-                  options={{ headerShown: false }}
-                />
+                <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
                 <Stack.Screen
                   name="ArtistBookingsList"
                   component={ArtistBookingsListScreen}
@@ -310,13 +313,9 @@ export function AppNavigator() {
                 <Stack.Screen name="Chat" component={ChatScreen} options={{ title: 'Chat' }} />
               </>
             )}
-            {/* Ensure Welcome is available even while onboarding to avoid reset race */}
+            {/* Ensure Home is available even while onboarding to avoid reset race */}
             {shouldShowCustomerOnboarding ? (
-              <Stack.Screen
-                name="Welcome"
-                component={WelcomeScreen}
-                options={{ headerShown: false }}
-              />
+              <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
             ) : null}
           </>
         )}

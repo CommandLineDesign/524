@@ -19,8 +19,8 @@ export function ReviewConfirmationScreen() {
   const { bookingId } = route.params;
 
   const handleGoHome = () => {
-    // Navigate to the Welcome screen (home page)
-    navigation.navigate('Welcome');
+    // Navigate to the Home screen
+    navigation.navigate('Home');
   };
 
   const handleViewBooking = () => {
