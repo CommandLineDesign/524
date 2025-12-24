@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { config } from '../config/environment';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { useAuthStore } from '../store/authStore';
 import { colors } from '../theme/colors';
@@ -29,13 +30,11 @@ const TEST_ACCOUNTS = [
   { email: 'admin@test.com', role: 'admin', name: '관리자' },
 ];
 
-const TEST_PASSWORD = 'password@1234';
-
-export function LoginScreen() {
+export function DevLoginScreen() {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const login = useAuthStore((state) => state.login);
   const [email, setEmail] = useState('demo-customer@524.app');
-  const [password, setPassword] = useState(TEST_PASSWORD);
+  const [password, setPassword] = useState(config.testPassword);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async () => {
@@ -60,7 +59,7 @@ export function LoginScreen() {
 
   const selectTestUser = (testEmail: string) => {
     setEmail(testEmail);
-    setPassword(TEST_PASSWORD);
+    setPassword(config.testPassword);
   };
 
   return (
@@ -87,7 +86,7 @@ export function LoginScreen() {
               style={styles.input}
               value={password}
               onChangeText={setPassword}
-              placeholder="password@1234"
+              placeholder="비밀번호"
               secureTextEntry
               editable={!isLoading}
             />
@@ -141,7 +140,7 @@ export function LoginScreen() {
           <View style={styles.infoBox}>
             <Text style={styles.infoTitle}>🔐 개발 전용 로그인</Text>
             <Text style={styles.infoText}>
-              모든 테스트 계정의 비밀번호는 {TEST_PASSWORD} 입니다.
+              개발 환경에서만 사용할 수 있는 테스트 로그인 화면입니다.
             </Text>
           </View>
         </View>

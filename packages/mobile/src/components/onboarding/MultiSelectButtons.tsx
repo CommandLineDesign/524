@@ -1,7 +1,8 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import { theme } from '../../theme/colors';
+import { colors } from '../../theme/colors';
+import { spacing } from '../../theme/spacing';
 
 export type MultiSelectOption = {
   id: string;
@@ -47,35 +48,35 @@ const styles = StyleSheet.create({
   container: {},
   button: {
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: colors.border,
     borderRadius: 12,
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.md,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
     backgroundColor: '#fff',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: theme.spacing.sm,
+    marginBottom: spacing.sm,
   },
   buttonActive: {
-    borderColor: theme.colors.accent,
+    borderColor: colors.accent,
     backgroundColor: '#fff8ed',
   },
   buttonContent: {
     flex: 1,
-    marginRight: theme.spacing.md,
+    marginRight: spacing.md,
   },
   label: {
     fontSize: 16,
     fontWeight: '600',
-    color: theme.colors.text,
+    color: colors.text,
   },
   labelActive: {
-    color: theme.colors.accent,
+    color: colors.accent,
   },
   description: {
     fontSize: 14,
-    color: theme.colors.textSecondary,
+    color: colors.textSecondary,
     marginTop: 4,
   },
   checkbox: {
@@ -83,11 +84,11 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 6,
     borderWidth: 2,
-    borderColor: theme.colors.border,
+    borderColor: colors.border,
     backgroundColor: '#fff',
   },
   checkboxActive: {
-    borderColor: theme.colors.accent,
-    backgroundColor: theme.colors.accent,
+    borderColor: colors.accent,
+    backgroundColor: colors.accent,
   },
 });

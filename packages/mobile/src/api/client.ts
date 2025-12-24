@@ -88,7 +88,23 @@ async function request<T>(path: string, options: RequestInit): Promise<T> {
   return (await response.json()) as T;
 }
 
+/**
+ * Full signup payload for customer signup with all required fields
+ */
 export interface SignupPayload {
+  email: string;
+  password: string;
+  confirmPassword: string;
+  name: string;
+  phoneNumber: string;
+  birthYear: number;
+}
+
+/**
+ * Artist signup payload - simplified version without phone/DOB requirements
+ * (Artist signup screen will be updated separately to match new design)
+ */
+export interface ArtistSignupPayload {
   email: string;
   password: string;
   confirmPassword: string;
@@ -309,6 +325,25 @@ export async function getReviewStats() {
   });
 }
 
+export interface AvailabilityCheckPayload {
+  email?: string;
+  phoneNumber?: string;
+}
+
+export interface AvailabilityCheckResponse {
+  emailAvailable: boolean;
+  phoneAvailable: boolean;
+}
+
+export async function checkAvailability(
+  payload: AvailabilityCheckPayload
+): Promise<AvailabilityCheckResponse> {
+  return request<AvailabilityCheckResponse>('/api/v1/auth/check-availability', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
 export async function signUpUser(payload: SignupPayload): Promise<AuthResponse> {
   return request<AuthResponse>('/api/v1/auth/signup/user', {
     method: 'POST',
@@ -316,7 +351,7 @@ export async function signUpUser(payload: SignupPayload): Promise<AuthResponse> 
   });
 }
 
-export async function signUpArtist(payload: SignupPayload): Promise<AuthResponse> {
+export async function signUpArtist(payload: ArtistSignupPayload): Promise<AuthResponse> {
   return request<AuthResponse>('/api/v1/auth/signup/artist', {
     method: 'POST',
     body: JSON.stringify(payload),

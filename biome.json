@@ -99,6 +99,9 @@
         "rules": {
           "style": {
             "useImportType": "off"
+          },
+          "suspicious": {
+            "noExplicitAny": "off"
           }
         }
       },

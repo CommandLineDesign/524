@@ -9,7 +9,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { theme } from '../../theme/colors';
+import { colors } from '../../theme/colors';
+import { spacing } from '../../theme/spacing';
 import { FormField } from './FormField';
 import { HelperStatus } from './validation';
 
@@ -139,37 +140,37 @@ export function SignupForm({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: colors.background,
   },
   scrollContent: {
     flexGrow: 1,
   },
   content: {
     flex: 1,
-    padding: theme.spacing.lg,
+    padding: spacing.lg,
     justifyContent: 'center',
   },
   title: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: theme.colors.text,
-    marginBottom: theme.spacing.xs,
+    color: colors.text,
+    marginBottom: spacing.xs,
   },
   subtitle: {
     fontSize: 16,
-    color: theme.colors.textSecondary,
-    marginBottom: theme.spacing.xl,
+    color: colors.textSecondary,
+    marginBottom: spacing.xl,
   },
   form: {
-    marginBottom: theme.spacing.xl,
+    marginBottom: spacing.xl,
   },
   button: {
     height: 50,
-    backgroundColor: theme.colors.primary,
+    backgroundColor: colors.primary,
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: theme.spacing.md,
+    marginTop: spacing.md,
   },
   buttonDisabled: {
     opacity: 0.5,
@@ -180,11 +181,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   linkButton: {
-    marginTop: theme.spacing.sm,
+    marginTop: spacing.sm,
     alignItems: 'center',
   },
   linkText: {
-    color: theme.colors.primary,
+    color: colors.primary,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -192,12 +193,12 @@ const styles = StyleSheet.create({
     color: '#d32f2f',
     fontSize: 12,
     marginTop: -4,
-    marginBottom: theme.spacing.sm,
+    marginBottom: spacing.sm,
   },
   helperSuccess: {
     color: '#2e7d32',
     fontSize: 12,
     marginTop: -4,
-    marginBottom: theme.spacing.sm,
+    marginBottom: spacing.sm,
   },
 });

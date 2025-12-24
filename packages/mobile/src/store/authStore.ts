@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 
 import {
+  type ArtistSignupPayload,
   type AuthResponse,
   type AuthUser,
   type SignupPayload,
@@ -15,7 +16,7 @@ interface AuthState {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   signUpUser: (payload: SignupPayload) => Promise<void>;
-  signUpArtist: (payload: SignupPayload) => Promise<void>;
+  signUpArtist: (payload: ArtistSignupPayload) => Promise<void>;
   logout: () => Promise<void>;
   loadSession: () => Promise<void>;
   setUserOnboardingComplete: (completed: boolean) => Promise<void>;
@@ -72,7 +73,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 
-  signUpArtist: async (payload: SignupPayload) => {
+  signUpArtist: async (payload: ArtistSignupPayload) => {
     try {
       const data = await signUpArtist(payload);
       await AsyncStorage.setItem('auth_token', data.token);
@@ -121,7 +122,9 @@ export const useAuthStore = create<AuthState>((set) => ({
         set({ isLoading: false });
       }
     } catch (error) {
-      console.error('Load session error:', error);
+      // TODO: Implement proper error monitoring for session loading failures
+      // Currently swallows errors to avoid exposing sensitive details to users
+      // Consider adding non-sensitive error tracking (e.g., "session_load_failed")
       set({ isLoading: false });
     }
   },

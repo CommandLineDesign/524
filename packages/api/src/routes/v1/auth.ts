@@ -60,23 +60,84 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// Validation helpers for signup
+function isValidKoreanPhone(phone: string): boolean {
+  // Korean phone format:
+  // - 010 numbers must be 11 digits: 010-XXXX-XXXX (01012345678)
+  // - Other prefixes (011, 016, 017, 018, 019) can be 10-11 digits
+  const cleaned = phone.replace(/[-\s]/g, '');
+  if (cleaned.startsWith('010')) {
+    return /^010\d{8}$/.test(cleaned);
+  }
+  return /^01[16789]\d{7,8}$/.test(cleaned);
+}
+
+function isValidBirthYear(year: number): boolean {
+  const currentYear = new Date().getFullYear();
+  return Number.isInteger(year) && year >= 1900 && year <= currentYear;
+}
+
+// Check email/phone availability before signup
+router.post('/check-availability', async (req, res) => {
+  try {
+    const { email, phoneNumber } = req.body;
+
+    if (!email && !phoneNumber) {
+      return res.status(400).json({ error: 'Email or phone number is required' });
+    }
+
+    const result = await authService.checkAvailability({ email, phoneNumber });
+    return res.json(result);
+  } catch (error) {
+    console.error('Check availability error:', error);
+    return res.status(500).json({ error: 'Failed to check availability' });
+  }
+});
+
 // User signup (customer)
 router.post('/signup/user', async (req, res) => {
   try {
-    const { email, password, confirmPassword, name } = req.body;
+    const { email, password, confirmPassword, name, phoneNumber, birthYear } = req.body;
 
+    // Required field validation
     if (!email || !password || !confirmPassword) {
       return res.status(400).json({ error: 'Email, password, and confirmPassword are required' });
     }
+    if (!name || typeof name !== 'string' || name.trim().length === 0) {
+      return res.status(400).json({ error: 'Name is required' });
+    }
+    if (!phoneNumber || typeof phoneNumber !== 'string') {
+      return res.status(400).json({ error: 'Phone number is required' });
+    }
+    if (birthYear === undefined || birthYear === null) {
+      return res.status(400).json({ error: 'Birth year is required' });
+    }
+
+    // Password match validation
     if (password !== confirmPassword) {
       return res.status(400).json({ error: 'Passwords do not match' });
+    }
+
+    // Phone number format validation (Korean format: 010-XXXX-XXXX)
+    if (!isValidKoreanPhone(phoneNumber)) {
+      return res
+        .status(400)
+        .json({ error: 'Invalid phone number format. Use Korean format: 010-XXXX-XXXX' });
+    }
+
+    // Birth year validation
+    const birthYearNum = typeof birthYear === 'string' ? Number.parseInt(birthYear, 10) : birthYear;
+    if (!isValidBirthYear(birthYearNum)) {
+      return res.status(400).json({ error: 'Invalid birth year' });
     }
 
     const result = await authService.registerWithEmail({
       email,
       password,
       role: 'customer',
-      name,
+      name: name.trim(),
+      phoneNumber: phoneNumber.replace(/[-\s]/g, ''), // Store without dashes
+      birthYear: birthYearNum,
     });
 
     return res.status(201).json(result);

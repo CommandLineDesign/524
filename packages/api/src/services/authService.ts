@@ -31,6 +31,7 @@ export class AuthService {
     role: 'customer' | 'artist';
     name?: string;
     phoneNumber?: string | null;
+    birthYear?: number | null;
   }): Promise<LoginResponse> {
     const email = params.email.trim().toLowerCase();
     const password = params.password;
@@ -50,13 +51,29 @@ export class AuthService {
     }
 
     // Ensure email is unique
-    const [existing] = await db
+    const [existingEmail] = await db
       .select({ id: users.id })
       .from(users)
       .where(eq(users.email, email))
       .limit(1);
-    if (existing) {
-      throw Object.assign(new Error('Email already in use'), { status: 409 });
+    if (existingEmail) {
+      throw Object.assign(new Error('Email already in use'), { status: 409, code: 'EMAIL_IN_USE' });
+    }
+
+    // Ensure phone number is unique (if provided)
+    if (params.phoneNumber?.trim()) {
+      const normalizedPhone = params.phoneNumber.replace(/[-\s]/g, '');
+      const [existingPhone] = await db
+        .select({ id: users.id })
+        .from(users)
+        .where(eq(users.phoneNumber, normalizedPhone))
+        .limit(1);
+      if (existingPhone) {
+        throw Object.assign(new Error('Phone number already in use'), {
+          status: 409,
+          code: 'PHONE_IN_USE',
+        });
+      }
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
@@ -74,6 +91,10 @@ export class AuthService {
 
     if (params.phoneNumber?.trim()) {
       newUser.phoneNumber = params.phoneNumber.trim();
+    }
+
+    if (params.birthYear) {
+      newUser.birthYear = params.birthYear;
     }
 
     const createdUserId = await db.transaction(async (tx) => {
@@ -121,6 +142,39 @@ export class AuthService {
       throw Object.assign(new Error('Login failed after signup'), { status: 500 });
     }
     return loginResult;
+  }
+
+  /**
+   * Check if email and/or phone number are available for registration
+   */
+  async checkAvailability(params: {
+    email?: string;
+    phoneNumber?: string;
+  }): Promise<{ emailAvailable: boolean; phoneAvailable: boolean }> {
+    let emailAvailable = true;
+    let phoneAvailable = true;
+
+    if (params.email?.trim()) {
+      const normalizedEmail = params.email.trim().toLowerCase();
+      const [existingEmail] = await db
+        .select({ id: users.id })
+        .from(users)
+        .where(eq(users.email, normalizedEmail))
+        .limit(1);
+      emailAvailable = !existingEmail;
+    }
+
+    if (params.phoneNumber?.trim()) {
+      const normalizedPhone = params.phoneNumber.replace(/[-\s]/g, '');
+      const [existingPhone] = await db
+        .select({ id: users.id })
+        .from(users)
+        .where(eq(users.phoneNumber, normalizedPhone))
+        .limit(1);
+      phoneAvailable = !existingPhone;
+    }
+
+    return { emailAvailable, phoneAvailable };
   }
 
   private isValidEmail(email: string) {

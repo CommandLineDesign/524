@@ -1,35 +1,55 @@
 import React from 'react';
-import { StyleSheet, Text, TextInput, TextInputProps, View } from 'react-native';
+import {
+  type StyleProp,
+  StyleSheet,
+  Text,
+  TextInput,
+  TextInputProps,
+  View,
+  type ViewStyle,
+} from 'react-native';
 
-import { theme } from '../../theme/colors';
+import { borderRadius } from '../../theme/borderRadius';
+import { colors } from '../../theme/colors';
+import { spacing } from '../../theme/spacing';
 import { HelperStatus } from './validation';
 
 type FormFieldProps = {
   label: string;
   helper?: string;
   status?: HelperStatus;
+  /** Optional component to render on the right side of the input (e.g., checkmark icon, button) */
+  rightAccessory?: React.ReactNode;
+  /** Container style override */
+  containerStyle?: StyleProp<ViewStyle>;
 } & TextInputProps;
 
 export const FormField = React.memo(function FormField({
   label,
   helper,
   status,
+  rightAccessory,
+  containerStyle,
+  style,
   ...textInputProps
 }: FormFieldProps) {
   const renderHelper = () => {
     if (!helper) return null;
-    const style = status === 'success' ? styles.helperSuccess : styles.helperError;
-    return <Text style={style}>{helper}</Text>;
+    const helperStyle = status === 'success' ? styles.helperSuccess : styles.helperError;
+    return <Text style={helperStyle}>{helper}</Text>;
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.label}>{label}</Text>
-      <TextInput
-        style={styles.input}
-        placeholderTextColor={theme.colors.textSecondary}
-        {...textInputProps}
-      />
+    <View style={[styles.container, containerStyle]}>
+      {label ? <Text style={styles.label}>{label}</Text> : null}
+      <View style={styles.inputContainer}>
+        <TextInput
+          style={[styles.input, rightAccessory ? styles.inputWithAccessory : null, style]}
+          placeholderTextColor={colors.placeholder}
+          {...textInputProps}
+        />
+        {rightAccessory && <View style={styles.accessoryContainer}>{rightAccessory}</View>}
+      </View>
       {renderHelper()}
     </View>
   );
@@ -37,22 +57,37 @@ export const FormField = React.memo(function FormField({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: theme.spacing.md,
+    marginBottom: 18, // Figma: 18px gap between form fields
   },
   label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: theme.colors.text,
-    marginBottom: theme.spacing.xs,
+    fontSize: 16,
+    fontWeight: '400',
+    color: colors.text,
+    marginBottom: spacing.labelGap,
+    lineHeight: 22,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   input: {
-    height: 50,
+    flex: 1,
+    height: 52,
     borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: 8,
-    paddingHorizontal: theme.spacing.md,
+    borderColor: colors.borderDark,
+    borderRadius: borderRadius.md,
+    paddingHorizontal: spacing.md,
     fontSize: 16,
-    backgroundColor: '#fff',
+    backgroundColor: colors.background,
+  },
+  inputWithAccessory: {
+    paddingRight: 48, // Make room for the accessory
+  },
+  accessoryContainer: {
+    position: 'absolute',
+    right: 12,
+    height: '100%',
+    justifyContent: 'center',
   },
   helperError: {
     color: '#d32f2f',

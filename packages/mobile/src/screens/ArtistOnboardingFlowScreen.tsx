@@ -11,7 +11,8 @@ import { OnboardingLayout } from '../components/onboarding/OnboardingLayout';
 import type { RootStackParamList } from '../navigation/AppNavigator';
 import { useUpdateArtistProfile } from '../query/artist';
 import { useAuthStore } from '../store/authStore';
-import { theme } from '../theme/colors';
+import { colors } from '../theme/colors';
+import { spacing } from '../theme/spacing';
 
 type StepKey = 'basic' | 'specialties' | 'service_area' | 'photo';
 
@@ -181,30 +182,28 @@ export function ArtistOnboardingFlowScreen() {
   };
 
   const renderFooter = (ctaLabel: string) => (
-    <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: theme.spacing.sm }}>
+    <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: spacing.sm }}>
       <TouchableOpacity
         onPress={goBack}
         disabled={stepIndex === 0 || isPending || uploading}
         style={{
           flex: 1,
-          padding: theme.spacing.md,
-          backgroundColor: stepIndex === 0 ? theme.colors.border : '#fff',
+          padding: spacing.md,
+          backgroundColor: stepIndex === 0 ? colors.border : '#fff',
           borderRadius: 12,
           borderWidth: 1,
-          borderColor: theme.colors.border,
+          borderColor: colors.border,
         }}
       >
-        <Text style={{ textAlign: 'center', color: theme.colors.text, fontWeight: '600' }}>
-          Back
-        </Text>
+        <Text style={{ textAlign: 'center', color: colors.text, fontWeight: '600' }}>Back</Text>
       </TouchableOpacity>
       <TouchableOpacity
         onPress={goNext}
         disabled={isPending || uploading}
         style={{
           flex: 1,
-          padding: theme.spacing.md,
-          backgroundColor: theme.colors.accent,
+          padding: spacing.md,
+          backgroundColor: colors.accent,
           borderRadius: 12,
         }}
       >
@@ -224,9 +223,9 @@ export function ArtistOnboardingFlowScreen() {
         totalSteps={steps.length}
         footer={renderFooter('Next')}
       >
-        <ScrollView contentContainerStyle={{ gap: theme.spacing.md }}>
+        <ScrollView contentContainerStyle={{ gap: spacing.md }}>
           <View>
-            <Text style={{ fontWeight: '700', marginBottom: 6, color: theme.colors.text }}>
+            <Text style={{ fontWeight: '700', marginBottom: 6, color: colors.text }}>
               Stage name
             </Text>
             <TextInput
@@ -235,16 +234,14 @@ export function ArtistOnboardingFlowScreen() {
               placeholder="e.g., Glow Studio"
               style={{
                 borderWidth: 1,
-                borderColor: theme.colors.border,
-                padding: theme.spacing.md,
+                borderColor: colors.border,
+                padding: spacing.md,
                 borderRadius: 10,
               }}
             />
           </View>
           <View>
-            <Text style={{ fontWeight: '700', marginBottom: 6, color: theme.colors.text }}>
-              Bio
-            </Text>
+            <Text style={{ fontWeight: '700', marginBottom: 6, color: colors.text }}>Bio</Text>
             <TextInput
               value={draft.bio}
               onChangeText={(text) => updateField({ bio: text })}
@@ -253,8 +250,8 @@ export function ArtistOnboardingFlowScreen() {
               placeholder="Highlight your style and experience."
               style={{
                 borderWidth: 1,
-                borderColor: theme.colors.border,
-                padding: theme.spacing.md,
+                borderColor: colors.border,
+                padding: spacing.md,
                 borderRadius: 10,
                 minHeight: 120,
                 textAlignVertical: 'top',
@@ -275,7 +272,7 @@ export function ArtistOnboardingFlowScreen() {
         totalSteps={steps.length}
         footer={renderFooter('Next')}
       >
-        <View style={{ gap: theme.spacing.md }}>
+        <View style={{ gap: spacing.md }}>
           <MultiSelectButtons
             options={SPECIALTY_OPTIONS}
             selected={draft.specialties as string[]}
@@ -288,7 +285,7 @@ export function ArtistOnboardingFlowScreen() {
             }}
           />
           <View>
-            <Text style={{ fontWeight: '700', marginBottom: 6, color: theme.colors.text }}>
+            <Text style={{ fontWeight: '700', marginBottom: 6, color: colors.text }}>
               Years of experience
             </Text>
             <TextInput
@@ -298,8 +295,8 @@ export function ArtistOnboardingFlowScreen() {
               keyboardType="number-pad"
               style={{
                 borderWidth: 1,
-                borderColor: theme.colors.border,
-                padding: theme.spacing.md,
+                borderColor: colors.border,
+                padding: spacing.md,
                 borderRadius: 10,
               }}
             />
@@ -318,9 +315,9 @@ export function ArtistOnboardingFlowScreen() {
         totalSteps={steps.length}
         footer={renderFooter('Next')}
       >
-        <View style={{ gap: theme.spacing.md }}>
+        <View style={{ gap: spacing.md }}>
           <View>
-            <Text style={{ fontWeight: '700', marginBottom: 6, color: theme.colors.text }}>
+            <Text style={{ fontWeight: '700', marginBottom: 6, color: colors.text }}>
               Address / neighborhood
             </Text>
             <TextInput
@@ -331,15 +328,15 @@ export function ArtistOnboardingFlowScreen() {
               placeholder="e.g., Gangnam, Seoul"
               style={{
                 borderWidth: 1,
-                borderColor: theme.colors.border,
-                padding: theme.spacing.md,
+                borderColor: colors.border,
+                padding: spacing.md,
                 borderRadius: 10,
               }}
             />
           </View>
-          <View style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
+          <View style={{ flexDirection: 'row', gap: spacing.sm }}>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontWeight: '700', marginBottom: 6, color: theme.colors.text }}>
+              <Text style={{ fontWeight: '700', marginBottom: 6, color: colors.text }}>
                 Latitude
               </Text>
               <TextInput
@@ -356,14 +353,14 @@ export function ArtistOnboardingFlowScreen() {
                 keyboardType="decimal-pad"
                 style={{
                   borderWidth: 1,
-                  borderColor: theme.colors.border,
-                  padding: theme.spacing.md,
+                  borderColor: colors.border,
+                  padding: spacing.md,
                   borderRadius: 10,
                 }}
               />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontWeight: '700', marginBottom: 6, color: theme.colors.text }}>
+              <Text style={{ fontWeight: '700', marginBottom: 6, color: colors.text }}>
                 Longitude
               </Text>
               <TextInput
@@ -380,15 +377,15 @@ export function ArtistOnboardingFlowScreen() {
                 keyboardType="decimal-pad"
                 style={{
                   borderWidth: 1,
-                  borderColor: theme.colors.border,
-                  padding: theme.spacing.md,
+                  borderColor: colors.border,
+                  padding: spacing.md,
                   borderRadius: 10,
                 }}
               />
             </View>
           </View>
           <View>
-            <Text style={{ fontWeight: '700', marginBottom: 6, color: theme.colors.text }}>
+            <Text style={{ fontWeight: '700', marginBottom: 6, color: colors.text }}>
               Service radius (km)
             </Text>
             <TextInput
@@ -398,8 +395,8 @@ export function ArtistOnboardingFlowScreen() {
               keyboardType="decimal-pad"
               style={{
                 borderWidth: 1,
-                borderColor: theme.colors.border,
-                padding: theme.spacing.md,
+                borderColor: colors.border,
+                padding: spacing.md,
                 borderRadius: 10,
               }}
             />
@@ -417,7 +414,7 @@ export function ArtistOnboardingFlowScreen() {
       totalSteps={steps.length}
       footer={renderFooter('Submit')}
     >
-      <View style={{ gap: theme.spacing.md, alignItems: 'center' }}>
+      <View style={{ gap: spacing.md, alignItems: 'center' }}>
         {draft.profileImageUrl ? (
           <Image
             source={{ uri: draft.profileImageUrl }}
@@ -431,22 +428,22 @@ export function ArtistOnboardingFlowScreen() {
               height: 200,
               borderRadius: 16,
               borderWidth: 1,
-              borderColor: theme.colors.border,
+              borderColor: colors.border,
               alignItems: 'center',
               justifyContent: 'center',
               backgroundColor: '#fafafa',
             }}
           >
-            <Text style={{ color: theme.colors.textSecondary }}>No photo selected</Text>
+            <Text style={{ color: colors.textSecondary }}>No photo selected</Text>
           </View>
         )}
         <TouchableOpacity
           onPress={pickImage}
           disabled={uploading || isPending}
           style={{
-            paddingVertical: theme.spacing.md,
-            paddingHorizontal: theme.spacing.lg,
-            backgroundColor: theme.colors.accent,
+            paddingVertical: spacing.md,
+            paddingHorizontal: spacing.lg,
+            backgroundColor: colors.accent,
             borderRadius: 12,
           }}
         >
@@ -454,7 +451,7 @@ export function ArtistOnboardingFlowScreen() {
             {uploading ? 'Uploading...' : 'Choose photo'}
           </Text>
         </TouchableOpacity>
-        <Text style={{ color: theme.colors.textSecondary, textAlign: 'center' }}>
+        <Text style={{ color: colors.textSecondary, textAlign: 'center' }}>
           We store your photo securely in S3 using a time-limited upload link.
         </Text>
       </View>

@@ -1,7 +1,8 @@
 import React from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import { theme } from '../../theme/colors';
+import { colors } from '../../theme/colors';
+import { spacing } from '../../theme/spacing';
 
 type SelectableCardProps = {
   title?: string;
@@ -38,39 +39,39 @@ export function SelectableCard({
 const styles = StyleSheet.create({
   card: {
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: colors.border,
     borderRadius: 12,
-    padding: theme.spacing.md,
+    padding: spacing.md,
     backgroundColor: '#fff',
-    marginBottom: theme.spacing.md,
+    marginBottom: spacing.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
   title: {
-    marginTop: theme.spacing.sm,
+    marginTop: spacing.sm,
     fontSize: 16,
     fontWeight: '600',
-    color: theme.colors.text,
+    color: colors.text,
     textAlign: 'center',
   },
   cardSelected: {
-    borderColor: theme.colors.accent,
+    borderColor: colors.accent,
     backgroundColor: '#fff8ed',
   },
   image: {
     width: 280,
     height: 360,
     borderRadius: 16,
-    backgroundColor: theme.colors.border,
+    backgroundColor: colors.border,
     resizeMode: 'cover',
   },
   imageSelected: {
     borderWidth: 3,
-    borderColor: theme.colors.accent,
+    borderColor: colors.accent,
   },
   fallback: {
-    color: theme.colors.textSecondary,
+    color: colors.textSecondary,
     fontSize: 14,
-    marginVertical: theme.spacing.md,
+    marginVertical: spacing.md,
   },
 });
