@@ -277,7 +277,6 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: typography.sizes.md,
-    // biome-ignore lint/suspicious/noExplicitAny: typography weights are strings but RN expects specific literals
     fontWeight: typography.weights.regular as any,
     color: colors.text,
   },
@@ -304,7 +303,7 @@ const styles = StyleSheet.create({
   },
   loginButtonText: {
     fontSize: typography.sizes.md,
-    fontWeight: typography.weights.bold as any, // biome-ignore lint/suspicious/noExplicitAny: typography weights are strings but RN expects specific literals
+    fontWeight: typography.weights.bold as any,
     color: colors.background,
   },
   linksContainer: {
@@ -316,7 +315,7 @@ const styles = StyleSheet.create({
   },
   linkText: {
     fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.regular as any, // biome-ignore lint/suspicious/noExplicitAny: typography weights are strings but RN expects specific literals
+    fontWeight: typography.weights.regular as any,
     color: colors.text,
   },
   divider: {
@@ -331,7 +330,7 @@ const styles = StyleSheet.create({
   },
   snsTitle: {
     fontSize: typography.sizes.base,
-    fontWeight: typography.weights.bold as any, // biome-ignore lint/suspicious/noExplicitAny: typography weights are strings but RN expects specific literals
+    fontWeight: typography.weights.bold as any,
     color: colors.text,
     textAlign: 'center',
     marginBottom: spacing.md,
@@ -370,12 +369,12 @@ const styles = StyleSheet.create({
   },
   fallbackLogoText: {
     fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.bold as any, // biome-ignore lint/suspicious/noExplicitAny: typography weights are strings but RN expects specific literals
+    fontWeight: typography.weights.bold as any,
     color: colors.background,
   },
   snsLabel: {
     fontSize: typography.sizes.base,
-    fontWeight: typography.weights.regular as any, // biome-ignore lint/suspicious/noExplicitAny: typography weights are strings but RN expects specific literals
+    fontWeight: typography.weights.regular as any,
     color: colors.text,
   },
 });
