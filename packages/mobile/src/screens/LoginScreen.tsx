@@ -14,7 +14,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { useAuthStore } from '../store/authStore';
-import { theme } from '../theme/colors';
+import { colors } from '../theme/colors';
+import { spacing } from '../theme/spacing';
 
 // Quick-select buttons for development convenience
 // These must match actual users in the database (created by seed script)
@@ -152,53 +153,53 @@ export function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: colors.background,
   },
   scrollContent: {
     flexGrow: 1,
   },
   content: {
     flex: 1,
-    padding: theme.spacing.lg,
+    padding: spacing.lg,
     justifyContent: 'center',
   },
   title: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: theme.colors.text,
-    marginBottom: theme.spacing.xs,
+    color: colors.text,
+    marginBottom: spacing.xs,
   },
   subtitle: {
     fontSize: 16,
-    color: theme.colors.textSecondary,
-    marginBottom: theme.spacing.xl,
+    color: colors.textSecondary,
+    marginBottom: spacing.xl,
   },
   form: {
-    marginBottom: theme.spacing.xl,
+    marginBottom: spacing.xl,
   },
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: theme.colors.text,
-    marginBottom: theme.spacing.xs,
+    color: colors.text,
+    marginBottom: spacing.xs,
   },
   input: {
     height: 50,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: colors.border,
     borderRadius: 8,
-    paddingHorizontal: theme.spacing.md,
-    marginBottom: theme.spacing.md,
+    paddingHorizontal: spacing.md,
+    marginBottom: spacing.md,
     fontSize: 16,
     backgroundColor: '#fff',
   },
   button: {
     height: 50,
-    backgroundColor: theme.colors.primary,
+    backgroundColor: colors.primary,
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: theme.spacing.md,
+    marginTop: spacing.md,
   },
   buttonDisabled: {
     opacity: 0.5,
@@ -211,50 +212,50 @@ const styles = StyleSheet.create({
   linksRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: theme.spacing.sm,
+    marginTop: spacing.sm,
   },
   linkButton: {
-    paddingVertical: theme.spacing.xs,
+    paddingVertical: spacing.xs,
   },
   linkText: {
-    color: theme.colors.primary,
+    color: colors.primary,
     fontSize: 14,
     fontWeight: '600',
   },
   testUsers: {
-    marginBottom: theme.spacing.xl,
+    marginBottom: spacing.xl,
   },
   testUsersTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: theme.colors.text,
-    marginBottom: theme.spacing.md,
+    color: colors.text,
+    marginBottom: spacing.md,
   },
   testUserButton: {
-    padding: theme.spacing.md,
+    padding: spacing.md,
     backgroundColor: '#f5f5f5',
     borderRadius: 8,
-    marginBottom: theme.spacing.sm,
+    marginBottom: spacing.sm,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: colors.border,
   },
   testUserName: {
     fontSize: 16,
     fontWeight: '600',
-    color: theme.colors.text,
+    color: colors.text,
   },
   testUserEmail: {
     fontSize: 14,
-    color: theme.colors.textSecondary,
+    color: colors.textSecondary,
     marginTop: 2,
   },
   testUserRole: {
     fontSize: 12,
-    color: theme.colors.primary,
+    color: colors.primary,
     marginTop: 4,
   },
   infoBox: {
-    padding: theme.spacing.md,
+    padding: spacing.md,
     backgroundColor: '#e3f2fd',
     borderRadius: 8,
     borderWidth: 1,
@@ -264,7 +265,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#1976d2',
-    marginBottom: theme.spacing.xs,
+    marginBottom: spacing.xs,
   },
   infoText: {
     fontSize: 12,

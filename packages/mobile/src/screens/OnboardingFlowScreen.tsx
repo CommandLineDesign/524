@@ -27,7 +27,8 @@ import {
   useSaveOnboardingResponse,
 } from '../query/onboarding';
 import { useAuthStore } from '../store/authStore';
-import { theme } from '../theme/colors';
+import { colors } from '../theme/colors';
+import { spacing } from '../theme/spacing';
 
 // Temporary internal-testing images from Wikimedia Commons (CC BY / CC BY-SA).
 // For production, replace with licensed/hosted assets.
@@ -228,8 +229,8 @@ function KpopLookalikeStep({
           onPress={handleContinue}
           style={{
             textAlign: 'center',
-            backgroundColor: submitting ? theme.colors.border : theme.colors.accent,
-            padding: theme.spacing.md,
+            backgroundColor: submitting ? colors.border : colors.accent,
+            padding: spacing.md,
             borderRadius: 12,
             color: '#fff',
             fontWeight: '700',
@@ -324,8 +325,8 @@ function ServiceInterestsStep({
           onPress={handleFinish}
           style={{
             textAlign: 'center',
-            backgroundColor: !canSubmit || submitting ? theme.colors.border : theme.colors.accent,
-            padding: theme.spacing.md,
+            backgroundColor: !canSubmit || submitting ? colors.border : colors.accent,
+            padding: spacing.md,
             borderRadius: 12,
             color: '#fff',
             fontWeight: '700',
@@ -434,7 +435,7 @@ export function OnboardingFlowScreen() {
           padding: theme.spacing.lg,
         }}
       >
-        <Text style={{ color: theme.colors.text, fontSize: 16, textAlign: 'center' }}>
+        <Text style={{ color: colors.text, fontSize: 16, textAlign: 'center' }}>
           Onboarding step not supported. Please try again later.
         </Text>
       </ScrollView>

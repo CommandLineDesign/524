@@ -15,8 +15,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { config } from '../config/environment';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { useAuthStore } from '../store/authStore';
-import { colors } from '../theme';
-import { spacing } from '../theme';
+import { colors } from '../theme/colors';
+import { spacing } from '../theme/spacing';
 
 // Quick-select buttons for development convenience
 // These must match actual users in the database (created by seed script)

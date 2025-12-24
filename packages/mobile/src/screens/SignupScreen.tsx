@@ -34,7 +34,9 @@ import {
 } from '../components/signup/validation';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { useAuthStore } from '../store/authStore';
-import { borderRadius, colors, spacing } from '../theme';
+import { borderRadius } from '../theme/borderRadius';
+import { colors } from '../theme/colors';
+import { spacing } from '../theme/spacing';
 
 // Checkmark icon component for password confirmation
 function CheckmarkIcon() {

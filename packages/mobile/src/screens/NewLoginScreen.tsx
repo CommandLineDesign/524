@@ -20,13 +20,16 @@ import { isValidEmail } from '../components/signup/validation';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { loginWithKakao, loginWithNaver } from '../services/snsAuth';
 import { useAuthStore } from '../store/authStore';
-import { borderRadius, colors, spacing, typography } from '../theme';
+import { borderRadius } from '../theme/borderRadius';
+import { colors } from '../theme/colors';
+import { spacing } from '../theme/spacing';
+import { typography } from '../theme/typography';
 
 // SNS Logo Component with fallback for missing assets
 interface SNSLogoProps {
   source: ImageSourcePropType | null;
   fallbackText: string;
-  style: StyleProp<ImageStyle>;
+  style: StyleProp<ViewStyle>;
 }
 
 const SNSLogo: React.FC<SNSLogoProps> = ({ source, fallbackText, style }) => {

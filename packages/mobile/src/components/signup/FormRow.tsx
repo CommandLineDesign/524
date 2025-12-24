@@ -1,7 +1,8 @@
 import React, { ReactNode } from 'react';
 import { type StyleProp, StyleSheet, Text, View, type ViewStyle } from 'react-native';
 
-import { colors, spacing } from '../../theme';
+import { colors } from '../../theme/colors';
+import { spacing } from '../../theme/spacing';
 
 type FormRowProps = {
   /** Label text displayed above the row */

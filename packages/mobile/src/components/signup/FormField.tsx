@@ -9,7 +9,9 @@ import {
   type ViewStyle,
 } from 'react-native';
 
-import { borderRadius, colors, spacing } from '../../theme';
+import { borderRadius } from '../../theme/borderRadius';
+import { colors } from '../../theme/colors';
+import { spacing } from '../../theme/spacing';
 import { HelperStatus } from './validation';
 
 type FormFieldProps = {
