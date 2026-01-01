@@ -1,27 +1,39 @@
 import type { ServiceType } from './constants.js';
 
-export type OnboardingStepKey = 'kpop_lookalike' | 'service_interests';
+export type OnboardingStepKey =
+  | 'celebrity_lookalike'
+  | 'celebrity_similar_image'
+  | 'celebrity_admire'
+  | 'celebrity_result';
 
-export interface KpopLookalikeSelection {
-  starId: string;
-  starName?: string;
-  imageUrl?: string;
+export interface OnboardingCelebrityLookalikeResponse {
+  step: 'celebrity_lookalike';
+  celebrityName: string | null;
 }
 
-export interface OnboardingKpopLookalikeResponse {
-  step: 'kpop_lookalike';
-  selection: KpopLookalikeSelection;
+export interface OnboardingCelebritySimilarImageResponse {
+  step: 'celebrity_similar_image';
+  celebrityName: string | null;
 }
 
-export interface OnboardingServiceInterestsResponse {
-  step: 'service_interests';
-  services: ServiceType[];
-  otherText?: string | null;
+export interface OnboardingCelebrityAdmireResponse {
+  step: 'celebrity_admire';
+  celebrityName: string | null;
+}
+
+export interface OnboardingCelebrityResultResponse {
+  step: 'celebrity_result';
+  resultCelebrity: string;
+  lookalike: string | null;
+  similarImage: string | null;
+  admire: string | null;
 }
 
 export type OnboardingResponseInput =
-  | OnboardingKpopLookalikeResponse
-  | OnboardingServiceInterestsResponse;
+  | OnboardingCelebrityLookalikeResponse
+  | OnboardingCelebritySimilarImageResponse
+  | OnboardingCelebrityAdmireResponse
+  | OnboardingCelebrityResultResponse;
 
 export interface OnboardingResponseRecord {
   step: OnboardingStepKey;

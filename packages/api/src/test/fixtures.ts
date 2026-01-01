@@ -129,6 +129,7 @@ export async function createTestBookingInDB(
       serviceLocation: bookingData.location,
       locationType: 'customer_location',
       address: bookingData.location.addressLine,
+      specialRequests: bookingData.notes ?? null,
       status: 'pending',
       statusHistory: [historyEntry],
       paymentStatus: 'pending',

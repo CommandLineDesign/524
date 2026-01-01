@@ -1,6 +1,6 @@
 'use client';
 
-import { Admin, Resource } from 'react-admin';
+import { Admin, Resource, defaultTheme } from 'react-admin';
 
 import { adminAuthProvider } from '../lib/adminAuthProvider';
 import { adminDataProvider } from '../lib/adminDataProvider';
@@ -14,12 +14,54 @@ import UserEdit from './users/UserEdit';
 import UserShow from './users/UserShow';
 import UsersList from './users/UsersList';
 
+// Custom theme with black focus outlines instead of blue
+const customTheme = {
+  ...defaultTheme,
+  components: {
+    ...defaultTheme.components,
+    MuiTextField: {
+      defaultProps: {
+        variant: 'outlined' as const,
+      },
+    },
+    MuiOutlinedInput: {
+      styleOverrides: {
+        root: {
+          '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+            borderColor: '#19191b', // Black border on focus
+            borderWidth: '2px',
+          },
+        },
+      },
+    },
+    MuiInput: {
+      styleOverrides: {
+        root: {
+          '&:after': {
+            borderBottomColor: '#19191b', // Black underline on focus
+          },
+        },
+      },
+    },
+    MuiFilledInput: {
+      styleOverrides: {
+        root: {
+          '&:after': {
+            borderBottomColor: '#19191b', // Black underline on focus
+          },
+        },
+      },
+    },
+  },
+};
+
 const AdminApp = () => (
   <Admin
     dataProvider={adminDataProvider}
     authProvider={adminAuthProvider}
     requireAuth
     loginPage={AdminLoginPage}
+    theme={customTheme}
   >
     <Resource
       name="pending-artists"

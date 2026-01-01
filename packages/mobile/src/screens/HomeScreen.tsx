@@ -66,7 +66,11 @@ export function HomeScreen() {
   };
 
   const handleBookService = () => {
-    navigation.navigate('ServiceSelection');
+    // Navigate to the new multi-step booking flow with celebrity entry path.
+    // This starts with location input → celebrity questions → service selection.
+    // Note: The 'direct' entry path exists but its use case is TBD - it skips
+    // location/celebrity screens and goes straight to service selection.
+    navigation.navigate('BookingFlow', { entryPath: 'celebrity' });
   };
 
   const handleBookingPress = () => {

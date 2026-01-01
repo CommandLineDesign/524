@@ -44,6 +44,8 @@ export function NewLoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [emailFocused, setEmailFocused] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -93,13 +95,17 @@ export function NewLoginScreen() {
           <View style={styles.fieldContainer}>
             <Text style={styles.label}>아이디</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, emailFocused && styles.inputFocused]}
               value={email}
               onChangeText={setEmail}
               placeholder=""
               keyboardType="email-address"
               autoCapitalize="none"
               editable={!isLoading}
+              selectionColor={colors.text}
+              cursorColor={colors.text}
+              onFocus={() => setEmailFocused(true)}
+              onBlur={() => setEmailFocused(false)}
               accessibilityLabel="아이디 입력"
               accessibilityHint="이메일 주소를 입력하세요"
             />
@@ -108,12 +114,16 @@ export function NewLoginScreen() {
           <View style={styles.fieldContainer}>
             <Text style={styles.label}>비밀번호</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, passwordFocused && styles.inputFocused]}
               value={password}
               onChangeText={setPassword}
               placeholder=""
               secureTextEntry
               editable={!isLoading}
+              selectionColor={colors.text}
+              cursorColor={colors.text}
+              onFocus={() => setPasswordFocused(true)}
+              onBlur={() => setPasswordFocused(false)}
               accessibilityLabel="비밀번호 입력"
               accessibilityHint="비밀번호를 입력하세요"
             />
@@ -270,6 +280,15 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.md,
     color: colors.text,
     backgroundColor: colors.background,
+  },
+  inputFocused: {
+    borderWidth: 3,
+    borderColor: colors.borderDark,
+    shadowColor: colors.borderDark,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 2,
   },
   loginButton: {
     height: 52,
