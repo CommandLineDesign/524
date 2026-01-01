@@ -3,7 +3,7 @@
 ## Overview
 This document catalogs all reusable components in the 524 React Native mobile application. Components are organized by category and include usage examples, props documentation, and design references.
 
-**Last Updated**: December 25, 2025
+**Last Updated**: January 1, 2026
 
 ---
 
@@ -19,6 +19,33 @@ Location: `packages/mobile/src/components/common/`
 **File**: `NotificationBanner.tsx`
 **Purpose**: Display notification messages to users
 **Usage**: System notifications, alerts, updates
+
+### SelectionItem
+**File**: `SelectionItem.tsx`
+**Purpose**: Reusable selectable item for option lists
+**Props**:
+- `label: string` - Display text
+- `selected?: boolean` - Selection state
+- `onPress: () => void` - Press handler
+- `disabled?: boolean` - Disabled state
+- `accessibilityLabel?: string` - Accessibility label (defaults to label)
+- `accessibilityHint?: string` - Accessibility hint
+- `style?: ViewStyle` - Custom style override
+
+**Usage Example**:
+```tsx
+<SelectionItem
+  label="헤어 메이크업"
+  selected={selectedService === 'combo'}
+  onPress={() => setSelectedService('combo')}
+  accessibilityLabel="헤어 메이크업 선택"
+/>
+```
+
+**Styling**:
+- Unselected: 1px border, white background
+- Selected: 3px border, white background
+- Uses `formStyles` from theme for consistent styling
 
 ---
 
@@ -144,18 +171,35 @@ Location: `packages/mobile/src/components/onboarding/`
 
 ### MultiSelectButtons
 **File**: `MultiSelectButtons.tsx`
-**Purpose**: Multiple selection button group
-**Usage**: Onboarding preference selection
+**Purpose**: Multiple selection button group with checkbox indicators
+**Props**:
+- `options: MultiSelectOption[]` - Array of options with id, label, description
+- `selected: string[]` - Array of selected option IDs
+- `onToggle: (id: string) => void` - Toggle handler
+
+**Styling**: Accent border/background when selected, checkbox indicator
 
 ### OnboardingLayout
 **File**: `OnboardingLayout.tsx`
-**Purpose**: Standard layout for onboarding screens
-**Usage**: All onboarding flow screens
+**Purpose**: Standard layout wrapper for onboarding screens
+**Props**:
+- `title: string` - Screen title
+- `subtitle?: string` - Optional subtitle
+- `step: number` - Current step number
+- `totalSteps: number` - Total steps for progress bar
+- `children: React.ReactNode` - Screen content
+- `footer?: React.ReactNode` - Footer content (usually continue button)
 
 ### SelectableCard
 **File**: `SelectableCard.tsx`
-**Purpose**: Card with selection state
-**Usage**: Onboarding option selection
+**Purpose**: Image card with selection state for style selection
+**Props**:
+- `title?: string` - Card title
+- `imageUrl?: string` - Image URL
+- `selected?: boolean` - Selection state
+- `onPress: () => void` - Press handler
+
+**Styling**: Accent border/background when selected
 
 ---
 
@@ -248,15 +292,13 @@ Location: `packages/mobile/src/components/`
 **File**: `packages/mobile/src/screens/ServiceSelectionScreen.tsx`
 **Purpose**: Service type selection screen for booking flow
 **Route**: `ServiceSelection` in main navigation
-**Created**: December 2025
-**Updated**: December 30, 2025
 
 **Components Used**:
 - `SafeAreaView` - Safe area wrapper
 - `MenuButton` - Navigation menu trigger
 - `NavigationMenu` - Side navigation menu
+- `SelectionItem` - Reusable selection items
 - `FlatList` - Service options list
-- `TouchableOpacity` - Interactive option buttons
 
 **Data Requirements**:
 - Store: `bookingStore` - Service type state management
@@ -265,31 +307,9 @@ Location: `packages/mobile/src/components/`
 
 **Features**:
 - Service type selection (헤어 메이크업, 헤어, 메이크업)
-- Emphasized first option with 3px border
-- Selection state with visual feedback
+- Selection state with 3px border on selected item
 - Continue button enabled only when service selected
 - Navigation to OccasionSelection on continue
-
-**Accessibility**:
-- Button roles for all interactive elements
-- Descriptive labels in Korean (e.g., "헤어 메이크업 선택")
-- Hints for screen reader users
-- Clear focus order from top to bottom
-- Disabled state properly communicated
-
-**Implementation Notes**:
-- **Title**: 20px bold, line-height 22px, centered, positioned 212px from top
-- **Options**: 16px regular (first is medium weight), line-height 24px
-- **Option height**: 52px (spacing.inputHeight)
-- **Border radius**: 10px (borderRadius.md)
-- **First option border**: 3px (emphasized)
-- **Other options border**: 1px
-- **Gap between options**: 16px (spacing.md)
-- **Button**: 52px height, pill shape (borderRadius.pill), black background
-- **Button text**: 16px bold, letter-spacing -0.408px
-- **Colors**: All from design tokens (colors.text, colors.background, colors.borderDark)
-- **Selection state**: Black background with white text
-- **Disabled state**: 50% opacity
 
 **State Management**:
 - Local state for selected service
@@ -340,14 +360,15 @@ Location: `packages/mobile/src/components/`
 
 ### Colors
 Always use color tokens from `theme/colors.ts`:
-- `colors.background` - Main background
-- `colors.surface` - Card/input backgrounds
-- `colors.primary` - Primary brand color
+- `colors.background` - Main background, text inputs, selection items
+- `colors.surface` - Summary cards, info boxes (NOT for inputs)
+- `colors.primary` - Primary brand color, button backgrounds
 - `colors.accent` - Accent/highlight color
 - `colors.text` - Primary text
 - `colors.textSecondary` - Secondary text
 - `colors.muted` - Disabled/placeholder text
-- `colors.border` - Border colors
+- `colors.border` - Light border colors
+- `colors.borderDark` - Dark border colors (inputs, selection items)
 
 ### Spacing
 Always use spacing tokens from `theme/spacing.ts`:
@@ -368,11 +389,26 @@ Always use typography tokens from `theme/typography.ts`:
 ### Border Radius
 Always use border radius tokens from `theme/borderRadius.ts`:
 - `borderRadius.sm` (4px)
-- `borderRadius.md` (10px)
+- `borderRadius.md` (10px) - Text inputs, selection items
 - `borderRadius.lg` (12px)
 - `borderRadius.xl` (24px)
-- `borderRadius.pill` (100px)
+- `borderRadius.pill` (100px) - Primary buttons
 - `borderRadius.full` (9999px)
+
+### Form Styles
+Use pre-built form styles from `theme/formStyles.ts` for consistency:
+- `formStyles.input` - Standard text input styling
+- `formStyles.inputFocused` - Focused input state (3px border)
+- `formStyles.selectionItem` - Selection item base styling
+- `formStyles.selectionItemSelected` - Selected state (3px border)
+- `formStyles.button` - Primary button styling
+- `formStyles.buttonDisabled` - Disabled button state
+- `formStyles.label` - Form field labels
+
+**Form Styling Rules**:
+- Text inputs: White background (`colors.background`), 1px dark border, 52px height
+- Selection items: White background, 1px border (3px when selected)
+- Primary buttons: Black background, white text, pill shape, 52px height
 
 ---
 
@@ -398,7 +434,7 @@ When creating new components, follow these standards:
 
 ---
 
-**Document Version**: 1.0  
-**Last Updated**: December 25, 2025  
+**Document Version**: 1.1
+**Last Updated**: January 1, 2026
 **Maintained By**: 524 Development Team
 
