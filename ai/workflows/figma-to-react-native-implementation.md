@@ -30,6 +30,45 @@ This workflow provides standardized steps for implementing React Native screens 
 
 ---
 
+## CRITICAL PREREQUISITE: Figma MCP Server Availability
+
+**BEFORE STARTING THIS WORKFLOW, YOU MUST VERIFY FIGMA MCP ACCESS:**
+
+1. **Check MCP Server Availability**: Verify Figma MCP server is configured and accessible
+   ```
+   Use list_mcp_resources to verify Figma MCP server is available
+   Look for resources from "project-0-524-figma" server
+   ```
+
+2. **Test Figma MCP Access**: Verify you can call the required tools
+   ```
+   Attempt to call mcp_figma_get_design_context with test parameters
+   If this fails, STOP IMMEDIATELY - do not proceed
+   ```
+
+3. **Exit Immediately if Unavailable**: If Figma MCP server is not accessible:
+   ```markdown
+   ❌ WORKFLOW CANNOT PROCEED
+   
+   **Reason**: Figma MCP server is required for code-based design extraction.
+   
+   **Action Required**:
+   - Configure and authenticate Figma MCP server before attempting implementation
+   - Do NOT proceed with screenshot-based implementation
+   - Do NOT attempt manual extraction from Figma
+   
+   **Why Screenshots Are Prohibited**:
+   - Screenshots lack precise measurements and code structure
+   - Manual extraction is error-prone and inconsistent
+   - Cannot extract exact color values, spacing, or typography
+   - Results in implementations that don't match designs exactly
+   - No access to design tokens, component structure, or hierarchy
+   ```
+
+**ENFORCEMENT**: This workflow REQUIRES programmatic access to Figma design code via MCP. Screenshots are explicitly prohibited as they are unreliable and lead to inaccurate implementations.
+
+---
+
 ## Workflow Steps
 
 ### 1. Figma Design Analysis
@@ -41,21 +80,41 @@ Extract and analyze the Figma design to understand the screen structure, compone
 - Figma URL or file key and node ID
 - Screen or component name from product requirements
 - Any specific implementation requirements or constraints
-- Access to Figma MCP server
+- **REQUIRED**: Confirmed access to Figma MCP server (verified in prerequisite check above)
 
 **Actions:**
 
-1. **Retrieve Figma Design**: Use the Figma MCP server to fetch the design
+1. **Retrieve Figma Design Code**: Use the Figma MCP server to fetch design code and metadata
    ```
-   Use mcp_figma_get_design_context or mcp_figma_get_screenshot with:
+   Use mcp_figma_get_design_context with:
    - fileKey: extracted from Figma URL
    - nodeId: extracted from Figma URL (format: "123:456")
+   - clientLanguages: "typescript"
+   - clientFrameworks: "react"
+   
+   This returns:
+   - Code representation of the design (React/Tailwind)
+   - Exact measurements and values
+   - Component structure with data-node-id attributes
+   - Design tokens and styles used
+   - Color values, spacing, typography specifications
    ```
 
-2. **Capture Design Screenshot**: Save a reference screenshot for visual comparison
+2. **Extract Figma Metadata**: Get structural overview for component hierarchy
    ```
-   Use mcp_figma_get_screenshot to get visual reference
-   Store screenshot reference for validation in step 7
+   Use mcp_figma_get_metadata to get XML structure
+   This provides:
+   - Component nesting and organization
+   - Layer names and types
+   - Hierarchy for planning component breakdown
+   ```
+
+3. **DO NOT use mcp_figma_get_screenshot**: Screenshots are for visual reference only
+   ```
+   ⚠️ IMPORTANT: Never rely on screenshots for measurements or values
+   - Screenshots are visual aids only
+   - All implementation values MUST come from design code or Figma inspect mode
+   - If you cannot access design code, STOP the workflow
    ```
 
 3. **Extract Design Specifications**: Document the following from Figma:
@@ -80,23 +139,26 @@ Extract and analyze the Figma design to understand the screen structure, compone
    - Illustrations or graphics
 
 **Output:**
-- Figma design context (code and metadata)
-- Reference screenshot saved for validation
+- Figma design context (code and metadata) retrieved via MCP
+- Figma metadata (XML structure) for component hierarchy
 - Design specifications document with:
-  - Layout structure breakdown
-  - Design token mappings (colors, spacing, typography)
-  - Component hierarchy diagram
+  - Layout structure breakdown (from code, not screenshots)
+  - Design token mappings (exact values from Figma code: colors, spacing, typography)
+  - Component hierarchy diagram (from metadata)
   - Interactive elements list
   - Asset requirements list
 - Implementation complexity assessment
+- **NO screenshots used for measurements or values**
 
 **Validation:**
-- [ ] **Design Retrieved**: Figma design successfully fetched via MCP server
-- [ ] **Screenshot Captured**: Reference screenshot saved for final validation
-- [ ] **Specifications Complete**: All design specifications documented
-- [ ] **Token Mapping**: Design values mapped to existing design tokens
-- [ ] **Component Hierarchy**: Clear understanding of component structure
+- [ ] **MCP Access Confirmed**: Figma MCP server is accessible and working
+- [ ] **Design Code Retrieved**: Figma design code successfully fetched via `mcp_figma_get_design_context`
+- [ ] **Metadata Retrieved**: Component structure and hierarchy obtained via `mcp_figma_get_metadata`
+- [ ] **Specifications Complete**: All design specifications documented from code (not visual inspection)
+- [ ] **Token Mapping**: Design values mapped to existing design tokens using exact values from code
+- [ ] **Component Hierarchy**: Clear understanding of component structure from metadata
 - [ ] **Assets Identified**: All required assets listed with specifications
+- [ ] **No Screenshot Dependency**: All measurements and values extracted from code, not screenshots
 
 ---
 
@@ -654,13 +716,13 @@ Implement the React Native components and screen following the plan, standards, 
 ### 7. Visual Validation Against Figma
 
 **Purpose:**
-Verify that the implemented screen matches the Figma design exactly by comparing the running application with the original design.
+Verify that the implemented screen matches the Figma design exactly by comparing the running application with the original design code and specifications.
 
 **Input:**
 - Implemented screen and components from Step 6
-- Reference screenshot from Step 1
-- Original Figma design context from Step 1
-- Figma URL for direct comparison
+- Original Figma design code and metadata from Step 1
+- Design specifications document from Step 1 (with exact values)
+- Figma URL for direct comparison in Figma inspect mode
 
 **Actions:**
 
@@ -671,12 +733,12 @@ Verify that the implemented screen matches the Figma design exactly by comparing
    # Open on iOS simulator or Android emulator
    ```
 
-2. **Take Implementation Screenshot**: Capture the implemented screen
-   - Navigate to the implemented screen in the app
-   - Take screenshot at same viewport size as Figma design
-   - Save screenshot for comparison
+2. **Open Figma in Inspect Mode**: Access the original Figma design
+   - Open Figma URL in browser
+   - Switch to "Inspect" mode (Developer handoff panel)
+   - This provides exact measurements and values for comparison
 
-3. **Side-by-Side Comparison**: Compare implementation with Figma design:
+3. **Compare Implementation Against Figma Code**: Validate implementation matches design specifications from Step 1:
    ```markdown
    ## Visual Comparison Checklist
    
@@ -711,13 +773,14 @@ Verify that the implemented screen matches the Figma design exactly by comparing
    - [ ] Platform-specific adjustments applied correctly
    ```
 
-4. **Measure Pixel Accuracy**: Use Figma inspect to verify measurements:
+4. **Measure Pixel Accuracy**: Use Figma inspect mode and design code from Step 1:
    - Open Figma design in inspect mode
-   - Compare padding values
-   - Compare margin/gap values
-   - Compare font sizes
-   - Compare border radius values
-   - Verify color hex values
+   - Compare padding values against code specifications
+   - Compare margin/gap values against code specifications
+   - Compare font sizes against code specifications
+   - Compare border radius values against code specifications
+   - Verify color hex values match code exactly
+   - **Reference the design code from Step 1, not screenshots**
 
 5. **Test Interactive Elements**: Verify all interactions work:
    - Tap all buttons and interactive elements
@@ -748,28 +811,28 @@ Verify that the implemented screen matches the Figma design exactly by comparing
    - Re-test after fixes
 
 8. **Final Validation**: Confirm perfect match:
-   - Take new screenshot after fixes
-   - Compare again with Figma
+   - Re-verify implementation against Figma inspect mode
+   - Compare code values from Step 1 with implementation
    - Verify all discrepancies resolved
-   - Get confirmation that implementation matches design exactly
+   - Get confirmation that implementation matches design code specifications exactly
 
 **Output:**
-- Implementation screenshot
 - Visual comparison checklist (all items checked)
 - Discrepancy report (if any issues found)
 - Fixed implementation (if corrections needed)
-- Final confirmation that implementation matches Figma exactly
+- Final confirmation that implementation matches Figma code specifications exactly
 - Documentation of any intentional deviations with justification
 
 **Validation:**
 - [ ] **Application Running**: Development server started and screen accessible
-- [ ] **Screenshots Taken**: Both Figma and implementation screenshots captured
-- [ ] **Comparison Complete**: All checklist items reviewed
-- [ ] **Measurements Verified**: Pixel-perfect accuracy confirmed
+- [ ] **Figma Inspect Used**: Figma design opened in inspect mode for comparison
+- [ ] **Code Specifications Referenced**: Design code from Step 1 used for validation
+- [ ] **Comparison Complete**: All checklist items reviewed against code specifications
+- [ ] **Measurements Verified**: Values match Figma code exactly (not visual approximation)
 - [ ] **Interactions Tested**: All interactive elements working correctly
 - [ ] **Discrepancies Documented**: Any differences clearly documented
 - [ ] **Fixes Applied**: All discrepancies corrected
-- [ ] **Final Match Confirmed**: Implementation matches Figma design exactly
+- [ ] **Final Match Confirmed**: Implementation matches Figma design code exactly
 - [ ] **Platform Testing**: Verified on both iOS and Android
 
 **CRITICAL**: Do not proceed to Step 8 until implementation matches Figma design exactly. All discrepancies must be resolved.
@@ -1134,8 +1197,10 @@ When using this workflow, AI systems MUST:
    ```
 
 2. **Use Figma MCP Server**: Always fetch designs using the Figma MCP tools:
-   - `mcp_figma_get_design_context` for code and metadata
-   - `mcp_figma_get_screenshot` for visual reference
+   - `mcp_figma_get_design_context` for code and metadata (REQUIRED - primary source of truth)
+   - `mcp_figma_get_metadata` for structure overview (REQUIRED for component hierarchy)
+   - **NEVER rely on screenshots for measurements or values** - code is the source of truth
+   - **Exit workflow immediately if MCP is unavailable** - do not attempt screenshot-based implementation
 
 3. **Check Component Library**: Always check `docs/frontend/component-library.md` before creating new components
 
@@ -1157,15 +1222,39 @@ When using this workflow, AI systems MUST:
 
 ### Figma MCP Server Usage
 
-The Figma MCP server provides these key tools:
-- `mcp_figma_get_design_context` - Gets code and metadata for a node
-- `mcp_figma_get_screenshot` - Gets visual screenshot for comparison
-- `mcp_figma_get_metadata` - Gets structure overview in XML format
+**CRITICAL**: The Figma MCP server is REQUIRED for this workflow. Do not proceed without it.
 
+The Figma MCP server provides these key tools:
+
+**PRIMARY TOOLS (REQUIRED):**
+- `mcp_figma_get_design_context` - Gets code and metadata for a node
+  - Returns React/Tailwind code with exact values
+  - Provides color hex codes, spacing values, typography specifications
+  - Includes data-node-id attributes for component mapping
+  - **This is the source of truth for all measurements and values**
+  
+- `mcp_figma_get_metadata` - Gets structure overview in XML format
+  - Provides component hierarchy and nesting
+  - Shows layer names and types
+  - Essential for planning component breakdown
+
+**VISUAL REFERENCE ONLY (NOT FOR MEASUREMENTS):**
+- `mcp_figma_get_screenshot` - Gets visual screenshot
+  - **Use only for visual reference, never for measurements**
+  - **All implementation values MUST come from design code, not screenshots**
+
+**URL Parsing:**
 Extract `fileKey` and `nodeId` from Figma URLs:
 - URL format: `https://figma.com/design/:fileKey/:fileName?node-id=1-2`
 - `fileKey` is the segment after `/design/`
 - `nodeId` is the value after `node-id=` (convert `-` to `:`, e.g., `1-2` → `1:2`)
+
+**If Figma MCP is unavailable:**
+1. STOP the workflow immediately
+2. Do NOT attempt screenshot-based implementation
+3. Do NOT estimate values from visual inspection
+4. Configure and authenticate Figma MCP server before proceeding
+5. Verify access with `list_mcp_resources` before starting
 
 ### Component Library Maintenance
 

@@ -412,6 +412,10 @@ export async function getArtistProfile(): Promise<ArtistProfile> {
   return request('/api/v1/artists/me/profile', { method: 'GET' });
 }
 
+export async function getArtistById(artistId: string): Promise<ArtistProfile> {
+  return request(`/api/v1/artists/${artistId}`, { method: 'GET' });
+}
+
 export async function updateArtistProfile(payload: Partial<ArtistProfile>) {
   return request('/api/v1/artists/me/profile', {
     method: 'PATCH',

@@ -1,24 +1,19 @@
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React from 'react';
-import { SectionList, SectionListData, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { SelectionItem } from '../components/common';
 import type { RootStackParamList } from '../navigation/AppNavigator';
 import { useBookingStore } from '../store/bookingStore';
+import { borderRadius } from '../theme/borderRadius';
 import { colors } from '../theme/colors';
+import { spacing } from '../theme/spacing';
+import { typography } from '../theme/typography';
 
-type OccasionSection = SectionListData<string, { title: string; data: string[] }>;
-
-const OCCASION_SECTIONS: OccasionSection[] = [
-  { title: '소셜 & 데이트', data: ['소개팅', '데이트'] },
-  { title: '운동', data: ['댄스스포츠', '운동클래스'] },
-  { title: '면접', data: ['미인대회', '승무원'] },
-  { title: '데일리', data: ['데일리'] },
-  { title: '사진 촬영', data: ['개인 프로필', '미인대회', '아나운서', '바디', '전업사진'] },
-  { title: '가족 행사', data: ['돌잔치', '상견례'] },
-  { title: '웨딩', data: ['전날제 결혼식', '본식 결혼식'] },
-];
+// Simple flat list of occasions matching Figma design
+const OCCASIONS = ['결혼식', '상견례', '소개팅', '데이트', '면접'];
 
 type OccasionSelectionNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -28,34 +23,44 @@ type OccasionSelectionNavigationProp = NativeStackNavigationProp<
 export function OccasionSelectionScreen() {
   const navigation = useNavigation<OccasionSelectionNavigationProp>();
   const setOccasion = useBookingStore((state) => state.setOccasion);
+  const [selectedOccasion, setSelectedOccasion] = useState<string | null>(null);
+
+  const handleContinue = () => {
+    if (selectedOccasion) {
+      setOccasion(selectedOccasion);
+      navigation.navigate('BookingSummary');
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom', 'left', 'right']}>
-      <Text style={styles.title}>오늘의 일정은 무엇인가요?</Text>
-      <Text style={styles.subtitle}>
-        일정을 선택하면 맞춤 아티스트와 서비스 추천을 도와드릴게요.
-      </Text>
+      <Text style={styles.title}>어디서 예뻐지실 건가요?</Text>
 
-      <SectionList
-        sections={OCCASION_SECTIONS}
-        keyExtractor={(item) => item}
+      <FlatList
+        data={OCCASIONS}
+        keyExtractor={(item, index) => `${item}-${index}`}
         contentContainerStyle={styles.listContent}
-        renderSectionHeader={({ section }) => (
-          <Text style={styles.sectionHeader}>{section.title}</Text>
-        )}
         renderItem={({ item }) => (
-          <TouchableOpacity
-            accessibilityRole="button"
-            style={styles.itemButton}
-            onPress={() => {
-              setOccasion(item);
-              navigation.navigate('BookingSummary');
-            }}
-          >
-            <Text style={styles.itemLabel}>{item}</Text>
-          </TouchableOpacity>
+          <SelectionItem
+            label={item}
+            selected={selectedOccasion === item}
+            onPress={() => setSelectedOccasion(item)}
+            accessibilityLabel={`${item} 선택`}
+          />
         )}
       />
+
+      <View style={styles.footer}>
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel="다음"
+          style={[styles.continueButton, !selectedOccasion && styles.continueButtonDisabled]}
+          onPress={handleContinue}
+          disabled={!selectedOccasion}
+        >
+          <Text style={styles.continueButtonText}>다음</Text>
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 }
@@ -63,39 +68,42 @@ export function OccasionSelectionScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 24,
+    paddingHorizontal: spacing.lg,
     backgroundColor: colors.background,
   },
   title: {
-    fontSize: 24,
-    fontWeight: '700',
-    marginBottom: 8,
+    fontSize: 20,
+    fontWeight: typography.weights.bold,
+    lineHeight: 22,
+    textAlign: 'center',
     color: colors.text,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: colors.subtle,
-    marginBottom: 16,
+    marginTop: 212,
+    marginBottom: 72,
   },
   listContent: {
-    gap: 12,
+    gap: spacing.md,
   },
-  sectionHeader: {
-    fontSize: 14,
-    color: colors.muted,
-    marginTop: 16,
-    marginBottom: 8,
+  footer: {
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.lg,
   },
-  itemButton: {
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
+  continueButton: {
+    height: spacing.inputHeight,
+    borderRadius: borderRadius.pill,
+    backgroundColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 15,
   },
-  itemLabel: {
-    fontSize: 16,
-    color: colors.text,
+  continueButtonDisabled: {
+    opacity: 0.5,
+  },
+  continueButtonText: {
+    fontSize: typography.sizes.base,
+    fontWeight: typography.weights.bold,
+    lineHeight: 22,
+    color: colors.background,
+    letterSpacing: -0.408,
+    textAlign: 'center',
   },
 });

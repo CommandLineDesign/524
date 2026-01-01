@@ -8,14 +8,18 @@ import type { ServiceType } from '@524/shared';
 
 import { MenuButton } from '../components/MenuButton';
 import { NavigationMenu } from '../components/NavigationMenu';
+import { SelectionItem } from '../components/common';
 import type { RootStackParamList } from '../navigation/AppNavigator';
 import { useBookingStore } from '../store/bookingStore';
+import { borderRadius } from '../theme/borderRadius';
 import { colors } from '../theme/colors';
+import { spacing } from '../theme/spacing';
+import { typography } from '../theme/typography';
 
-const SERVICE_OPTIONS: Array<{ id: ServiceType; label: string; description: string }> = [
-  { id: 'hair', label: '헤어', description: '스타일링, 드라이, 업스타일 등 헤어 전문 서비스' },
-  { id: 'makeup', label: '메이크업', description: '데일리, 데이트, 웨딩 등 맞춤 메이크업' },
-  { id: 'combo', label: '헤어 + 메이크업', description: '완벽한 변신을 위한 풀 패키지' },
+const SERVICE_OPTIONS: Array<{ id: ServiceType; label: string; isEmphasized?: boolean }> = [
+  { id: 'combo', label: '헤어 메이크업', isEmphasized: true },
+  { id: 'hair', label: '헤어' },
+  { id: 'makeup', label: '메이크업' },
 ];
 
 type ServiceSelectionNavigationProp = NativeStackNavigationProp<
@@ -27,6 +31,14 @@ export function ServiceSelectionScreen() {
   const navigation = useNavigation<ServiceSelectionNavigationProp>();
   const setServiceType = useBookingStore((state) => state.setServiceType);
   const [menuVisible, setMenuVisible] = useState(false);
+  const [selectedService, setSelectedService] = useState<ServiceType | null>(null);
+
+  const handleContinue = () => {
+    if (selectedService) {
+      setServiceType(selectedService);
+      navigation.navigate('OccasionSelection');
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom', 'left', 'right']}>
@@ -36,29 +48,35 @@ export function ServiceSelectionScreen() {
       </View>
 
       <View style={styles.content}>
-        <Text style={styles.title}>어떤 서비스를 원하시나요?</Text>
-        <Text style={styles.subtitle}>
-          서비스 유형을 선택하시면 맞춤 아티스트를 추천해 드립니다.
-        </Text>
+        <Text style={styles.title}>어떤 서비스를 받고 싶으세요?</Text>
 
         <FlatList
           data={SERVICE_OPTIONS}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
           renderItem={({ item }) => (
-            <TouchableOpacity
-              accessibilityRole="button"
-              style={styles.card}
-              onPress={() => {
-                setServiceType(item.id);
-                navigation.navigate('OccasionSelection');
-              }}
-            >
-              <Text style={styles.cardTitle}>{item.label}</Text>
-              <Text style={styles.cardDescription}>{item.description}</Text>
-            </TouchableOpacity>
+            <SelectionItem
+              label={item.label}
+              selected={selectedService === item.id}
+              onPress={() => setSelectedService(item.id)}
+              accessibilityLabel={`${item.label} 선택`}
+              accessibilityHint={`${item.label} 서비스를 선택합니다`}
+            />
           )}
         />
+      </View>
+
+      <View style={styles.footer}>
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel="다음"
+          accessibilityHint="다음 단계로 진행합니다"
+          style={[styles.continueButton, !selectedService && styles.continueButtonDisabled]}
+          onPress={handleContinue}
+          disabled={!selectedService}
+        >
+          <Text style={styles.continueButtonText}>다음</Text>
+        </TouchableOpacity>
       </View>
 
       <NavigationMenu visible={menuVisible} onClose={() => setMenuVisible(false)} />
@@ -75,47 +93,48 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingTop: 8,
-    paddingBottom: 8,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.sm,
   },
   headerSpacer: {
     width: 44,
   },
   content: {
     flex: 1,
-    paddingHorizontal: 24,
+    paddingHorizontal: spacing.lg,
   },
   title: {
-    fontSize: 24,
-    fontWeight: '700',
-    marginBottom: 8,
+    fontSize: 20,
+    fontWeight: typography.weights.bold,
+    lineHeight: 22,
     color: colors.text,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: colors.subtle,
-    marginBottom: 24,
+    textAlign: 'center',
+    marginTop: 180,
+    marginBottom: 50,
   },
   listContent: {
-    gap: 16,
+    gap: spacing.md,
   },
-  card: {
-    padding: 20,
-    borderRadius: 16,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
+  footer: {
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.lg,
   },
-  cardTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    marginBottom: 8,
-    color: colors.text,
+  continueButton: {
+    height: spacing.inputHeight,
+    borderRadius: borderRadius.pill,
+    backgroundColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  cardDescription: {
-    fontSize: 15,
-    color: colors.subtle,
+  continueButtonDisabled: {
+    opacity: 0.5,
+  },
+  continueButtonText: {
+    fontSize: typography.sizes.base,
+    fontWeight: typography.weights.bold,
     lineHeight: 22,
+    color: colors.background,
+    letterSpacing: -0.408,
   },
 });

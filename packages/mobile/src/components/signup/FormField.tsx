@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import React, { ReactNode, useState } from 'react';
 import {
   StyleProp,
   StyleSheet,
@@ -29,8 +29,22 @@ export const FormField = React.memo(function FormField({
   status,
   rightAccessory,
   containerStyle,
+  onFocus,
+  onBlur,
   ...textInputProps
 }: FormFieldProps) {
+  const [isFocused, setIsFocused] = useState(false);
+
+  const handleFocus = (e: Parameters<NonNullable<TextInputProps['onFocus']>>[0]) => {
+    setIsFocused(true);
+    onFocus?.(e);
+  };
+
+  const handleBlur = (e: Parameters<NonNullable<TextInputProps['onBlur']>>[0]) => {
+    setIsFocused(false);
+    onBlur?.(e);
+  };
+
   const renderHelper = () => {
     if (!helper) return null;
     const style = status === 'success' ? styles.helperSuccess : styles.helperError;
@@ -42,8 +56,16 @@ export const FormField = React.memo(function FormField({
       {label ? <Text style={styles.label}>{label}</Text> : null}
       <View style={styles.inputRow}>
         <TextInput
-          style={[styles.input, rightAccessory ? styles.inputWithAccessory : null]}
+          style={[
+            styles.input,
+            rightAccessory ? styles.inputWithAccessory : null,
+            isFocused && styles.inputFocused,
+          ]}
           placeholderTextColor={colors.textSecondary}
+          selectionColor={colors.text}
+          cursorColor={colors.text}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
           {...textInputProps}
         />
         {rightAccessory}
@@ -69,13 +91,23 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    height: 50,
+    height: 52,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.borderDark,
     borderRadius: 8,
     paddingHorizontal: spacing.md,
     fontSize: 16,
-    backgroundColor: '#fff',
+    backgroundColor: colors.background,
+    color: colors.text,
+  },
+  inputFocused: {
+    borderWidth: 3,
+    borderColor: colors.borderDark,
+    shadowColor: colors.borderDark,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 2,
   },
   inputWithAccessory: {
     paddingRight: 40, // Space for the accessory

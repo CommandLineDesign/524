@@ -66,6 +66,7 @@ const AdminLoginPage = () => {
                 borderRadius: 8,
                 border: '1px solid #d0d7de',
                 fontSize: 14,
+                boxSizing: 'border-box',
               }}
             />
           </label>
@@ -84,6 +85,7 @@ const AdminLoginPage = () => {
                 borderRadius: 8,
                 border: '1px solid #d0d7de',
                 fontSize: 14,
+                boxSizing: 'border-box',
               }}
             />
           </label>

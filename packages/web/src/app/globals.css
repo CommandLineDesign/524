@@ -19,3 +19,19 @@ body {
   margin: 0;
   padding: 0;
 }
+
+/* Override default blue focus outlines with black */
+input:focus,
+textarea:focus,
+select:focus {
+  outline-color: #19191b !important;
+  border-color: #19191b !important;
+}
+
+/* For inputs with custom focus rings */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid #19191b !important;
+  outline-offset: 2px;
+}

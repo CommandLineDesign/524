@@ -30,7 +30,10 @@ import { ReviewSubmissionScreen } from '../screens/ReviewSubmissionScreen';
 import { ServiceSelectionScreen } from '../screens/ServiceSelectionScreen';
 import { SignupConfirmationScreen } from '../screens/SignupConfirmationScreen';
 import { SignupScreen } from '../screens/SignupScreen';
+import { BookingFlowScreen } from '../screens/booking';
+import { ArtistDetailScreen } from '../screens/booking/artist/ArtistDetailScreen';
 import { useAuthStore } from '../store/authStore';
+import type { EntryPath } from '../store/bookingFlowStore';
 
 // Feature flag to control customer onboarding visibility
 const isCustomerOnboardingEnabled = process.env.EXPO_PUBLIC_SHOW_CUSTOMER_ONBOARDING === 'true';
@@ -98,6 +101,7 @@ export type RootStackParamList = {
   SignupConfirmation: undefined;
   ArtistSignup: undefined;
   Home: undefined;
+  BookingFlow: { entryPath?: EntryPath } | undefined;
   ServiceSelection: undefined;
   OccasionSelection: undefined;
   BookingSummary: undefined;
@@ -110,6 +114,7 @@ export type RootStackParamList = {
   ReviewConfirmation: { bookingId: string };
   MyReviews: undefined;
   ArtistProfile: { artistId: string };
+  ArtistDetail: { artistId: string };
   ArtistOnboarding: undefined;
   ArtistPending: undefined;
   ArtistBookingsList: undefined;
@@ -236,6 +241,11 @@ export function AppNavigator() {
               <>
                 <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
                 <Stack.Screen
+                  name="BookingFlow"
+                  component={BookingFlowScreen}
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
                   name="ArtistBookingsList"
                   component={ArtistBookingsListScreen}
                   options={{ title: '예약 요청' }}
@@ -305,6 +315,11 @@ export function AppNavigator() {
                   Navigation call: navigation.navigate('ArtistProfile', { artistId })
                   Expected to be implemented in upcoming stories for search and booking flows.
                 */}
+                <Stack.Screen
+                  name="ArtistDetail"
+                  component={ArtistDetailScreen}
+                  options={{ title: '아티스트 정보' }}
+                />
                 <Stack.Screen
                   name="ChatsList"
                   component={ChatsListScreen}

@@ -369,6 +369,8 @@ export function ReviewSubmissionScreen() {
               placeholder="서비스에 대한 자세한 의견을 남겨주세요..."
               value={reviewText}
               onChangeText={setReviewText}
+              selectionColor={colors.text}
+              cursorColor={colors.text}
               multiline
               numberOfLines={4}
               maxLength={1000}
@@ -531,7 +533,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     fontSize: 16,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.background,
     color: colors.text,
     minHeight: 120,
     textAlignVertical: 'top',

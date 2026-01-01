@@ -4,17 +4,49 @@
 
 This guide provides a systematic approach to translating Figma designs into React Native components for the 524 Beauty Marketplace mobile application.
 
+**CRITICAL REQUIREMENT**: This guide assumes you have **programmatic access to Figma designs via the Figma MCP server**. Screenshots are explicitly prohibited as they are unreliable and lead to inaccurate implementations.
+
+---
+
+## PREREQUISITE: Figma MCP Server Access
+
+**BEFORE STARTING IMPLEMENTATION:**
+
+1. **Verify Figma MCP Access**: Confirm the Figma MCP server is configured and accessible
+   ```bash
+   # Check if Figma MCP server is available
+   list_mcp_resources
+   # Should show resources from "project-0-524-figma"
+   
+   # Test access to design context
+   mcp_figma_get_design_context(fileKey, nodeId, clientLanguages="typescript", clientFrameworks="react")
+   ```
+
+2. **If MCP is Unavailable**: STOP IMMEDIATELY
+   ```markdown
+   ❌ CANNOT PROCEED WITHOUT FIGMA MCP ACCESS
+   
+   **Why**: Screenshots and manual extraction are unreliable and produce inaccurate implementations.
+   
+   **Required Action**: 
+   - Configure and authenticate Figma MCP server before attempting any implementation
+   - Do NOT estimate values from visual inspection
+   - Do NOT use screenshots for measurements
+   ```
+
+**ENFORCEMENT**: Implementations without Figma MCP access are prohibited and will be rejected.
+
 ---
 
 ## Pre-Implementation Checklist
 
 Before starting implementation, ensure you have:
 
-- [ ] Access to Figma design files
-- [ ] Design specifications exported (spacing, colors, typography)
-- [ ] Asset exports (icons, images) in appropriate formats
-- [ ] Understanding of component hierarchy in designs
-- [ ] Clarification on interactive states (hover, pressed, disabled)
+- [ ] **Figma MCP server access verified** (CRITICAL - exit if unavailable)
+- [ ] Figma design URL with file key and node ID
+- [ ] Access to Figma design files in inspect mode
+- [ ] Understanding of component hierarchy from Figma metadata
+- [ ] Clarification on interactive states (pressed, disabled, loading)
 - [ ] Responsive behavior specifications
 
 ---
@@ -23,11 +55,50 @@ Before starting implementation, ensure you have:
 
 ### 1. Design Analysis
 
+**STEP 1A: Fetch Design Code from Figma MCP**
+
+Before any manual analysis, retrieve the design programmatically:
+
+```bash
+# Use Figma MCP to get design code and metadata
+mcp_figma_get_design_context(
+  fileKey="kZJo1yyy6T3lCWd1FTX16D",
+  nodeId="1:100",
+  clientLanguages="typescript",
+  clientFrameworks="react"
+)
+
+# This provides:
+# - React/Tailwind code with exact component structure
+# - Precise measurements (padding, spacing, dimensions)
+# - Exact color values (hex codes like #19191b)
+# - Typography specifications (size, weight, line-height, letter-spacing)
+# - Border radius, shadows, and other properties
+# - data-node-id attributes for component mapping
+
+# Also get metadata for hierarchy
+mcp_figma_get_metadata(
+  fileKey="kZJo1yyy6T3lCWd1FTX16D",
+  nodeId="1:100"
+)
+```
+
+**CRITICAL RULES:**
+- ✅ **DO**: Extract all values from the code output from `mcp_figma_get_design_context`
+- ✅ **DO**: Use Figma inspect mode for verification
+- ❌ **DON'T**: Extract values from screenshots
+- ❌ **DON'T**: Estimate or guess measurements
+- ❌ **DON'T**: Proceed if MCP is unavailable
+
+---
+
 #### Extract Design Tokens
 
 **Colors**
 ```typescript
-// Review Figma color palette and map to theme/colors.ts
+// Extract exact color values from Figma MCP code output
+// Example from code: className="text-[#19191b]" or className="bg-[#19191b]"
+// Map these exact hex values to theme/colors.ts
 export const colors = {
   // From Figma: Primary colors
   primary: '#111827',      // Figma: Primary/900
@@ -54,7 +125,9 @@ export const colors = {
 
 **Spacing**
 ```typescript
-// Measure spacing in Figma (usually 4px, 8px, 16px, 24px, 32px)
+// Extract exact spacing values from Figma MCP code output
+// Example from code: className="left-[24px] top-[284px]" or className="px-0 py-[15px]"
+// DO NOT estimate from visual inspection - use exact values from code
 export const spacing = {
   xs: 4,    // Figma: 4px
   sm: 8,    // Figma: 8px
@@ -67,7 +140,9 @@ export const spacing = {
 
 **Typography**
 ```typescript
-// Extract font sizes, weights, and line heights from Figma
+// Extract exact typography values from Figma MCP code output
+// Example from code: className="text-[20px]" or className="text-[length:var(--static\/body-large\/size,16px)]"
+// Example: className="leading-[22px]" or className="tracking-[-0.408px]"
 export const typography = {
   sizes: {
     xs: 12,    // Figma: Caption
@@ -94,7 +169,8 @@ export const typography = {
 
 **Border Radius**
 ```typescript
-// Extract border radius values from Figma
+// Extract exact border radius values from Figma MCP code output
+// Example from code: className="rounded-[40px]" or className="rounded-[10px]" or className="rounded-[100px]"
 export const borderRadius = {
   sm: 4,     // Figma: Small radius
   md: 8,     // Figma: Medium radius
@@ -314,25 +390,23 @@ const styles = StyleSheet.create({
 
 #### Step 4.2: Match Figma Measurements
 
-Use Figma's inspect panel to get exact measurements:
+Use Figma MCP code output and Figma's inspect panel to get exact measurements (NEVER estimate from screenshots):
 
 ```tsx
-// Figma shows:
-// - Padding: 16px
-// - Gap between elements: 8px
-// - Border radius: 12px
-// - Font size (title): 18px
-// - Font weight (title): 700
+// From Figma MCP code output:
+// className="px-0 py-[15px]" → padding vertical: 15px
+// className="rounded-[10px]" → border radius: 10px
+// className="text-[20px]" → font size: 20px
+// className="font-['Pretendard:Bold',sans-serif]" → font weight: bold (700)
 
 const styles = StyleSheet.create({
   card: {
-    padding: 16,        // Match Figma exactly
-    gap: 8,             // Match Figma exactly
-    borderRadius: 12,   // Match Figma exactly
+    paddingVertical: 15,  // From MCP code: py-[15px]
+    borderRadius: 10,      // From MCP code: rounded-[10px]
   },
   title: {
-    fontSize: 18,       // Match Figma exactly
-    fontWeight: '700',  // Match Figma exactly
+    fontSize: 20,          // From MCP code: text-[20px]
+    fontWeight: '700',     // From MCP code: Pretendard:Bold
   },
 });
 
@@ -906,7 +980,63 @@ export function BookingsListScreen() {
 
 ---
 
-**Guide Version**: 1.0  
+## Appendix: Why Figma MCP is Required
+
+### The Problem with Screenshots
+
+Screenshots are fundamentally unreliable for implementation because:
+
+1. **No Precise Measurements**: You cannot extract exact pixel values from a screenshot
+2. **Color Inaccuracy**: Screen rendering, compression, and color profiles affect color accuracy
+3. **No Structure Information**: Screenshots don't reveal component hierarchy or nesting
+4. **No Design Tokens**: Cannot identify which design system values are being used
+5. **Estimation Errors**: Manual measurement leads to inconsistent implementations
+6. **No Code Context**: Cannot see how components relate or what properties they have
+
+### Why Figma MCP is Superior
+
+The Figma MCP server provides:
+
+1. **Exact Values**: Precise measurements in code format (e.g., `padding: 15px`, `color: #19191b`)
+2. **Component Structure**: Complete hierarchy with `data-node-id` attributes
+3. **Design Tokens**: References to design system variables and styles
+4. **Code Output**: React/Tailwind code that can be directly translated to React Native
+5. **Metadata**: XML structure showing component organization
+6. **Consistency**: Same values every time, no human error
+
+### Example Comparison
+
+**Screenshot-based (WRONG)**:
+```typescript
+// Estimated from visual inspection
+const styles = StyleSheet.create({
+  button: {
+    padding: 16,  // Looks like about 16px?
+    borderRadius: 12,  // Seems rounded, maybe 12px?
+    backgroundColor: '#1a1a1a',  // Dark color, close enough?
+  },
+});
+```
+
+**MCP-based (CORRECT)**:
+```typescript
+// From mcp_figma_get_design_context output:
+// className="px-0 py-[15px] rounded-[100px] bg-[#19191b]"
+const styles = StyleSheet.create({
+  button: {
+    paddingVertical: 15,  // Exact value from code
+    paddingHorizontal: 0,  // Exact value from code
+    borderRadius: 100,  // Exact value from code (pill shape)
+    backgroundColor: '#19191b',  // Exact hex from code
+  },
+});
+```
+
+The MCP-based approach ensures pixel-perfect accuracy and consistency.
+
+---
+
+**Guide Version**: 1.1  
 **Last Updated**: December 2024  
 **Maintained By**: 524 Development Team
 

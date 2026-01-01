@@ -5,14 +5,26 @@ import { computePendingSteps } from './onboardingService.js';
 
 describe('computePendingSteps', () => {
   it('returns all steps when no responses exist', () => {
-    const pending = computePendingSteps(['kpop_lookalike', 'service_interests'], {});
-    assert.deepEqual(pending, ['kpop_lookalike', 'service_interests']);
+    const pending = computePendingSteps(
+      ['celebrity_lookalike', 'celebrity_similar_image', 'celebrity_admire', 'celebrity_result'],
+      {}
+    );
+    assert.deepEqual(pending, [
+      'celebrity_lookalike',
+      'celebrity_similar_image',
+      'celebrity_admire',
+      'celebrity_result',
+    ]);
   });
 
   it('drops completed steps in order', () => {
-    const pending = computePendingSteps(['kpop_lookalike', 'service_interests'], {
-      kpop_lookalike: { done: true },
-    });
-    assert.deepEqual(pending, ['service_interests']);
+    const pending = computePendingSteps(
+      ['celebrity_lookalike', 'celebrity_similar_image', 'celebrity_admire', 'celebrity_result'],
+      {
+        celebrity_lookalike: { done: true },
+        celebrity_similar_image: { done: true },
+      }
+    );
+    assert.deepEqual(pending, ['celebrity_admire', 'celebrity_result']);
   });
 });

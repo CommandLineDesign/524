@@ -232,6 +232,8 @@ export function ArtistOnboardingFlowScreen() {
               value={draft.stageName}
               onChangeText={(text) => updateField({ stageName: text })}
               placeholder="e.g., Glow Studio"
+              selectionColor={colors.text}
+              cursorColor={colors.text}
               style={{
                 borderWidth: 1,
                 borderColor: colors.border,
@@ -248,6 +250,8 @@ export function ArtistOnboardingFlowScreen() {
               multiline
               numberOfLines={4}
               placeholder="Highlight your style and experience."
+              selectionColor={colors.text}
+              cursorColor={colors.text}
               style={{
                 borderWidth: 1,
                 borderColor: colors.border,
@@ -293,6 +297,8 @@ export function ArtistOnboardingFlowScreen() {
               onChangeText={(text) => updateField({ yearsExperience: Number(text) || 0 })}
               placeholder="e.g., 5"
               keyboardType="number-pad"
+              selectionColor={colors.text}
+              cursorColor={colors.text}
               style={{
                 borderWidth: 1,
                 borderColor: colors.border,
@@ -326,6 +332,8 @@ export function ArtistOnboardingFlowScreen() {
                 updateField({ primaryLocation: { ...draft.primaryLocation, address: text } })
               }
               placeholder="e.g., Gangnam, Seoul"
+              selectionColor={colors.text}
+              cursorColor={colors.text}
               style={{
                 borderWidth: 1,
                 borderColor: colors.border,
@@ -351,6 +359,8 @@ export function ArtistOnboardingFlowScreen() {
                 }
                 placeholder="37.4979"
                 keyboardType="decimal-pad"
+                selectionColor={colors.text}
+                cursorColor={colors.text}
                 style={{
                   borderWidth: 1,
                   borderColor: colors.border,
@@ -375,6 +385,8 @@ export function ArtistOnboardingFlowScreen() {
                 }
                 placeholder="127.0276"
                 keyboardType="decimal-pad"
+                selectionColor={colors.text}
+                cursorColor={colors.text}
                 style={{
                   borderWidth: 1,
                   borderColor: colors.border,
@@ -393,6 +405,8 @@ export function ArtistOnboardingFlowScreen() {
               onChangeText={(text) => updateField({ serviceRadiusKm: Number(text) || 0 })}
               placeholder="e.g., 10"
               keyboardType="decimal-pad"
+              selectionColor={colors.text}
+              cursorColor={colors.text}
               style={{
                 borderWidth: 1,
                 borderColor: colors.border,

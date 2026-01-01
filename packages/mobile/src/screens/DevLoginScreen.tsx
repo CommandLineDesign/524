@@ -36,6 +36,8 @@ export function DevLoginScreen() {
   const [email, setEmail] = useState('demo-customer@524.app');
   const [password, setPassword] = useState(config.testPassword);
   const [isLoading, setIsLoading] = useState(false);
+  const [emailFocused, setEmailFocused] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -72,23 +74,31 @@ export function DevLoginScreen() {
           <View style={styles.form}>
             <Text style={styles.label}>이메일</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, emailFocused && styles.inputFocused]}
               value={email}
               onChangeText={setEmail}
               placeholder="email@test.com"
               keyboardType="email-address"
               autoCapitalize="none"
               editable={!isLoading}
+              selectionColor={colors.text}
+              cursorColor={colors.text}
+              onFocus={() => setEmailFocused(true)}
+              onBlur={() => setEmailFocused(false)}
             />
 
             <Text style={styles.label}>비밀번호</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, passwordFocused && styles.inputFocused]}
               value={password}
               onChangeText={setPassword}
               placeholder="password@1234"
               secureTextEntry
               editable={!isLoading}
+              selectionColor={colors.text}
+              cursorColor={colors.text}
+              onFocus={() => setPasswordFocused(true)}
+              onBlur={() => setPasswordFocused(false)}
             />
 
             <TouchableOpacity
@@ -185,12 +195,22 @@ const styles = StyleSheet.create({
   input: {
     height: 50,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.borderDark,
     borderRadius: 8,
     paddingHorizontal: spacing.md,
     marginBottom: spacing.md,
     fontSize: 16,
-    backgroundColor: '#fff',
+    backgroundColor: colors.background,
+    color: colors.text,
+  },
+  inputFocused: {
+    borderWidth: 3,
+    borderColor: colors.borderDark,
+    shadowColor: colors.borderDark,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 2,
   },
   button: {
     height: 50,

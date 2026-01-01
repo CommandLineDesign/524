@@ -102,6 +102,7 @@ export class BookingRepository {
         serviceLocation: payload.location,
         locationType: 'customer_location',
         address: payload.location,
+        specialRequests: payload.notes ?? null,
         status: 'pending',
         statusHistory: [historyEntry],
         paymentStatus: 'pending',
