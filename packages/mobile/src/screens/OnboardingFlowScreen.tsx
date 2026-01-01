@@ -128,7 +128,7 @@ function CelebrityResultStepRenderer({ onSubmit }: StepRendererProps) {
   );
 }
 
-const STEP_RENDERERS: Record<OnboardingStepKey, React.FC<StepRendererProps>> = {
+const STEP_RENDERERS: Partial<Record<OnboardingStepKey, React.FC<StepRendererProps>>> = {
   celebrity_lookalike: CelebrityLookalikeStepRenderer,
   celebrity_similar_image: CelebritySimilarImageStepRenderer,
   celebrity_admire: CelebrityAdmireStepRenderer,

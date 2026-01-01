@@ -121,9 +121,8 @@ export function ArtistDetailScreen({ route, navigation }: ArtistDetailScreenProp
         {activeTab === 'profile' ? (
           <ArtistProfileTab
             bio={artist.bio}
-            specialties={artist.specialties}
-            services={artist.services}
-            priceRange={artist.priceRange}
+            specialties={artist.specialties?.map((s) => (typeof s === 'string' ? s : String(s)))}
+            services={artist.services?.map((s) => s.name)}
           />
         ) : (
           <ArtistReviewsTab artistId={artistId} />

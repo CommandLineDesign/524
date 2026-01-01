@@ -4,7 +4,9 @@ export type OnboardingStepKey =
   | 'celebrity_lookalike'
   | 'celebrity_similar_image'
   | 'celebrity_admire'
-  | 'celebrity_result';
+  | 'celebrity_result'
+  | 'kpop_lookalike'
+  | 'service_interests';
 
 export interface OnboardingCelebrityLookalikeResponse {
   step: 'celebrity_lookalike';
@@ -29,11 +31,27 @@ export interface OnboardingCelebrityResultResponse {
   admire: string | null;
 }
 
+export interface OnboardingKpopLookalikeResponse {
+  step: 'kpop_lookalike';
+  selection: {
+    starId: string;
+    starName: string;
+    imageUrl: string;
+  };
+}
+
+export interface OnboardingServiceInterestsResponse {
+  step: 'service_interests';
+  services: ServiceType[];
+}
+
 export type OnboardingResponseInput =
   | OnboardingCelebrityLookalikeResponse
   | OnboardingCelebritySimilarImageResponse
   | OnboardingCelebrityAdmireResponse
-  | OnboardingCelebrityResultResponse;
+  | OnboardingCelebrityResultResponse
+  | OnboardingKpopLookalikeResponse
+  | OnboardingServiceInterestsResponse;
 
 export interface OnboardingResponseRecord {
   step: OnboardingStepKey;

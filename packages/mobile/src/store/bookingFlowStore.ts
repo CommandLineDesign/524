@@ -510,11 +510,13 @@ export const useBookingFlowStore = create<BookingFlowStore>((set, get) => ({
     }
 
     // Convert ExtendedServiceType to ServiceType for API compatibility
-    // ExtendedServiceType includes UI-only options like 'all' (select all services)
+    // ExtendedServiceType includes UI-only options like 'beautyLesson' and 'nail'
     // ServiceType is the API contract: 'hair' | 'makeup' | 'combo'
-    // When user selects 'all', it maps to 'combo' (hair + makeup package)
+    // Non-standard service types default to 'combo'
     const validServiceType: ServiceType =
-      serviceType === 'all' ? 'combo' : (serviceType as ServiceType);
+      serviceType === 'hair' || serviceType === 'makeup' || serviceType === 'combo'
+        ? serviceType
+        : 'combo';
 
     // Convert SelectedTreatment to BookedService
     const services: BookedService[] = selectedTreatments.map((treatment) => ({
@@ -538,15 +540,14 @@ export const useBookingFlowStore = create<BookingFlowStore>((set, get) => ({
       scheduledEndTime: endTime.toISOString(),
       totalAmount,
       services,
-      // Use provided location or fallback to default location
+      // Use provided location coordinates or fallback to default location
       // DEV_DEFAULT_LOCATION is a shared constant used as a fallback when no location is provided
       // In production, this ensures the booking can still be created while prompting user to update
-      location: location
+      location: state.locationCoordinates
         ? {
-            type: 'customer_location' as const,
-            addressLine: location,
-            city: '',
-            postalCode: '',
+            latitude: state.locationCoordinates.lat,
+            longitude: state.locationCoordinates.lng,
+            addressLine: location || DEV_DEFAULT_LOCATION.addressLine,
           }
         : DEV_DEFAULT_LOCATION,
       notes: customerNotes || undefined,
