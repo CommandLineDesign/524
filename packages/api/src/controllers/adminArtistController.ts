@@ -82,7 +82,7 @@ export const AdminArtistController = {
         return acc;
       }, {});
 
-      const updated = await artistService.updateArtistProfile(artistId, filteredUpdates);
+      const updated = await artistService.updateArtistProfileById(artistId, filteredUpdates);
       res.json({ data: updated });
     } catch (error) {
       next(error);

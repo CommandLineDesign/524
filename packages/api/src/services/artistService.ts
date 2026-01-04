@@ -27,6 +27,13 @@ export class ArtistService {
     return this.repository.updateByUserId(userId, updates);
   }
 
+  updateArtistProfileById(
+    artistProfileId: string,
+    updates: ArtistProfileUpdateInput
+  ): Promise<ArtistProfile> {
+    return this.repository.update(artistProfileId, updates);
+  }
+
   updateMyArtistProfile(userId: string, updates: ArtistProfileUpdateInput): Promise<ArtistProfile> {
     return this.repository.updateByUserId(userId, updates);
   }
