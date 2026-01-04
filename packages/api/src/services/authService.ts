@@ -327,7 +327,7 @@ export class AuthService {
         family_id: familyId,
         jti,
       } as RefreshTokenPayload,
-      env.JWT_REFRESH_SECRET || env.JWT_SECRET,
+      env.JWT_REFRESH_SECRET || env.JWT_SECRET || 'fallback-secret',
       { expiresIn: `${REFRESH_TOKEN_EXPIRY_DAYS}d` }
     );
 
@@ -426,7 +426,7 @@ export class AuthService {
     try {
       payload = jwt.verify(
         refreshTokenString,
-        env.JWT_REFRESH_SECRET || env.JWT_SECRET
+        env.JWT_REFRESH_SECRET || env.JWT_SECRET || 'fallback-secret'
       ) as RefreshTokenPayload;
     } catch (error) {
       if (error instanceof jwt.TokenExpiredError) {

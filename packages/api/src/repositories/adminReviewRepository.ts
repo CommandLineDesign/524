@@ -29,7 +29,7 @@ type ReviewRow = {
   timelinessRating: number;
   reviewText: string | null;
   artistResponse: string | null;
-  isVisible: number | null;
+  isVisible: boolean | null;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -52,7 +52,7 @@ function mapReviewRow(row: ReviewRow): Review & {
     reviewText: row.reviewText,
     reviewImages: null, // This will be populated separately if needed
     artistResponse: row.artistResponse,
-    isVisible: row.isVisible === null ? true : Boolean(row.isVisible), // Convert integer to boolean
+    isVisible: row.isVisible === null ? true : row.isVisible,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     customerName: row.customerName ?? undefined,
@@ -69,7 +69,7 @@ export class AdminReviewRepository {
     const conditions = [];
 
     if (filters.isVisible !== undefined) {
-      conditions.push(eq(reviews.isVisible, filters.isVisible ? 1 : 0));
+      conditions.push(eq(reviews.isVisible, filters.isVisible));
     }
 
     if (filters.search) {
@@ -98,7 +98,7 @@ export class AdminReviewRepository {
     const conditions = [];
 
     if (params.isVisible !== undefined) {
-      conditions.push(eq(reviews.isVisible, params.isVisible ? 1 : 0));
+      conditions.push(eq(reviews.isVisible, params.isVisible));
     }
 
     if (params.search) {

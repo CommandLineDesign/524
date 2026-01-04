@@ -169,7 +169,7 @@ const ServicesSection = () => {
   return (
     <Stack spacing={2} sx={{ mt: 1 }}>
       {record.services.map((service, index) => (
-        <Card key={service.id || `${service.name}-${index}`} variant="outlined">
+        <Card key={`${service.name}-${index}`} variant="outlined">
           <CardContent>
             <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
               <Box>

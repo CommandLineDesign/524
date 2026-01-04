@@ -1,3 +1,4 @@
+import type { ReviewImage } from '@524/database';
 import type { NextFunction, Request, Response } from 'express';
 
 import { AdminReviewRepository } from '../repositories/adminReviewRepository.js';
@@ -80,7 +81,7 @@ export const AdminReviewController = {
       }
 
       // Get review images
-      let images = [];
+      let images: ReviewImage[] = [];
       try {
         images = await reviewRepository.getReviewImages(id);
       } catch (error) {

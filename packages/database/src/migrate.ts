@@ -15,7 +15,7 @@ if (!DATABASE_URL) {
 
 async function runMigrations() {
   console.log('Starting database migrations...');
-  console.log('Database URL:', DATABASE_URL.replace(/:[^:@]+@/, ':*****@'));
+  console.log('Database URL:', DATABASE_URL?.replace(/:[^:@]+@/, ':*****@'));
 
   const pool = new Pool({
     connectionString: DATABASE_URL,

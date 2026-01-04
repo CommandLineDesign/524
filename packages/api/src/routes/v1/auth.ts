@@ -291,9 +291,8 @@ if (features.USE_REAL_AUTH) {
 
 // Common routes (work with both mock and real auth)
 router.post('/logout', requireAuth(), async (req: AuthRequest, res) => {
+  const { refreshToken } = req.body;
   try {
-    const { refreshToken } = req.body;
-
     // Revoke the specific refresh token if provided
     if (refreshToken && typeof refreshToken === 'string') {
       await authService.revokeRefreshToken(refreshToken);
