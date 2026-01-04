@@ -1,4 +1,4 @@
-import { type SQL, and, count, desc, eq, sql } from 'drizzle-orm';
+import { type SQL, and, asc, count, desc, eq, sql } from 'drizzle-orm';
 
 import { type Review, reviewImages, reviews } from '@524/database';
 import { db } from '../db/client.js';
@@ -379,16 +379,17 @@ export class ReviewRepository {
     let orderBy: SQL;
     switch (params.sortField) {
       case 'createdAt':
-        orderBy = params.sortOrder === 'DESC' ? desc(reviews.createdAt) : reviews.createdAt;
+        orderBy = params.sortOrder === 'DESC' ? desc(reviews.createdAt) : asc(reviews.createdAt);
         break;
       case 'overallRating':
-        orderBy = params.sortOrder === 'DESC' ? desc(reviews.overallRating) : reviews.overallRating;
+        orderBy =
+          params.sortOrder === 'DESC' ? desc(reviews.overallRating) : asc(reviews.overallRating);
         break;
       case 'customerId':
-        orderBy = params.sortOrder === 'DESC' ? desc(reviews.customerId) : reviews.customerId;
+        orderBy = params.sortOrder === 'DESC' ? desc(reviews.customerId) : asc(reviews.customerId);
         break;
       case 'artistId':
-        orderBy = params.sortOrder === 'DESC' ? desc(reviews.artistId) : reviews.artistId;
+        orderBy = params.sortOrder === 'DESC' ? desc(reviews.artistId) : asc(reviews.artistId);
         break;
       default:
         orderBy = desc(reviews.createdAt);
