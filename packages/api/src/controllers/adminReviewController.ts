@@ -50,9 +50,10 @@ export const AdminReviewController = {
       const totalQuery = await adminReviewRepository.getAllReviewsCount({ search, isVisible });
 
       // Get paginated results with related data
+      const effectivePerPage = Number.isNaN(perPage) ? 25 : Math.max(perPage, 1);
       const reviews = await adminReviewRepository.getAllReviews({
-        limit: Number.isNaN(perPage) ? 25 : Math.max(perPage, 1),
-        offset: Number.isNaN(page) ? 0 : Math.max((page - 1) * perPage, 0),
+        limit: effectivePerPage,
+        offset: Number.isNaN(page) ? 0 : Math.max((page - 1) * effectivePerPage, 0),
         sortField,
         sortOrder,
         search,
