@@ -206,7 +206,7 @@ Create the commit and handle any failures from pre-commit hooks by fixing issues
 **Actions:**
 
 1. **Attempt Commit**: Run `git commit -m "<commit-message>"` with the prepared message
-2. **Monitor Pre-Commit Hooks**: Observe output from any pre-commit hooks (linting, formatting, type checking)
+2. **Monitor Pre-Commit Hooks**: Observe output from any pre-commit hooks (linting, formatting, type checking, build verification)
 3. **Handle Hook Failures**: If pre-commit hooks fail:
    - Review hook output to identify specific issues
    - Fix identified issues (formatting, linting errors, type errors)
@@ -396,7 +396,7 @@ When using this workflow, AI systems MUST:
 This workflow is designed to handle the complete git commit-push cycle with robust error handling for common issues:
 
 - **Merge Conflicts**: The workflow prioritizes merging origin/main before committing to reduce integration issues
-- **Pre-Commit Hooks**: Common hooks include linting (ESLint, Biome), formatting (Prettier), and type checking (TypeScript)
+- **Pre-Commit Hooks**: Common hooks include linting (ESLint, Biome), formatting (Prettier), type checking (TypeScript), and build verification
 - **Pre-Push Hooks**: Common hooks include test suites, build verification, and additional type checking
 - **Iterative Resolution**: The workflow explicitly supports multiple retry attempts rather than bypassing hooks
 - **Cleanup**: The workflow ensures temporary files and debug scripts don't pollute the repository

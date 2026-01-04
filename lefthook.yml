@@ -32,8 +32,8 @@ pre-push:
       run: pnpm -w format:check
     check-fix:
       run: pnpm -w check:fix
-    typecheck:
-      run: pnpm -w typecheck
     build:
       run: pnpm -w build
+    typecheck:
+      run: pnpm -w typecheck
 
