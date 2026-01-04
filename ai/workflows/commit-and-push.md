@@ -192,7 +192,55 @@ Stage all intended changes and analyze the diff to generate a meaningful, descri
 - [ ] **Diff Reviewed**: All staged changes have been reviewed and understood
 - [ ] **Message Prepared**: Commit message accurately summarizes all changes
 
-### 5. Commit Changes with Pre-Commit Hook Handling
+### 5. Cross-Package Type Validation
+
+**Purpose:**
+Run a dedicated typecheck across all packages in the monorepo to catch type errors that may not be caught by pre-commit hooks, particularly cross-package import issues and module resolution errors. This step runs independently of git hooks to ensure CI/CD compatibility.
+
+**Input:**
+
+- Staged changes from Step 4
+- All package source files in the monorepo
+- TypeScript configurations for each package
+
+**Actions:**
+
+1. **Install Dependencies**: Ensure all dependencies are installed with `pnpm install`
+2. **Run Monorepo Typecheck**: Execute `pnpm typecheck` to run TypeScript validation across all packages
+3. **Analyze Type Errors**: If typecheck fails, analyze the error output:
+   - Identify which packages have errors
+   - Categorize errors (module resolution, type mismatch, missing exports, etc.)
+   - Determine root cause (missing dependency, incorrect import path, type definition issue)
+4. **Fix Module Resolution Errors**: For errors like `Cannot find module '@524/shared'`:
+   - Verify the package is listed in dependencies in `package.json`
+   - Check that the shared package exports the required types/modules
+   - Ensure workspace linking is correct (`"@524/shared": "workspace:*"`)
+   - Run `pnpm install` again if dependencies were modified
+5. **Fix Type Errors**: Address TypeScript compilation issues:
+   - Fix type mismatches in source files
+   - Add missing type exports to shared packages
+   - Update type definitions where needed
+   - Ensure all cross-package imports use correct paths
+6. **Re-stage Fixed Files**: If fixes were made, run `git add <fixed-files>` to include them
+7. **Verify Typecheck Passes**: Re-run `pnpm typecheck` to confirm all errors are resolved
+8. **Iterate Until Success**: Continue fixing and re-running until typecheck passes
+
+**Output:**
+
+- All packages pass TypeScript type checking
+- Cross-package imports are validated
+- Module resolution errors are resolved
+- Any fixes are staged for commit
+
+**Validation:**
+
+- [ ] **Typecheck Success**: `pnpm typecheck` completes without errors
+- [ ] **All Packages Pass**: Every package in the monorepo passes type validation
+- [ ] **Module Resolution**: All cross-package imports resolve correctly (e.g., `@524/shared`)
+- [ ] **No Type Errors**: No TypeScript compilation errors in any package
+- [ ] **Fixes Staged**: Any type-related fixes are staged for commit
+
+### 6. Commit Changes with Pre-Commit Hook Handling
 
 **Purpose:**
 Create the commit and handle any failures from pre-commit hooks by fixing issues and retrying until the commit succeeds.
@@ -200,6 +248,7 @@ Create the commit and handle any failures from pre-commit hooks by fixing issues
 **Input:**
 
 - Staged changes from Step 4
+- Type-validated codebase from Step 5
 - Generated commit message from Step 4
 - Pre-commit hook configuration (if present)
 
@@ -229,14 +278,14 @@ Create the commit and handle any failures from pre-commit hooks by fixing issues
 - [ ] **Commit Verified**: git log -1 shows new commit with correct message
 - [ ] **No Remaining Issues**: All hook-identified issues have been resolved
 
-### 6. Push Changes with Pre-Push Hook Handling
+### 7. Push Changes with Pre-Push Hook Handling
 
 **Purpose:**
 Push the committed changes to the remote repository and handle any failures from pre-push hooks by fixing issues and retrying until the push succeeds.
 
 **Input:**
 
-- Successful commit from Step 5
+- Successful commit from Step 6
 - Remote repository access
 - Pre-push hook configuration (if present)
 
@@ -272,14 +321,14 @@ Push the committed changes to the remote repository and handle any failures from
 - [ ] **Remote Updated**: git log origin/<branch> shows pushed commits
 - [ ] **Branch Synchronized**: Local and remote branches are in sync
 
-### 7. Final Verification
+### 8. Final Verification
 
 **Purpose:**
 Confirm the complete workflow executed successfully and the repository is in a clean, synchronized state.
 
 **Input:**
 
-- Successful push from Step 6
+- Successful push from Step 7
 - Remote repository state
 
 **Actions:**
@@ -329,6 +378,14 @@ Confirm the complete workflow executed successfully and the repository is in a c
 - [ ] **Documentation Concise**: Documentation is focused and avoids unnecessary verbosity
 - [ ] **Examples Validated**: Code examples in documentation are accurate and functional
 
+**Type Validation Review:**
+
+- [ ] **Monorepo Typecheck**: `pnpm typecheck` passes for all packages
+- [ ] **Cross-Package Imports**: All workspace package imports resolve correctly
+- [ ] **Module Exports**: Shared packages export all required types and modules
+- [ ] **Dependency Resolution**: All workspace dependencies are properly linked
+- [ ] **CI Compatibility**: Typecheck passes in the same way it would in CI/CD
+
 **Git Operations Review:**
 
 - [ ] **Branch Safety**: No destructive operations on protected branches without explicit warnings
@@ -357,6 +414,13 @@ Confirm the complete workflow executed successfully and the repository is in a c
 - No redundant or duplicate documentation has been added
 - Existing documentation has been updated where code changes require it
 - Documentation is concise and avoids unnecessary repetition
+
+**Type Safety:**
+
+- `pnpm typecheck` passes across all packages before commit
+- All cross-package imports (e.g., `@524/shared`) resolve correctly
+- No module resolution errors that would fail in CI/CD
+- TypeScript compilation succeeds for all packages in the monorepo
 
 **Process Efficiency:**
 
@@ -398,6 +462,7 @@ This workflow is designed to handle the complete git commit-push cycle with robu
 - **Merge Conflicts**: The workflow prioritizes merging origin/main before committing to reduce integration issues
 - **Pre-Commit Hooks**: Common hooks include linting (ESLint, Biome), formatting (Prettier), type checking (TypeScript), and build verification
 - **Pre-Push Hooks**: Common hooks include test suites, build verification, and additional type checking
+- **Dedicated Typecheck**: A separate `pnpm typecheck` step runs independently of hooks to catch cross-package type errors before commit
 - **Iterative Resolution**: The workflow explicitly supports multiple retry attempts rather than bypassing hooks
 - **Cleanup**: The workflow ensures temporary files and debug scripts don't pollute the repository
 - **Documentation Integrity**: The workflow validates that documentation stays in sync with code changes
@@ -440,3 +505,37 @@ This workflow is designed to handle the complete git commit-push cycle with robu
 3. **Test Failures**: Fix failing tests or update tests for new behavior
 4. **Build Failures**: Resolve compilation or bundling errors
 5. **Format Issues**: Apply auto-formatting or manual formatting corrections
+
+**Cross-Package Type Error Resolution:**
+
+The dedicated typecheck step (Step 5) catches errors that pre-commit hooks may miss, particularly in monorepo setups:
+
+1. **Module Resolution Errors** (`Cannot find module '@524/shared'`):
+   - Verify the package is in `dependencies` in the consuming package's `package.json`
+   - Ensure the shared package's `package.json` has correct `main`, `types`, and `exports` fields
+   - Check workspace linking: should be `"@524/shared": "workspace:*"`
+   - Run `pnpm install` to refresh workspace links
+
+2. **Missing Type Exports**:
+   - Ensure types are exported from the shared package's `src/index.ts`
+   - Verify `tsconfig.json` includes the source files
+   - Check that `declaration: true` is set in the shared package's TypeScript config
+
+3. **Path Resolution Issues**:
+   - Verify `baseUrl` and `paths` in `tsconfig.json` are correct
+   - Ensure package `name` in `package.json` matches the import path
+   - Check for circular dependencies between packages
+
+4. **Build Order Dependencies**:
+   - Some packages may need to be built before others can typecheck
+   - Use `pnpm build` on shared packages first if needed
+   - Consider adding `references` to `tsconfig.json` for proper build order
+
+**Why Dedicated Typecheck is Necessary:**
+
+Pre-commit hooks often run type checking on individual files or packages, which may not catch:
+- Cross-package import errors that only manifest when all packages are checked together
+- Module resolution issues that depend on workspace linking
+- Type errors in packages that weren't directly modified but are affected by changes to shared packages
+
+Running `pnpm typecheck` ensures the same validation that occurs in CI/CD happens locally before commit.
