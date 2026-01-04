@@ -201,13 +201,13 @@ async function handleTokenRefresh(): Promise<string> {
     onRefreshFailed(authError);
 
     // Trigger auth failure callback for any unrecoverable refresh error
-    // This includes token expiry, revocation, network errors, and other auth failures
+    // This includes token expiry, revocation, and other auth failures
+    // Network errors are transient and should not force logout
     if (
       authError.code === SESSION_INVALIDATED_CODE ||
       authError.code === 'REFRESH_TOKEN_EXPIRED' ||
       authError.code === 'REFRESH_TOKEN_REVOKED' ||
       authError.code === 'NO_REFRESH_TOKEN' ||
-      authError.code === 'NETWORK_ERROR' ||
       authError.code === 'INVALID_REFRESH_TOKEN' ||
       authError.code === 'USER_NOT_FOUND' ||
       authError.code === 'ACCOUNT_BANNED'

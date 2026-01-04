@@ -22,6 +22,8 @@ pre-commit:
           .*meta.*|
           .*next-env\.d\.ts$
         )
+    typecheck:
+      run: pnpm -w typecheck
 
 pre-push:
   parallel: true

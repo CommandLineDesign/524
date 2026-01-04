@@ -1,4 +1,4 @@
-import { type SQL, and, asc, count, desc, eq, sql } from 'drizzle-orm';
+import { type SQL, and, asc, count, desc, eq, inArray, sql } from 'drizzle-orm';
 
 import { type Review, reviewImages, reviews } from '@524/database';
 import { db } from '../db/client.js';
@@ -227,7 +227,7 @@ export class ReviewRepository {
         const allImages = await db
           .select()
           .from(reviewImages)
-          .where(sql`${reviewImages.reviewId} IN ${reviewIds}`)
+          .where(inArray(reviewImages.reviewId, reviewIds))
           .orderBy(reviewImages.displayOrder);
 
         // Group images by review ID

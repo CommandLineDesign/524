@@ -51,19 +51,19 @@ export class ArtistService {
     return this.repository.findAllArtists(query);
   }
 
-  getArtistDetailById(artistId: string): Promise<ArtistDetail | null> {
-    return this.repository.findArtistDetailById(artistId);
+  getArtistDetailById(artistProfileId: string): Promise<ArtistDetail | null> {
+    return this.repository.findArtistDetailById(artistProfileId);
   }
 
   updateArtistAdmin(
-    userId: string,
+    artistProfileId: string,
     updates: Partial<{
       isAcceptingBookings: boolean;
       verificationStatus: ArtistProfile['verificationStatus'];
       reviewNotes: string;
     }>
   ) {
-    return this.repository.updateArtistAdmin(userId, updates);
+    return this.repository.updateArtistAdmin(artistProfileId, updates);
   }
 
   /**

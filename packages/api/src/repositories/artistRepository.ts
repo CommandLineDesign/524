@@ -529,7 +529,7 @@ export class ArtistRepository {
     };
   }
 
-  async findArtistDetailById(userId: string): Promise<ArtistDetail | null> {
+  async findArtistDetailById(artistProfileId: string): Promise<ArtistDetail | null> {
     const [row] = await db
       .select({
         id: artistProfiles.id,
@@ -563,7 +563,7 @@ export class ArtistRepository {
       })
       .from(artistProfiles)
       .leftJoin(users, eq(users.id, artistProfiles.userId))
-      .where(eq(artistProfiles.userId, userId))
+      .where(eq(artistProfiles.id, artistProfileId))
       .limit(1);
 
     if (!row) {
@@ -574,7 +574,7 @@ export class ArtistRepository {
   }
 
   async updateArtistAdmin(
-    userId: string,
+    artistProfileId: string,
     updates: Partial<{
       isAcceptingBookings: boolean;
       verificationStatus: ArtistProfile['verificationStatus'];
@@ -598,14 +598,14 @@ export class ArtistRepository {
     const [updated] = await db
       .update(artistProfiles)
       .set(updatePayload)
-      .where(eq(artistProfiles.userId, userId))
+      .where(eq(artistProfiles.id, artistProfileId))
       .returning({ id: artistProfiles.id });
 
     if (!updated) {
       throw Object.assign(new Error('Artist not found'), { status: 404 });
     }
 
-    const detail = await this.findArtistDetailById(userId);
+    const detail = await this.findArtistDetailById(artistProfileId);
     if (!detail) {
       throw Object.assign(new Error('Artist not found'), { status: 404 });
     }

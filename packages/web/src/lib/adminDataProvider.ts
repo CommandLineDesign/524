@@ -108,9 +108,10 @@ export const adminDataProvider: AdminDataProvider = {
     const url = `${endpoint}?${queryParams.toString()}`;
     const { json } = await httpClient(url);
 
-    // For artists and pending-artists, swap id and userId so React Admin uses userId as the primary key
+    // For pending-artists, swap id and userId so React Admin uses userId as the primary key
+    // For regular artists, keep id as the profile ID since the API expects profileId in URLs
     let data = json.data ?? [];
-    if (resource === 'artists' || resource === 'pending-artists') {
+    if (resource === 'pending-artists') {
       data = data.map((item: ArtistApiData) => ({
         ...item,
         // Swap id and userId so userId becomes the primary identifier
@@ -138,8 +139,8 @@ export const adminDataProvider: AdminDataProvider = {
       // Handle both {data: ...} and direct response formats
       let data = response.json.data || response.json;
 
-      // For artists and pending-artists, ensure id is userId for consistency
-      if ((resource === 'artists' || resource === 'pending-artists') && data.userId) {
+      // For pending-artists, ensure id is userId since the API expects userId in URLs
+      if (resource === 'pending-artists' && data.userId) {
         data = {
           ...data,
           id: data.userId, // Ensure id matches userId for React Admin consistency
@@ -173,15 +174,15 @@ export const adminDataProvider: AdminDataProvider = {
       return Promise.reject(new Error(`Unsupported resource: ${resource}`));
     }
 
-    // For artists, the id is now userId, so use it directly
+    // For regular artists, params.id is the profile ID; for pending-artists, it's the userId
     const { json } = await httpClient(`${endpoint}/${params.id}`, {
       method: 'PUT',
       body: JSON.stringify(params.data),
     });
 
-    // For artists, ensure id is userId for consistency
+    // For pending-artists, ensure id is userId for consistency
     let data = json.data;
-    if (resource === 'artists' && data && data.userId) {
+    if (resource === 'pending-artists' && data && data.userId) {
       data = {
         ...data,
         id: data.userId, // Ensure id matches userId for React Admin consistency
