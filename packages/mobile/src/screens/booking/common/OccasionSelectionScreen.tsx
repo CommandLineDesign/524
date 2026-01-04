@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
-import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { FlatList, StyleSheet, View } from 'react-native';
 
-import { ContinueButton } from '../../../components/booking';
+import { BookingLayout, ContinueButton } from '../../../components/booking';
 import { SelectionItem } from '../../../components/common';
 import { useBookingFlowStore } from '../../../store/bookingFlowStore';
-import { colors, spacing, typography } from '../../../theme';
+import { spacing } from '../../../theme';
 
 interface OccasionSelectionScreenProps {
   onContinue: () => void;
   onBack?: () => void;
+  onExit?: () => void;
+  showBackButton?: boolean;
   progress: number;
 }
 
@@ -18,6 +20,8 @@ const OCCASIONS = ['결혼식', '상견례', '소개팅', '텍스트', '텍스�
 export function OccasionSelectionScreen({
   onContinue,
   onBack,
+  onExit,
+  showBackButton = false,
   progress,
 }: OccasionSelectionScreenProps) {
   const { occasion, setOccasion } = useBookingFlowStore();
@@ -31,10 +35,17 @@ export function OccasionSelectionScreen({
   };
 
   return (
-    <View style={styles.container}>
+    <BookingLayout
+      title="어디서 예뻐지실 건가요?"
+      showCloseButton={Boolean(onExit)}
+      onClose={onExit}
+      onBack={onBack}
+      showBackButton={showBackButton}
+      scrollable={false}
+      footer={<ContinueButton label="다음" onPress={handleContinue} disabled={!selectedOccasion} />}
+      testID="occasion-selection-screen"
+    >
       <View style={styles.content}>
-        <Text style={styles.title}>어디서 예뻐지실 건가요?</Text>
-
         <FlatList
           data={OCCASIONS}
           keyExtractor={(item, index) => `${item}-${index}`}
@@ -50,38 +61,16 @@ export function OccasionSelectionScreen({
           )}
         />
       </View>
-
-      <View style={styles.footer}>
-        <ContinueButton label="다음" onPress={handleContinue} disabled={!selectedOccasion} />
-      </View>
-    </View>
+    </BookingLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
   content: {
     flex: 1,
-    paddingHorizontal: spacing.lg,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: typography.weights.bold,
-    lineHeight: 22,
-    textAlign: 'center',
-    color: colors.text,
-    marginTop: 212,
-    marginBottom: 72,
+    justifyContent: 'center',
   },
   listContent: {
     gap: spacing.md,
-  },
-  footer: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.lg,
   },
 });

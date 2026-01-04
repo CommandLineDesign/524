@@ -1,11 +1,13 @@
 import { type DataProvider, fetchUtils } from 'react-admin';
 
-import { API_BASE_URL, getStoredToken } from './adminApi';
+import { API_BASE_URL, getStoredToken, handleTokenRefresh, isTokenExpiredError } from './adminApi';
 
 const resourceToEndpoint = {
   'pending-artists': `${API_BASE_URL}/admin/pending-artists`,
   users: `${API_BASE_URL}/admin/users`,
   bookings: `${API_BASE_URL}/admin/bookings`,
+  artists: `${API_BASE_URL}/admin/artists`,
+  reviews: `${API_BASE_URL}/admin/reviews`,
 } as const;
 
 export type AdminDataProvider = DataProvider & {
@@ -19,11 +21,17 @@ interface HttpError {
   body?: { status?: number };
 }
 
+interface ArtistApiData {
+  id: string;
+  userId: string;
+  [key: string]: unknown;
+}
+
 function isHttpError(error: unknown): error is HttpError {
   return typeof error === 'object' && error !== null && ('status' in error || 'body' in error);
 }
 
-async function httpClient(url: string, options: fetchUtils.Options = {}) {
+async function httpClient(url: string, options: fetchUtils.Options = {}, skipRefresh = false) {
   const token = getStoredToken();
   const headers = new Headers(options.headers || {});
 
@@ -35,18 +43,37 @@ async function httpClient(url: string, options: fetchUtils.Options = {}) {
     headers.set('Authorization', `Bearer ${token}`);
   }
 
-  return await fetchUtils.fetchJson(url, { ...options, headers });
+  try {
+    return await fetchUtils.fetchJson(url, { ...options, headers });
+  } catch (error) {
+    // Handle 401 errors with token refresh
+    if (!skipRefresh && isHttpError(error) && error.status === 401) {
+      const errorBody = error.body as { code?: string } | undefined;
+
+      // Check if this is a token expiration error
+      if (isTokenExpiredError(errorBody)) {
+        console.log('[AdminDataProvider] Token expired, attempting refresh');
+        try {
+          const newToken = await handleTokenRefresh();
+
+          // Retry the original request with new token
+          const retryHeaders = new Headers(headers);
+          retryHeaders.set('Authorization', `Bearer ${newToken}`);
+
+          return await fetchUtils.fetchJson(url, { ...options, headers: retryHeaders });
+        } catch (refreshError) {
+          console.error('[AdminDataProvider] Token refresh failed:', refreshError);
+          throw error; // Throw original error if refresh fails
+        }
+      }
+    }
+
+    throw error;
+  }
 }
 
 export const adminDataProvider: AdminDataProvider = {
   async getList(resource, params) {
-    console.log(
-      '[AdminDataProvider] getList called for resource:',
-      resource,
-      'with params:',
-      params
-    );
-
     const endpoint = resourceToEndpoint[resource as keyof typeof resourceToEndpoint];
     if (!endpoint) {
       return Promise.reject(new Error(`Unsupported resource: ${resource}`));
@@ -79,11 +106,22 @@ export const adminDataProvider: AdminDataProvider = {
     }
 
     const url = `${endpoint}?${queryParams.toString()}`;
-    console.log('[AdminDataProvider] Making request to:', url);
     const { json } = await httpClient(url);
 
+    // For pending-artists, swap id and userId so React Admin uses userId as the primary key
+    // For regular artists, keep id as the profile ID since the API expects profileId in URLs
+    let data = json.data ?? [];
+    if (resource === 'pending-artists') {
+      data = data.map((item: ArtistApiData) => ({
+        ...item,
+        // Swap id and userId so userId becomes the primary identifier
+        id: item.userId,
+        artistProfileId: item.id, // Keep original id as artistProfileId
+      }));
+    }
+
     return {
-      data: json.data ?? [],
+      data,
       total: json.total ?? 0,
     };
   },
@@ -99,10 +137,18 @@ export const adminDataProvider: AdminDataProvider = {
       const response = await httpClient(url);
 
       // Handle both {data: ...} and direct response formats
-      if (response.json.data) {
-        return { data: response.json.data };
+      let data = response.json.data || response.json;
+
+      // For pending-artists, ensure id is userId since the API expects userId in URLs
+      if (resource === 'pending-artists' && data.userId) {
+        data = {
+          ...data,
+          id: data.userId, // Ensure id matches userId for React Admin consistency
+          artistProfileId: data.id, // Preserve original id as artistProfileId
+        };
       }
-      return { data: response.json };
+
+      return { data };
     } catch (error: unknown) {
       // If it's a 404, return a more graceful error
       const is404Error = isHttpError(error) && (error.status === 404 || error.body?.status === 404);
@@ -128,12 +174,23 @@ export const adminDataProvider: AdminDataProvider = {
       return Promise.reject(new Error(`Unsupported resource: ${resource}`));
     }
 
+    // For regular artists, params.id is the profile ID; for pending-artists, it's the userId
     const { json } = await httpClient(`${endpoint}/${params.id}`, {
       method: 'PUT',
       body: JSON.stringify(params.data),
     });
 
-    return { data: json.data };
+    // For pending-artists, ensure id is userId for consistency
+    let data = json.data;
+    if (resource === 'pending-artists' && data && data.userId) {
+      data = {
+        ...data,
+        id: data.userId, // Ensure id matches userId for React Admin consistency
+        artistProfileId: data.id, // Preserve original id as artistProfileId
+      };
+    }
+
+    return { data };
   },
 
   async updateMany() {

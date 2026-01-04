@@ -86,7 +86,6 @@ export function ArtistDetailScreen({ route, navigation }: ArtistDetailScreenProp
         specialty={artist.specialties?.[0] || '전문'}
         rating={artist.averageRating}
         reviewCount={artist.totalReviews}
-        isBookmarked={false}
       />
 
       {/* Tab Bar */}

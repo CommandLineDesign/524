@@ -39,7 +39,6 @@ router.post('/login', async (req, res) => {
 
     return res.json(result);
   } catch (error) {
-    console.error('Login error:', error);
     const status =
       typeof (error as { status?: number }).status === 'number'
         ? (error as { status: number }).status
@@ -89,7 +88,6 @@ router.post('/check-availability', async (req, res) => {
     const result = await authService.checkAvailability({ email, phoneNumber });
     return res.json(result);
   } catch (error) {
-    console.error('Check availability error:', error);
     return res.status(500).json({ error: 'Failed to check availability' });
   }
 });
@@ -142,7 +140,6 @@ router.post('/signup/user', async (req, res) => {
 
     return res.status(201).json(result);
   } catch (error) {
-    console.error('Signup/user error:', error);
     const status =
       typeof (error as { status?: number }).status === 'number'
         ? (error as { status: number }).status
@@ -175,7 +172,6 @@ router.post('/signup/artist', async (req, res) => {
 
     return res.status(201).json(result);
   } catch (error) {
-    console.error('Signup/artist error:', error);
     const status =
       typeof (error as { status?: number }).status === 'number'
         ? (error as { status: number }).status
@@ -211,7 +207,6 @@ router.get('/me', requireAuth(), async (req: AuthRequest, res) => {
       phoneNumber: user.phoneNumber ?? '',
     });
   } catch (error) {
-    console.error('Get user error:', error);
     return res.status(500).json({ error: 'Failed to get user info' });
   }
 });
@@ -295,18 +290,102 @@ if (features.USE_REAL_AUTH) {
 }
 
 // Common routes (work with both mock and real auth)
-router.post('/logout', requireAuth(), async (req, res) => {
-  // In mock mode, just return success
-  // In real mode, invalidate refresh token
-  res.json({
-    success: true,
-    message: 'Logged out successfully',
-  });
+router.post('/logout', requireAuth(), async (req: AuthRequest, res) => {
+  const { refreshToken } = req.body;
+  try {
+    // Revoke the specific refresh token if provided
+    if (refreshToken && typeof refreshToken === 'string') {
+      await authService.revokeRefreshToken(refreshToken);
+    }
+
+    res.json({
+      success: true,
+      message: 'Logged out successfully',
+    });
+  } catch (error) {
+    // Classify and log logout errors for better debugging
+    const errorType = error instanceof Error ? error.constructor.name : 'UnknownError';
+    const errorMessage = error instanceof Error ? error.message : String(error);
+
+    // Log different error types with appropriate context
+    if (errorMessage.includes('connect') || errorMessage.includes('ECONNREFUSED')) {
+      console.error('Logout database connection error:', {
+        errorType,
+        errorMessage,
+        refreshTokenProvided: !!refreshToken,
+      });
+    } else if (errorMessage.includes('token') || errorMessage.includes('invalid')) {
+      console.warn('Logout token validation error:', {
+        errorType,
+        errorMessage,
+        refreshTokenProvided: !!refreshToken,
+      });
+    } else {
+      console.error('Logout unexpected error:', {
+        errorType,
+        errorMessage,
+        refreshTokenProvided: !!refreshToken,
+      });
+    }
+
+    // Still return success - user is logging out anyway
+    res.json({
+      success: true,
+      message: 'Logged out successfully',
+    });
+  }
 });
 
+// Logout from all devices
+router.post('/logout-all', requireAuth(), async (req: AuthRequest, res) => {
+  try {
+    const userId = (req.user as { id?: string } | undefined)?.id;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+
+    await authService.revokeAllUserTokens(userId);
+
+    return res.json({
+      success: true,
+      message: 'Logged out from all devices',
+    });
+  } catch (error) {
+    return res.status(500).json({ error: 'Failed to logout from all devices' });
+  }
+});
+
+// Refresh access token using refresh token
 router.post('/refresh', async (req, res) => {
-  // TODO: Implement token refresh
-  res.status(501).json({ error: 'Token refresh not implemented yet' });
+  try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken || typeof refreshToken !== 'string') {
+      return res.status(400).json({
+        error: 'Refresh token is required',
+        code: 'MISSING_REFRESH_TOKEN',
+      });
+    }
+
+    const tokens = await authService.refreshTokens(refreshToken);
+
+    return res.json(tokens);
+  } catch (error) {
+    console.error('Token refresh error:', error);
+
+    const status =
+      typeof (error as { status?: number }).status === 'number'
+        ? (error as { status: number }).status
+        : 401;
+
+    const code = (error as { code?: string }).code || 'REFRESH_FAILED';
+
+    return res.status(status).json({
+      error: error instanceof Error ? error.message : 'Token refresh failed',
+      code,
+    });
+  }
 });
 
 export default router;

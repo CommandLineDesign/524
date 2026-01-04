@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { Socket, io } from 'socket.io-client';
 
+import { TokenService } from '../services/tokenService';
 import { useAuthStore } from '../store/authStore';
 
 // Get the API URL from environment
@@ -18,7 +19,17 @@ interface SocketContextValue {
 const SocketContext = createContext<SocketContextValue | undefined>(undefined);
 
 export function SocketProvider({ children }: { children: React.ReactNode }) {
-  const { user, token } = useAuthStore();
+  const { user, isAuthenticated } = useAuthStore();
+  const [token, setToken] = useState<string | null>(null);
+
+  // Get the token from TokenService when auth state changes
+  useEffect(() => {
+    if (isAuthenticated) {
+      TokenService.getAccessToken().then(setToken);
+    } else {
+      setToken(null);
+    }
+  }, [isAuthenticated]);
   const socketRef = useRef<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);

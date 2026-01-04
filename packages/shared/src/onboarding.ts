@@ -1,4 +1,4 @@
-import type { ServiceType } from './constants.js';
+import type { ServiceType } from './constants';
 
 export type OnboardingStepKey =
   | 'celebrity_lookalike'

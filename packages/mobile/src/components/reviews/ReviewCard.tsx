@@ -1,5 +1,7 @@
 import React from 'react';
 import {
+  Image,
+  ScrollView,
   type StyleProp,
   StyleSheet,
   Text,
@@ -16,6 +18,7 @@ interface ReviewCardProps {
   review: Review;
   onPress?: () => void;
   containerStyle?: StyleProp<ViewStyle>;
+  isLast?: boolean;
 }
 
 function formatDate(dateString: string): string {
@@ -26,12 +29,12 @@ function formatDate(dateString: string): string {
   return `${year}.${month.toString().padStart(2, '0')}.${day.toString().padStart(2, '0')}`;
 }
 
-export function ReviewCard({ review, onPress, containerStyle }: ReviewCardProps) {
+export function ReviewCard({ review, onPress, containerStyle, isLast }: ReviewCardProps) {
   const Wrapper = onPress ? TouchableOpacity : View;
   const wrapperProps = onPress ? { onPress, accessibilityRole: 'button' as const } : {};
 
   return (
-    <Wrapper style={[styles.card, containerStyle]} {...wrapperProps}>
+    <Wrapper style={[styles.card, isLast && styles.lastCard, containerStyle]} {...wrapperProps}>
       <View style={styles.cardHeader}>
         <View style={styles.ratingContainer}>
           <Text style={styles.stars}>{renderStars(review.overallRating)}</Text>
@@ -41,26 +44,29 @@ export function ReviewCard({ review, onPress, containerStyle }: ReviewCardProps)
       </View>
 
       <View style={styles.cardBody}>
+        {review.reviewImages && review.reviewImages.length > 0 && (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.imagesContainer}
+            contentContainerStyle={styles.imagesContent}
+          >
+            {review.reviewImages.map((imageUrl, index) => (
+              <Image
+                key={imageUrl}
+                source={{ uri: imageUrl }}
+                style={styles.reviewImage}
+                resizeMode="cover"
+              />
+            ))}
+          </ScrollView>
+        )}
+
         {review.reviewText && (
           <Text style={styles.reviewText} numberOfLines={3}>
             {review.reviewText}
           </Text>
         )}
-
-        <View style={styles.ratingsGrid}>
-          <View style={styles.ratingRow}>
-            <Text style={styles.ratingLabel}>품질</Text>
-            <Text style={styles.ratingValue}>{renderStars(review.qualityRating)}</Text>
-          </View>
-          <View style={styles.ratingRow}>
-            <Text style={styles.ratingLabel}>전문성</Text>
-            <Text style={styles.ratingValue}>{renderStars(review.professionalismRating)}</Text>
-          </View>
-          <View style={styles.ratingRow}>
-            <Text style={styles.ratingLabel}>시간준수</Text>
-            <Text style={styles.ratingValue}>{renderStars(review.timelinessRating)}</Text>
-          </View>
-        </View>
       </View>
 
       {review.artistResponse && (
@@ -77,12 +83,15 @@ export function ReviewCard({ review, onPress, containerStyle }: ReviewCardProps)
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.surface,
-    borderRadius: 14,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
+    backgroundColor: colors.background,
+    paddingVertical: 16,
+    paddingHorizontal: 0,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.primary,
     gap: 12,
+  },
+  lastCard: {
+    borderBottomWidth: 0,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -96,7 +105,7 @@ const styles = StyleSheet.create({
   },
   stars: {
     fontSize: 16,
-    color: '#FFB800',
+    color: colors.primary,
   },
   ratingText: {
     fontSize: 16,
@@ -110,29 +119,25 @@ const styles = StyleSheet.create({
   cardBody: {
     gap: 10,
   },
+  imagesContainer: {
+    marginHorizontal: -4,
+  },
+  imagesContent: {
+    paddingHorizontal: 4,
+    gap: 8,
+  },
+  reviewImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 8,
+  },
   reviewText: {
     fontSize: 14,
     color: colors.text,
     lineHeight: 20,
   },
-  ratingsGrid: {
-    gap: 6,
-  },
-  ratingRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  ratingLabel: {
-    fontSize: 13,
-    color: colors.subtle,
-  },
-  ratingValue: {
-    fontSize: 13,
-    color: '#FFB800',
-  },
   response: {
-    backgroundColor: colors.background,
+    backgroundColor: colors.surface,
     borderRadius: 8,
     padding: 12,
     gap: 6,

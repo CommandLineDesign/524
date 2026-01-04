@@ -23,8 +23,14 @@ export interface BookingLayoutProps {
   footer?: React.ReactNode;
   /** Whether to show the close button */
   showCloseButton?: boolean;
-  /** Callback for close button press */
+  /** Callback for close button press - exits the entire booking flow */
   onClose?: () => void;
+  /** Callback for back button press - goes to previous step */
+  onBack?: () => void;
+  /** Whether to show the back button in footer (default: false) */
+  showBackButton?: boolean;
+  /** Label for the back button (default: '이전') */
+  backButtonLabel?: string;
   /** Whether to wrap content in ScrollView (default: true) */
   scrollable?: boolean;
   /** Whether to use KeyboardAvoidingView (default: true) */
@@ -42,6 +48,9 @@ export function BookingLayout({
   footer,
   showCloseButton = true,
   onClose,
+  onBack,
+  showBackButton = false,
+  backButtonLabel = '이전',
   scrollable = true,
   avoidKeyboard = true,
   headerRight,
@@ -99,7 +108,26 @@ export function BookingLayout({
       {wrappedContent}
 
       {/* Footer */}
-      {footer && <View style={styles.footer}>{footer}</View>}
+      {(footer || showBackButton) && (
+        <View style={styles.footer}>
+          {showBackButton && onBack ? (
+            <View style={styles.footerWithBack}>
+              <TouchableOpacity
+                onPress={onBack}
+                style={styles.backButton}
+                accessibilityLabel={backButtonLabel}
+                accessibilityRole="button"
+                accessibilityHint="이전 단계로 돌아갑니다"
+              >
+                <Text style={styles.backButtonText}>{backButtonLabel}</Text>
+              </TouchableOpacity>
+              <View style={styles.continueButtonWrapper}>{footer}</View>
+            </View>
+          ) : (
+            footer
+          )}
+        </View>
+      )}
     </SafeAreaView>
   );
 
@@ -212,5 +240,30 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: colors.border,
     backgroundColor: colors.background,
+  },
+  footerWithBack: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  backButton: {
+    height: 52,
+    paddingHorizontal: spacing.lg,
+    borderRadius: borderRadius.pill,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  backButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.primary,
+    lineHeight: 22,
+    letterSpacing: -0.408,
+  },
+  continueButtonWrapper: {
+    flex: 1,
   },
 });

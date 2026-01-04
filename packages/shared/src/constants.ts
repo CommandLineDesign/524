@@ -42,4 +42,4 @@ export const BOOKING_SYSTEM_MESSAGES = {
 } as const;
 
 // Re-export defaultLocale from i18n
-export { defaultLocale } from './i18n.js';
+export { defaultLocale } from './i18n';

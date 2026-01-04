@@ -1,7 +1,7 @@
-import { and, asc, desc, eq, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, ilike, or, sql } from 'drizzle-orm';
 
 import { artistProfiles, users } from '@524/database';
-import type { PendingArtistDetail } from '@524/shared/admin';
+import type { ArtistDetail, ArtistListItem, PendingArtistDetail } from '@524/shared/admin';
 import type { ArtistProfile } from '@524/shared/artists';
 
 import { db } from '../db/client.js';
@@ -45,6 +45,40 @@ type PendingArtistRow = {
   yearsExperience: number | null;
 };
 
+type ArtistAdminRow = {
+  id: string;
+  userId: string;
+  stageName: string;
+  name: string | null;
+  email: string | null;
+  phoneNumber: string | null;
+  verificationStatus: ArtistProfile['verificationStatus'];
+  isAcceptingBookings: boolean | null;
+  averageRating: string | null;
+  totalReviews: number | null;
+  totalServices: number | null;
+  createdAt: Date;
+  verifiedAt: Date | null;
+};
+
+type ArtistDetailRow = ArtistAdminRow & {
+  bio: string | null;
+  specialties: unknown;
+  yearsExperience: number;
+  businessVerified: boolean | null;
+  businessRegistrationNumber: string | null;
+  serviceRadiusKm: string;
+  primaryLocation: unknown;
+  portfolioImages: unknown;
+  services: unknown;
+  completedServices: number | null;
+  cancelledServices: number | null;
+  profileImageUrl: string | null;
+  reviewedBy: string | null;
+  reviewNotes: string | null;
+  reviewedAt: Date | null;
+};
+
 export type ArtistProfileUpdateInput = Partial<
   Pick<
     ArtistProfile,
@@ -68,6 +102,16 @@ export interface PendingArtistQuery {
   perPage: number;
   sortField?: 'signupDate';
   sortOrder?: 'ASC' | 'DESC';
+}
+
+export interface ArtistQuery {
+  page: number;
+  perPage: number;
+  sortField?: 'stageName' | 'createdAt' | 'averageRating' | 'totalServices';
+  sortOrder?: 'ASC' | 'DESC';
+  search?: string;
+  verificationStatus?: ArtistProfile['verificationStatus'];
+  isAcceptingBookings?: boolean;
 }
 
 function toNumber(value: unknown, fallback = 0): number {
@@ -136,6 +180,50 @@ function mapPendingRow(row: PendingArtistRow): PendingArtistDetail {
   };
 }
 
+function mapArtistAdminRow(row: ArtistAdminRow): ArtistListItem {
+  return {
+    id: row.id,
+    userId: row.userId,
+    stageName: row.stageName,
+    name: row.name && row.name.length > 0 ? row.name : row.stageName,
+    email: row.email,
+    phoneNumber: row.phoneNumber ?? '',
+    verificationStatus: row.verificationStatus ?? 'pending_review',
+    isAcceptingBookings: row.isAcceptingBookings ?? true,
+    averageRating: row.averageRating ? toNumber(row.averageRating, 0) : null,
+    totalReviews: row.totalReviews ?? 0,
+    totalServices: row.totalServices ?? 0,
+    createdAt: row.createdAt.toISOString(),
+    verifiedAt: row.verifiedAt?.toISOString() ?? null,
+  };
+}
+
+function mapArtistDetailRow(row: ArtistDetailRow): ArtistDetail {
+  const specialties =
+    Array.isArray(row.specialties) && row.specialties.every((item) => typeof item === 'string')
+      ? row.specialties
+      : [];
+
+  return {
+    ...mapArtistAdminRow(row),
+    bio: row.bio,
+    specialties,
+    yearsExperience: row.yearsExperience,
+    businessVerified: row.businessVerified ?? false,
+    businessRegistrationNumber: row.businessRegistrationNumber,
+    serviceRadiusKm: toNumber(row.serviceRadiusKm, 0),
+    primaryLocation: (row.primaryLocation as ArtistDetail['primaryLocation']) ?? null,
+    portfolioImages: (row.portfolioImages as ArtistDetail['portfolioImages']) ?? [],
+    services: (row.services as ArtistDetail['services']) ?? [],
+    completedServices: row.completedServices ?? 0,
+    cancelledServices: row.cancelledServices ?? 0,
+    profileImageUrl: row.profileImageUrl,
+    reviewedBy: row.reviewedBy,
+    reviewNotes: row.reviewNotes,
+    reviewedAt: row.reviewedAt?.toISOString() ?? null,
+  };
+}
+
 const artistProfileSelect = {
   id: artistProfiles.id,
   createdAt: artistProfiles.createdAt,
@@ -161,16 +249,6 @@ const artistProfileSelect = {
 };
 
 export class ArtistRepository {
-  async findById(artistId: string): Promise<ArtistProfile | null> {
-    const [record] = await db
-      .select(artistProfileSelect)
-      .from(artistProfiles)
-      .leftJoin(users, eq(users.id, artistProfiles.userId))
-      .where(eq(artistProfiles.id, artistId))
-      .limit(1);
-    return record ? mapRowToProfile(record) : null;
-  }
-
   async findByUserId(userId: string): Promise<ArtistProfile | null> {
     const [record] = await db
       .select(artistProfileSelect)
@@ -182,11 +260,11 @@ export class ArtistRepository {
     return record ? mapRowToProfile(record) : null;
   }
 
-  async update(artistId: string, updates: ArtistProfileUpdateInput): Promise<ArtistProfile> {
+  async update(artistProfileId: string, updates: ArtistProfileUpdateInput): Promise<ArtistProfile> {
     const [current] = await db
       .select({ userId: artistProfiles.userId })
       .from(artistProfiles)
-      .where(eq(artistProfiles.id, artistId))
+      .where(eq(artistProfiles.id, artistProfileId))
       .limit(1);
 
     if (!current) {
@@ -231,7 +309,7 @@ export class ArtistRepository {
     const [updated] = await db
       .update(artistProfiles)
       .set(updatePayload)
-      .where(eq(artistProfiles.id, artistId))
+      .where(eq(artistProfiles.id, artistProfileId))
       .returning();
 
     if (!updated) {
@@ -249,7 +327,7 @@ export class ArtistRepository {
       .select(artistProfileSelect)
       .from(artistProfiles)
       .leftJoin(users, eq(users.id, artistProfiles.userId))
-      .where(eq(artistProfiles.id, artistId))
+      .where(eq(artistProfiles.id, artistProfileId))
       .limit(1);
 
     if (!record) {
@@ -315,7 +393,7 @@ export class ArtistRepository {
     };
   }
 
-  async findPendingById(artistId: string): Promise<PendingArtistDetail | null> {
+  async findPendingById(userId: string): Promise<PendingArtistDetail | null> {
     const [row] = await db
       .select({
         id: artistProfiles.id,
@@ -336,7 +414,7 @@ export class ArtistRepository {
       .leftJoin(users, eq(users.id, artistProfiles.userId))
       .where(
         and(
-          eq(artistProfiles.id, artistId),
+          eq(artistProfiles.userId, userId),
           eq(artistProfiles.verificationStatus, 'pending_review')
         )
       )
@@ -349,7 +427,7 @@ export class ArtistRepository {
     return mapPendingRow(row as PendingArtistRow);
   }
 
-  async activatePendingArtist(artistId: string, reviewerId?: string): Promise<ArtistProfile> {
+  async activatePendingArtist(userId: string, reviewerId?: string): Promise<ArtistProfile> {
     const [updated] = await db
       .update(artistProfiles)
       .set({
@@ -361,7 +439,7 @@ export class ArtistRepository {
       })
       .where(
         and(
-          eq(artistProfiles.id, artistId),
+          eq(artistProfiles.userId, userId),
           eq(artistProfiles.verificationStatus, 'pending_review')
         )
       )
@@ -372,5 +450,180 @@ export class ArtistRepository {
     }
 
     return mapRowToProfile(updated);
+  }
+
+  async findAllArtists(query: ArtistQuery) {
+    const { page, perPage, sortField, sortOrder, search, verificationStatus, isAcceptingBookings } =
+      query;
+    const offset = Math.max(page - 1, 0) * perPage;
+
+    // Determine sort column
+    const sortColumnMap = {
+      stageName: artistProfiles.stageName,
+      createdAt: artistProfiles.createdAt,
+      averageRating: artistProfiles.averageRating,
+      totalServices: artistProfiles.totalServices,
+    };
+    const sortColumn = sortColumnMap[sortField ?? 'createdAt'] ?? artistProfiles.createdAt;
+    const sortDirection = (sortOrder ?? 'DESC') === 'ASC' ? asc(sortColumn) : desc(sortColumn);
+
+    // Build conditions
+    const conditions = [];
+
+    if (verificationStatus) {
+      conditions.push(eq(artistProfiles.verificationStatus, verificationStatus));
+    }
+
+    if (isAcceptingBookings !== undefined) {
+      conditions.push(eq(artistProfiles.isAcceptingBookings, isAcceptingBookings));
+    }
+
+    if (search) {
+      const searchPattern = `%${search}%`;
+      conditions.push(
+        or(
+          ilike(artistProfiles.stageName, searchPattern),
+          ilike(users.name, searchPattern),
+          ilike(users.email, searchPattern),
+          ilike(users.phoneNumber, searchPattern)
+        )
+      );
+    }
+
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+    const rows = await db
+      .select({
+        id: artistProfiles.id,
+        userId: artistProfiles.userId,
+        stageName: artistProfiles.stageName,
+        name: users.name,
+        email: users.email,
+        phoneNumber: users.phoneNumber,
+        verificationStatus: artistProfiles.verificationStatus,
+        isAcceptingBookings: artistProfiles.isAcceptingBookings,
+        averageRating: artistProfiles.averageRating,
+        totalReviews: artistProfiles.totalReviews,
+        totalServices: artistProfiles.totalServices,
+        createdAt: artistProfiles.createdAt,
+        verifiedAt: artistProfiles.verifiedAt,
+      })
+      .from(artistProfiles)
+      .leftJoin(users, eq(users.id, artistProfiles.userId))
+      .where(whereClause)
+      .orderBy(sortDirection)
+      .limit(perPage)
+      .offset(offset);
+
+    const [countRow] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(artistProfiles)
+      .leftJoin(users, eq(users.id, artistProfiles.userId))
+      .where(whereClause);
+
+    const total = countRow?.count ?? 0;
+
+    return {
+      items: rows.map((row) => mapArtistAdminRow(row as ArtistAdminRow)),
+      total: Number(total),
+    };
+  }
+
+  async findArtistDetailById(artistProfileId: string): Promise<ArtistDetail | null> {
+    const [row] = await db
+      .select({
+        id: artistProfiles.id,
+        userId: artistProfiles.userId,
+        stageName: artistProfiles.stageName,
+        name: users.name,
+        email: users.email,
+        phoneNumber: users.phoneNumber,
+        verificationStatus: artistProfiles.verificationStatus,
+        isAcceptingBookings: artistProfiles.isAcceptingBookings,
+        averageRating: artistProfiles.averageRating,
+        totalReviews: artistProfiles.totalReviews,
+        totalServices: artistProfiles.totalServices,
+        createdAt: artistProfiles.createdAt,
+        verifiedAt: artistProfiles.verifiedAt,
+        bio: artistProfiles.bio,
+        specialties: artistProfiles.specialties,
+        yearsExperience: artistProfiles.yearsExperience,
+        businessVerified: artistProfiles.businessVerified,
+        businessRegistrationNumber: artistProfiles.businessRegistrationNumber,
+        serviceRadiusKm: artistProfiles.serviceRadiusKm,
+        primaryLocation: artistProfiles.primaryLocation,
+        portfolioImages: artistProfiles.portfolioImages,
+        services: artistProfiles.services,
+        completedServices: artistProfiles.completedServices,
+        cancelledServices: artistProfiles.cancelledServices,
+        profileImageUrl: users.profileImageUrl,
+        reviewedBy: artistProfiles.reviewedBy,
+        reviewNotes: artistProfiles.reviewNotes,
+        reviewedAt: artistProfiles.reviewedAt,
+      })
+      .from(artistProfiles)
+      .leftJoin(users, eq(users.id, artistProfiles.userId))
+      .where(eq(artistProfiles.id, artistProfileId))
+      .limit(1);
+
+    if (!row) {
+      return null;
+    }
+
+    return mapArtistDetailRow(row as ArtistDetailRow);
+  }
+
+  async updateArtistAdmin(
+    artistProfileId: string,
+    updates: Partial<{
+      isAcceptingBookings: boolean;
+      verificationStatus: ArtistProfile['verificationStatus'];
+      reviewNotes: string;
+    }>
+  ): Promise<ArtistDetail> {
+    const updatePayload: Partial<typeof artistProfiles.$inferInsert> = {
+      updatedAt: new Date(),
+    };
+
+    if (updates.isAcceptingBookings !== undefined) {
+      updatePayload.isAcceptingBookings = updates.isAcceptingBookings;
+    }
+    if (updates.verificationStatus !== undefined) {
+      updatePayload.verificationStatus = updates.verificationStatus;
+    }
+    if (updates.reviewNotes !== undefined) {
+      updatePayload.reviewNotes = updates.reviewNotes;
+    }
+
+    const [updated] = await db
+      .update(artistProfiles)
+      .set(updatePayload)
+      .where(eq(artistProfiles.id, artistProfileId))
+      .returning({ id: artistProfiles.id });
+
+    if (!updated) {
+      throw Object.assign(new Error('Artist not found'), { status: 404 });
+    }
+
+    const detail = await this.findArtistDetailById(artistProfileId);
+    if (!detail) {
+      throw Object.assign(new Error('Artist not found'), { status: 404 });
+    }
+
+    return detail;
+  }
+
+  async updateReviewStats(
+    artistId: string,
+    stats: { averageRating: number; totalReviews: number }
+  ): Promise<void> {
+    await db
+      .update(artistProfiles)
+      .set({
+        averageRating: stats.averageRating.toString(),
+        totalReviews: stats.totalReviews,
+        updatedAt: new Date(),
+      })
+      .where(eq(artistProfiles.userId, artistId));
   }
 }

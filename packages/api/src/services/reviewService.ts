@@ -7,6 +7,7 @@ import {
   type UpdateReviewPayload,
 } from '../repositories/reviewRepository.js';
 import { createLogger } from '../utils/logger.js';
+import { ArtistService } from './artistService.js';
 import { NotificationService } from './notificationService.js';
 
 const logger = createLogger('review-service');
@@ -29,7 +30,8 @@ export class ReviewService {
   constructor(
     private readonly reviewRepository = new ReviewRepository(),
     private readonly bookingRepository = new BookingRepository(),
-    private readonly notificationService = new NotificationService()
+    private readonly notificationService = new NotificationService(),
+    private readonly artistService = new ArtistService()
   ) {}
 
   /**
@@ -143,6 +145,17 @@ export class ReviewService {
       // Don't fail the review submission if notification fails
     }
 
+    // Update artist review statistics
+    try {
+      await this.artistService.recalculateArtistReviewStats(review.artistId);
+    } catch (error) {
+      logger.error(
+        { error, artistId: review.artistId, reviewId: review.id },
+        'Failed to update artist review statistics after review submission'
+      );
+      // Don't fail the review submission if stats update fails
+    }
+
     logger.info({ reviewId: review.id, bookingId }, 'Review submitted successfully');
     return review;
   }
@@ -186,6 +199,17 @@ export class ReviewService {
     }
 
     const updatedReview = await this.reviewRepository.updateReview(reviewId, payload);
+
+    // Update artist review statistics
+    try {
+      await this.artistService.recalculateArtistReviewStats(updatedReview.artistId);
+    } catch (error) {
+      logger.error(
+        { error, artistId: updatedReview.artistId, reviewId },
+        'Failed to update artist review statistics after review update'
+      );
+      // Don't fail the review update if stats update fails
+    }
 
     logger.info({ reviewId }, 'Review updated successfully');
     return updatedReview;

@@ -1,4 +1,4 @@
-import type { ServiceType } from './constants.js';
+import type { ServiceType } from './constants';
 
 export interface ArtistLocation {
   latitude: number;
@@ -40,6 +40,7 @@ export interface ArtistSearchResult {
   averageRating: number;
   reviewCount: number;
   priceRange: [number, number];
+  profileImageUrl?: string | null;
 }
 
 export interface PortfolioImage {

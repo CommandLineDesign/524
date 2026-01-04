@@ -30,8 +30,8 @@ export interface ArtistCardProps {
   testID?: string;
   /** Artist username/handle */
   username?: string;
-  /** Artist specialty */
-  specialty?: string;
+  /** Artist specialties/services */
+  specialties?: string[];
   /** Whether to show the chat button (default: false) */
   showChatButton?: boolean;
   /** Callback when chat button is pressed */
@@ -54,7 +54,7 @@ export function ArtistCard({
   selected = false,
   testID,
   username,
-  specialty,
+  specialties,
   showChatButton = false,
   onChatPress,
   onInfoPress,
@@ -118,10 +118,18 @@ export function ArtistCard({
             )}
           </View>
 
-          {specialty && (
-            <Text style={styles.specialty} numberOfLines={1}>
-              {specialty}
-            </Text>
+          {specialties && specialties.length > 0 && (
+            <View style={styles.specialtiesContainer}>
+              {specialties.slice(0, 2).map((service, index) => (
+                <Text key={service} style={styles.specialty} numberOfLines={1}>
+                  {service}
+                  {index < Math.min(specialties.length, 2) - 1 && specialties.length > 1 && ' • '}
+                </Text>
+              ))}
+              {specialties.length > 2 && (
+                <Text style={styles.moreSpecialties}>+{specialties.length - 2}</Text>
+              )}
+            </View>
           )}
 
           {/* Rating and review row */}
@@ -252,6 +260,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#19191b',
     marginBottom: 4,
+    fontWeight: '400',
+  },
+  specialtiesContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  moreSpecialties: {
+    fontSize: 14,
+    color: colors.muted,
     fontWeight: '400',
   },
   ratingRow: {

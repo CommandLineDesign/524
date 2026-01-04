@@ -1,4 +1,4 @@
-import type { OnboardingStepKey, OnboardingStepMeta } from './onboarding.js';
+import type { OnboardingStepKey, OnboardingStepMeta } from './onboarding';
 
 export interface OnboardingStepDefinition extends OnboardingStepMeta {
   key: OnboardingStepKey;

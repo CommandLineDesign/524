@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { FlatList, StyleSheet, View } from 'react-native';
 
-import { ContinueButton } from '../../../components/booking';
+import { BookingLayout, ContinueButton } from '../../../components/booking';
 import { SelectionItem } from '../../../components/common';
 import {
   type ExtendedServiceType,
@@ -9,17 +9,21 @@ import {
   serviceSelectionStrings,
 } from '../../../constants/bookingOptions';
 import { useBookingFlowStore } from '../../../store/bookingFlowStore';
-import { borderRadius, colors, spacing, typography } from '../../../theme';
+import { colors, spacing } from '../../../theme';
 
 interface ServiceSelectionScreenProps {
   onContinue: () => void;
   onBack?: () => void;
+  onExit?: () => void;
+  showBackButton?: boolean;
   progress: number;
 }
 
 export function ServiceSelectionScreen({
   onContinue,
   onBack,
+  onExit,
+  showBackButton = false,
   progress,
 }: ServiceSelectionScreenProps) {
   const { serviceType, setServiceType } = useBookingFlowStore();
@@ -35,23 +39,23 @@ export function ServiceSelectionScreen({
   };
 
   return (
-    <View style={styles.container}>
-      {/* Close button */}
-      {onBack && (
-        <TouchableOpacity
-          style={styles.closeButton}
-          onPress={onBack}
-          accessibilityRole="button"
-          accessibilityLabel="닫기"
-        >
-          <Text style={styles.closeButtonText}>✕</Text>
-        </TouchableOpacity>
-      )}
-
-      {/* Content */}
+    <BookingLayout
+      title={serviceSelectionStrings.title}
+      showCloseButton={Boolean(onExit)}
+      onClose={onExit}
+      onBack={onBack}
+      showBackButton={showBackButton}
+      scrollable={false}
+      footer={
+        <ContinueButton
+          label={serviceSelectionStrings.continueButton}
+          onPress={handleContinue}
+          disabled={!selectedService}
+        />
+      }
+      testID="service-selection-screen"
+    >
       <View style={styles.content}>
-        <Text style={styles.title}>{serviceSelectionStrings.title}</Text>
-
         <FlatList
           data={serviceOptions}
           keyExtractor={(item) => item.id}
@@ -70,59 +74,19 @@ export function ServiceSelectionScreen({
           ItemSeparatorComponent={() => <View style={styles.separator} />}
         />
       </View>
-
-      {/* Footer with Continue Button */}
-      <View style={styles.footer}>
-        <ContinueButton
-          label={serviceSelectionStrings.continueButton}
-          onPress={handleContinue}
-          disabled={!selectedService}
-        />
-      </View>
-    </View>
+    </BookingLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  closeButton: {
-    position: 'absolute',
-    top: spacing.md,
-    left: spacing.lg,
-    width: 44,
-    height: 44,
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 10,
-  },
-  closeButtonText: {
-    fontSize: 24,
-    color: colors.text,
-  },
   content: {
     flex: 1,
-    paddingHorizontal: spacing.lg,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: typography.weights.bold,
-    lineHeight: 22,
-    color: colors.text,
-    textAlign: 'center',
-    marginTop: 180,
-    marginBottom: 50,
+    justifyContent: 'center',
   },
   list: {
     paddingBottom: spacing.lg,
   },
   separator: {
     height: spacing.md,
-  },
-  footer: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.lg,
   },
 });

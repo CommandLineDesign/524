@@ -18,9 +18,6 @@ interface NavigationMenuProps {
 
 const menuItems: Array<{ label: string; screen: SimpleRoute }> = [
   { label: 'Home', screen: 'Home' },
-  { label: 'Services', screen: 'ServiceSelection' },
-  { label: 'Occasions', screen: 'OccasionSelection' },
-  { label: 'Booking Summary', screen: 'BookingSummary' },
   { label: 'My Bookings', screen: 'BookingsList' },
   { label: 'Messages', screen: 'ChatsList' },
 ];

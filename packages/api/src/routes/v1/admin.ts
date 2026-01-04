@@ -2,6 +2,7 @@ import { type Router as ExpressRouter, Router } from 'express';
 
 import { AdminArtistController } from '../../controllers/adminArtistController.js';
 import { AdminBookingController } from '../../controllers/adminBookingController.js';
+import { AdminReviewController } from '../../controllers/adminReviewController.js';
 import { AdminUserController } from '../../controllers/adminUserController.js';
 import { type AuthRequest } from '../../middleware/auth.js';
 import { requireAdmin } from '../../middleware/auth.js';
@@ -37,6 +38,13 @@ router.post('/users/:id/unban', requireAdmin(), AdminUserController.unbanUser);
 
 router.get('/bookings', requireAdmin(), AdminBookingController.listBookings);
 router.get('/bookings/:bookingId', requireAdmin(), AdminBookingController.getBookingDetail);
+
+router.get('/artists', requireAdmin(), AdminArtistController.listArtists);
+router.get('/artists/:artistId', requireAdmin(), AdminArtistController.getArtist);
+router.put('/artists/:artistId', requireAdmin(), AdminArtistController.updateArtist);
+
+router.get('/reviews', requireAdmin(), AdminReviewController.listReviews);
+router.get('/reviews/:id', requireAdmin(), AdminReviewController.getReview);
 
 // Admin messaging endpoints
 router.get('/conversations', requireAdmin(), async (req: AuthRequest, res) => {

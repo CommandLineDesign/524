@@ -25,6 +25,8 @@ import { borderRadius, colors, spacing } from '../../../theme';
 interface ArtistListScreenProps {
   onContinue: () => void;
   onBack?: () => void;
+  onExit?: () => void;
+  showBackButton?: boolean;
   progress: number;
   /** List variant: default, bookmarked, or nearby */
   variant?: 'default' | 'bookmarked' | 'nearby';
@@ -35,6 +37,8 @@ type ArtistListNavigationProp = NativeStackNavigationProp<RootStackParamList, 'B
 export function ArtistListScreen({
   onContinue,
   onBack,
+  onExit,
+  showBackButton = false,
   progress,
   variant = 'default',
 }: ArtistListScreenProps) {
@@ -136,8 +140,10 @@ export function ArtistListScreen({
   return (
     <BookingLayout
       title={getTitle()}
-      showCloseButton={Boolean(onBack)}
-      onClose={onBack}
+      showCloseButton={Boolean(onExit)}
+      onClose={onExit}
+      onBack={onBack}
+      showBackButton={showBackButton}
       scrollable={false}
       footer={
         <ContinueButton label="선택 완료" onPress={handleContinue} disabled={!selectedArtistId} />
@@ -196,7 +202,7 @@ export function ArtistListScreen({
             <ArtistCard
               id={item.id}
               name={item.stageName}
-              imageUrl={null}
+              imageUrl={item.profileImageUrl}
               rating={item.averageRating}
               reviewCount={item.reviewCount}
               startingPrice={item.priceRange[0]}
@@ -206,7 +212,7 @@ export function ArtistListScreen({
               onInfoPress={() => handleArtistDetailPress(item.id)}
               onBookmarkToggle={() => handleBookmarkToggle(item.id)}
               username={item.stageName.toLowerCase().replace(/\s+/g, '')}
-              specialty={item.specialties[0] || '전문'}
+              specialties={item.specialties}
               testID={`artist-card-${item.id}`}
             />
           )}

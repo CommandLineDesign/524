@@ -1,5 +1,5 @@
-import type { BookingStatus, ServiceType } from './constants.js';
-import type { ChatMessage } from './messaging.js';
+import type { BookingStatus, ServiceType } from './constants';
+import type { ChatMessage } from './messaging';
 
 export interface ServiceLocation {
   latitude: number;

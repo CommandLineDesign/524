@@ -225,7 +225,8 @@ When ready to implement real OAuth providers:
 - This is for **development/testing only**
 - All test users use the same password: `password@1234`
 - Passwords are properly hashed with bcrypt (secure)
-- JWT tokens expire after 24 hours
+- JWT access tokens expire after 15 minutes
+- Refresh tokens enable seamless token renewal without re-authentication
 - Tokens are stored securely in AsyncStorage
 
 ## Mock Users Reference

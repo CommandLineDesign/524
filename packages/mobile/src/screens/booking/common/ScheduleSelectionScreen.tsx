@@ -14,12 +14,16 @@ import { colors, spacing } from '../../../theme';
 interface ScheduleSelectionScreenProps {
   onContinue: () => void;
   onBack?: () => void;
+  onExit?: () => void;
+  showBackButton?: boolean;
   progress: number;
 }
 
 export function ScheduleSelectionScreen({
   onContinue,
   onBack,
+  onExit,
+  showBackButton = false,
   progress,
 }: ScheduleSelectionScreenProps) {
   const { selectedDate, selectedTimeSlot, setSelectedDate, setSelectedTimeSlot } =
@@ -61,8 +65,10 @@ export function ScheduleSelectionScreen({
   return (
     <BookingLayout
       title={scheduleStrings.title}
-      showCloseButton={Boolean(onBack)}
-      onClose={onBack}
+      showCloseButton={Boolean(onExit)}
+      onClose={onExit}
+      onBack={onBack}
+      showBackButton={showBackButton}
       scrollable={false}
       footer={
         <ContinueButton

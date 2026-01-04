@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TextInput, View } from 'react-native';
 
-import { BookingLayout } from '../../../components/booking';
+import { BookingLayout, ContinueButton } from '../../../components/booking';
 import { locationStrings } from '../../../constants/bookingOptions';
 import { useBookingFlowStore } from '../../../store/bookingFlowStore';
 import { colors, spacing } from '../../../theme';
@@ -9,10 +9,17 @@ import { colors, spacing } from '../../../theme';
 interface LocationInputScreenProps {
   onContinue: () => void;
   onBack?: () => void;
+  onExit?: () => void;
+  showBackButton?: boolean;
   progress?: number; // Keep for compatibility but don't use
 }
 
-export function LocationInputScreen({ onContinue, onBack }: LocationInputScreenProps) {
+export function LocationInputScreen({
+  onContinue,
+  onBack,
+  onExit,
+  showBackButton = false,
+}: LocationInputScreenProps) {
   const { location, setLocation } = useBookingFlowStore();
   const [inputValue, setInputValue] = useState(location ?? '');
   const [isFocused, setIsFocused] = useState(false);
@@ -26,19 +33,13 @@ export function LocationInputScreen({ onContinue, onBack }: LocationInputScreenP
 
   return (
     <BookingLayout
-      showCloseButton={Boolean(onBack)}
-      onClose={onBack}
+      showCloseButton={Boolean(onExit)}
+      onClose={onExit}
+      onBack={onBack}
+      showBackButton={showBackButton}
       scrollable={false}
       footer={
-        <TouchableOpacity
-          style={[styles.continueButton, !inputValue.trim() && styles.continueButtonDisabled]}
-          onPress={handleContinue}
-          disabled={!inputValue.trim()}
-          accessibilityLabel="계속"
-          accessibilityRole="button"
-        >
-          <Text style={styles.continueButtonText}>계속</Text>
-        </TouchableOpacity>
+        <ContinueButton label="계속" onPress={handleContinue} disabled={!inputValue.trim()} />
       }
       testID="location-input-screen"
     >
@@ -156,22 +157,5 @@ const styles = StyleSheet.create({
     bottom: 1,
     right: 1,
     transform: [{ rotate: '45deg' }],
-  },
-  continueButton: {
-    width: '100%',
-    height: 50,
-    backgroundColor: colors.primary,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  continueButtonDisabled: {
-    backgroundColor: colors.muted,
-    opacity: 0.5,
-  },
-  continueButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.background,
   },
 });

@@ -25,11 +25,11 @@ pnpm run check:fix
 echo "🧹 Running linting checks..."
 pnpm run lint
 
+echo "🏗️ Building packages..."
+pnpm run build
+
 echo "🔍 Running type checking..."
 pnpm run typecheck
-
-echo "🏗️ Running build..."
-pnpm run build
 
 echo "✅ All quality checks passed! Code is ready for deployment."
 echo ""

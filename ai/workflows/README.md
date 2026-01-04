@@ -82,9 +82,15 @@ This directory contains standardized workflows for the AI-assisted development s
 
 #### [Document Processing Workflow](document-processing.md)
 
-**Purpose**: Unified processing approach for any document type in the system  
-**Use When**: Processing any AI development system document  
+**Purpose**: Unified processing approach for any document type in the system
+**Use When**: Processing any AI development system document
 **Outputs**: Validated document, related updates, quality report
+
+#### [Commit and Push Workflow](commit-and-push.md)
+
+**Purpose**: Safely commit and push changes with conflict resolution and hook error handling
+**Use When**: Committing changes that may have merge conflicts or require pre-commit/pre-push hook fixes
+**Outputs**: Synchronized branch, successful commits, pushed changes to remote
 
 ## Workflow Categories
 
@@ -104,6 +110,10 @@ This directory contains standardized workflows for the AI-assisted development s
 - **Complete Task**: Task completion with deliverable validation, dependency resolution, and closure
 - **Split Epic**: Epic separation into multiple focused units
 - **Cross-Reference Validation**: Link integrity and relationship maintenance
+
+### Git Operations
+
+- **Commit and Push**: Safe commit and push with conflict resolution and hook error handling
 
 ### Content Transformation
 
@@ -147,6 +157,7 @@ This directory contains standardized workflows for the AI-assisted development s
 | Processing context status   | Process Context Status     | Process Context, Update Epic |
 | Validating system integrity | Cross-Reference Validation | Document Processing          |
 | General document handling   | Document Processing        | Specific type workflows      |
+| Committing and pushing code | Commit and Push            | Pre-Deployment Quality Check |
 
 ## Workflow Integration
 

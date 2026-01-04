@@ -55,76 +55,28 @@ export function ArtistReviewsTab({ artistId, testID }: ArtistReviewsTabProps) {
       ListHeaderComponent={
         stats ? (
           <View style={styles.header}>
-            {/* Overall Rating Summary */}
-            <View style={styles.ratingContainer}>
-              <Text style={styles.ratingValue}>
+            {/* Review Count Title */}
+            <Text style={styles.reviewTitle}>리뷰 {stats.totalReviews}</Text>
+
+            {/* Star Rating Row */}
+            <View style={styles.ratingRow}>
+              <Text style={styles.stars}>
+                {stats.totalReviews > 0 ? renderStars(stats.averageOverallRating) : '☆☆☆☆☆'}
+              </Text>
+              <Text style={styles.ratingScore}>
                 {stats.averageOverallRating > 0 ? stats.averageOverallRating.toFixed(1) : 'N/A'}
               </Text>
-              <View style={styles.ratingDetails}>
-                <Text style={styles.stars}>
-                  {stats.totalReviews > 0 ? renderStars(stats.averageOverallRating) : '☆☆☆☆☆'}
-                </Text>
-                <Text style={styles.reviewCount}>리뷰 {stats.totalReviews}</Text>
-              </View>
             </View>
-
-            {/* Dimension Stats */}
-            {stats.totalReviews > 0 && (
-              <View style={styles.dimensionStats}>
-                <View style={styles.dimensionRow}>
-                  <Text style={styles.dimensionLabel}>품질</Text>
-                  <View style={styles.dimensionValue}>
-                    <View style={styles.ratingBar}>
-                      <View
-                        style={[
-                          styles.ratingBarFill,
-                          { width: `${(stats.averageQualityRating / 5) * 100}%` },
-                        ]}
-                      />
-                    </View>
-                    <Text style={styles.dimensionScore}>
-                      {stats.averageQualityRating?.toFixed(1) ?? 'N/A'}
-                    </Text>
-                  </View>
-                </View>
-                <View style={styles.dimensionRow}>
-                  <Text style={styles.dimensionLabel}>전문성</Text>
-                  <View style={styles.dimensionValue}>
-                    <View style={styles.ratingBar}>
-                      <View
-                        style={[
-                          styles.ratingBarFill,
-                          { width: `${(stats.averageProfessionalismRating / 5) * 100}%` },
-                        ]}
-                      />
-                    </View>
-                    <Text style={styles.dimensionScore}>
-                      {stats.averageProfessionalismRating?.toFixed(1) ?? 'N/A'}
-                    </Text>
-                  </View>
-                </View>
-                <View style={styles.dimensionRow}>
-                  <Text style={styles.dimensionLabel}>시간준수</Text>
-                  <View style={styles.dimensionValue}>
-                    <View style={styles.ratingBar}>
-                      <View
-                        style={[
-                          styles.ratingBarFill,
-                          { width: `${(stats.averageTimelinessRating / 5) * 100}%` },
-                        ]}
-                      />
-                    </View>
-                    <Text style={styles.dimensionScore}>
-                      {stats.averageTimelinessRating?.toFixed(1) ?? 'N/A'}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            )}
           </View>
         ) : null
       }
-      renderItem={({ item }) => <ReviewCard review={item} containerStyle={styles.reviewCard} />}
+      renderItem={({ item, index }) => (
+        <ReviewCard
+          review={item}
+          containerStyle={styles.reviewCard}
+          isLast={index === reviews.length - 1}
+        />
+      )}
       ListEmptyComponent={
         reviewsLoading ? (
           <View style={styles.emptyState}>
@@ -172,67 +124,29 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#19191b',
   },
-  ratingContainer: {
+  reviewTitle: {
+    fontSize: 20,
+    fontWeight: '500',
+    color: '#19191b',
+    lineHeight: 24,
+    letterSpacing: 0.5,
+    marginBottom: 8,
+  },
+  ratingRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 20,
-    marginBottom: 20,
-  },
-  ratingValue: {
-    fontSize: 48,
-    fontWeight: '700',
-    color: '#19191b',
-  },
-  ratingDetails: {
-    flex: 1,
-    gap: 6,
+    gap: 8,
   },
   stars: {
     fontSize: 18,
-    color: '#FFB800',
-  },
-  reviewCount: {
-    fontSize: 14,
     color: '#19191b',
+  },
+  ratingScore: {
+    fontSize: 18,
     fontWeight: '400',
-  },
-  dimensionStats: {
-    gap: 12,
-  },
-  dimensionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  dimensionLabel: {
-    fontSize: 14,
     color: '#19191b',
-    width: 70,
-  },
-  dimensionValue: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  ratingBar: {
-    flex: 1,
-    height: 8,
-    backgroundColor: '#efeff0',
-    borderRadius: 4,
-    overflow: 'hidden',
-  },
-  ratingBarFill: {
-    height: '100%',
-    backgroundColor: '#FFB800',
-    borderRadius: 4,
-  },
-  dimensionScore: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#19191b',
-    width: 32,
-    textAlign: 'right',
+    lineHeight: 16,
+    letterSpacing: 0.4,
   },
   reviewCard: {
     marginHorizontal: 20,

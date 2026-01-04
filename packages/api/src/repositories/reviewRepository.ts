@@ -1,4 +1,4 @@
-import { and, count, desc, eq, sql } from 'drizzle-orm';
+import { type SQL, and, asc, count, desc, eq, inArray, sql } from 'drizzle-orm';
 
 import { type Review, reviewImages, reviews } from '@524/database';
 import { db } from '../db/client.js';
@@ -58,11 +58,12 @@ function validatePaginationParams(limit: number, offset: number): void {
 const logger = createLogger('review-repository');
 
 // Mapping function to convert database Review to API response format
-function mapReviewToResponse(review: Review) {
+function mapReviewToResponse(review: Review, images?: string[]) {
   return {
     ...review,
     createdAt: review.createdAt.toISOString(),
     updatedAt: review.updatedAt.toISOString(),
+    reviewImages: images,
   };
 }
 
@@ -206,15 +207,50 @@ export class ReviewRepository {
 
     logger.debug({ artistId, limit, offset }, 'Getting reviews for artist');
 
-    const rows = await db
-      .select()
-      .from(reviews)
-      .where(and(eq(reviews.artistId, artistId), eq(reviews.isVisible, true)))
-      .orderBy(desc(reviews.createdAt))
-      .limit(limit)
-      .offset(offset);
+    try {
+      const query = db
+        .select()
+        .from(reviews)
+        .where(and(eq(reviews.artistId, artistId), eq(reviews.isVisible, true)))
+        .orderBy(desc(reviews.createdAt))
+        .limit(limit)
+        .offset(offset);
 
-    return rows.map(mapReviewToResponse);
+      const rows = await query;
+
+      // Fetch images for all reviews in a single query
+      const reviewIds = rows.map((r) => r.id);
+      const s3PublicBaseUrl = process.env.S3_PUBLIC_BASE_URL;
+
+      let imagesByReviewId: Record<string, string[]> = {};
+      if (reviewIds.length > 0) {
+        const allImages = await db
+          .select()
+          .from(reviewImages)
+          .where(inArray(reviewImages.reviewId, reviewIds))
+          .orderBy(reviewImages.displayOrder);
+
+        // Group images by review ID
+        imagesByReviewId = allImages.reduce(
+          (acc, img) => {
+            const url = s3PublicBaseUrl ? `${s3PublicBaseUrl}/${img.s3Key}` : img.publicUrl;
+            if (url) {
+              if (!acc[img.reviewId]) {
+                acc[img.reviewId] = [];
+              }
+              acc[img.reviewId].push(url);
+            }
+            return acc;
+          },
+          {} as Record<string, string[]>
+        );
+      }
+
+      return rows.map((review) => mapReviewToResponse(review, imagesByReviewId[review.id]));
+    } catch (error) {
+      logger.error({ error, artistId }, 'Failed to get reviews for artist');
+      throw error;
+    }
   }
 
   async getReviewsForCustomer(customerId: string, limit = 20, offset = 0) {
@@ -231,7 +267,7 @@ export class ReviewRepository {
       .limit(limit)
       .offset(offset);
 
-    return rows.map(mapReviewToResponse);
+    return rows.map((review) => mapReviewToResponse(review));
   }
 
   async createReviewImages(reviewId: string, imageKeys: ReviewImagePayload[]) {
@@ -279,8 +315,7 @@ export class ReviewRepository {
 
   async getArtistReviewStats(artistId: string) {
     validateUUID(artistId, 'artistId');
-
-    const [stats] = await db
+    const query = db
       .select({
         totalReviews: count(),
         averageOverallRating: sql<number>`ROUND(AVG(${reviews.overallRating}), 1)`,
@@ -291,12 +326,83 @@ export class ReviewRepository {
       .from(reviews)
       .where(and(eq(reviews.artistId, artistId), eq(reviews.isVisible, true)));
 
+    const [stats] = await query;
+
     return {
       totalReviews: stats.totalReviews ?? 0,
-      averageOverallRating: stats.averageOverallRating ?? 0,
-      averageQualityRating: stats.averageQualityRating ?? 0,
-      averageProfessionalismRating: stats.averageProfessionalismRating ?? 0,
-      averageTimelinessRating: stats.averageTimelinessRating ?? 0,
+      averageOverallRating: Number(stats.averageOverallRating) || 0,
+      averageQualityRating: Number(stats.averageQualityRating) || 0,
+      averageProfessionalismRating: Number(stats.averageProfessionalismRating) || 0,
+      averageTimelinessRating: Number(stats.averageTimelinessRating) || 0,
     };
+  }
+
+  async getAllReviewsCount(filters: { search?: string; isVisible?: boolean } = {}) {
+    const conditions = [];
+
+    if (filters.isVisible !== undefined) {
+      conditions.push(eq(reviews.isVisible, filters.isVisible));
+    }
+
+    if (filters.search) {
+      // Simple search on review text for now - could be expanded to search customer/artist names
+      conditions.push(sql`${reviews.reviewText} ILIKE ${`%${filters.search}%`}`);
+    }
+
+    const [result] = await db
+      .select({ count: count() })
+      .from(reviews)
+      .where(conditions.length > 0 ? and(...conditions) : undefined);
+
+    return result.count ?? 0;
+  }
+
+  async getAllReviews(params: {
+    limit: number;
+    offset: number;
+    sortField: 'createdAt' | 'overallRating' | 'customerId' | 'artistId';
+    sortOrder: 'ASC' | 'DESC';
+    search?: string;
+    isVisible?: boolean;
+  }) {
+    const conditions = [];
+
+    if (params.isVisible !== undefined) {
+      conditions.push(eq(reviews.isVisible, params.isVisible));
+    }
+
+    if (params.search) {
+      // Simple search on review text for now - could be expanded to search customer/artist names
+      conditions.push(sql`${reviews.reviewText} ILIKE ${`%${params.search}%`}`);
+    }
+
+    let orderBy: SQL;
+    switch (params.sortField) {
+      case 'createdAt':
+        orderBy = params.sortOrder === 'DESC' ? desc(reviews.createdAt) : asc(reviews.createdAt);
+        break;
+      case 'overallRating':
+        orderBy =
+          params.sortOrder === 'DESC' ? desc(reviews.overallRating) : asc(reviews.overallRating);
+        break;
+      case 'customerId':
+        orderBy = params.sortOrder === 'DESC' ? desc(reviews.customerId) : asc(reviews.customerId);
+        break;
+      case 'artistId':
+        orderBy = params.sortOrder === 'DESC' ? desc(reviews.artistId) : asc(reviews.artistId);
+        break;
+      default:
+        orderBy = desc(reviews.createdAt);
+    }
+
+    const rows = await db
+      .select()
+      .from(reviews)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(orderBy)
+      .limit(params.limit)
+      .offset(params.offset);
+
+    return rows.map((review) => mapReviewToResponse(review));
   }
 }

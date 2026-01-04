@@ -8,6 +8,11 @@
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "incremental": true,
+    "baseUrl": ".",
+    "paths": {
+      "@524/shared": ["../shared/src/index.ts"],
+      "@524/shared/*": ["../shared/src/*"]
+    },
     "plugins": [
       {
         "name": "next"

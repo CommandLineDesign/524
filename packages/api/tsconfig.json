@@ -4,15 +4,15 @@
     "rootDir": "src",
     "outDir": "dist",
     "noEmit": false,
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
     "paths": {
-      "@524/shared": ["../shared/dist/index.d.ts"],
-      "@524/shared/*": ["../shared/dist/*.d.ts"],
-      "@524/database": ["../database/dist/index.d.ts"],
-      "@524/database/*": ["../database/dist/*.d.ts"],
-      "@524/notifications": ["../notifications/dist/index.d.ts"],
-      "@524/notifications/*": ["../notifications/dist/*.d.ts"]
+      "@524/shared": ["../shared/dist/index.js"],
+      "@524/shared/*": ["../shared/dist/*.js"],
+      "@524/database": ["../database/dist/index.js"],
+      "@524/database/*": ["../database/dist/*.js"],
+      "@524/notifications": ["../notifications/dist/index.js"],
+      "@524/notifications/*": ["../notifications/dist/*.js"]
     },
     "allowImportingTsExtensions": false,
     "target": "ES2022",
