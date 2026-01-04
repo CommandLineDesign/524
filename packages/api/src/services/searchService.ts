@@ -1,6 +1,6 @@
 import type { ArtistSearchFilters, ArtistSearchResult } from '@524/shared/artists';
 
-import { artistProfiles } from '@524/database';
+import { artistProfiles, users } from '@524/database';
 import { eq } from 'drizzle-orm';
 import { db } from '../db/client.js';
 import { createLogger } from '../utils/logger.js';
@@ -17,7 +17,9 @@ type ArtistSearchRow = Pick<
   | 'totalReviews'
   | 'services'
   | 'verificationStatus'
->;
+> & {
+  profileImageUrl: string | null;
+};
 
 export class SearchService {
   async searchArtists(filters: ArtistSearchFilters): Promise<ArtistSearchResult[]> {
@@ -32,8 +34,10 @@ export class SearchService {
         totalReviews: artistProfiles.totalReviews,
         services: artistProfiles.services,
         verificationStatus: artistProfiles.verificationStatus,
+        profileImageUrl: users.profileImageUrl,
       })
       .from(artistProfiles)
+      .innerJoin(users, eq(artistProfiles.userId, users.id))
       .where(eq(artistProfiles.verificationStatus, 'verified'))
       .limit(25);
 
@@ -51,8 +55,16 @@ export class SearchService {
 
     if (filters.serviceType) {
       const specialties = (row.specialties as string[] | null) ?? [];
-      if (!specialties.includes(filters.serviceType)) {
-        return false;
+      if (filters.serviceType === 'combo') {
+        // For combo (hair makeup), artist must have both hair and makeup services
+        if (!specialties.includes('hair') || !specialties.includes('makeup')) {
+          return false;
+        }
+      } else {
+        // For hair or makeup, check if artist offers that specific service
+        if (!specialties.includes(filters.serviceType)) {
+          return false;
+        }
       }
     }
 
@@ -88,6 +100,7 @@ export class SearchService {
       averageRating: row.averageRating ? Number(row.averageRating) : 0,
       reviewCount: row.totalReviews ?? 0,
       priceRange,
+      profileImageUrl: row.profileImageUrl,
     };
   }
 }

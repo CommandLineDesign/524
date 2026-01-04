@@ -138,6 +138,7 @@ export function requireAuth(allowedRoles?: ('customer' | 'artist' | 'admin' | 's
         if (tokenVersionFromToken !== tokenVersionFromDb) {
           return res.status(401).json({
             error: 'Session invalidated',
+            code: 'SESSION_INVALIDATED',
             message: 'Please log in again.',
           });
         }
@@ -171,12 +172,22 @@ export function requireAuth(allowedRoles?: ('customer' | 'artist' | 'admin' | 's
       next();
     } catch (error) {
       if (error instanceof jwt.JsonWebTokenError) {
-        return res.status(401).json({ error: 'Invalid token' });
+        return res.status(401).json({
+          error: 'Invalid token',
+          code: 'TOKEN_INVALID',
+        });
       }
       if (error instanceof jwt.TokenExpiredError) {
-        return res.status(401).json({ error: 'Token expired' });
+        // This code tells the frontend to attempt a token refresh
+        return res.status(401).json({
+          error: 'Token expired',
+          code: 'TOKEN_EXPIRED',
+        });
       }
-      return res.status(500).json({ error: 'Authentication failed' });
+      return res.status(500).json({
+        error: 'Authentication failed',
+        code: 'AUTH_ERROR',
+      });
     }
   };
 }

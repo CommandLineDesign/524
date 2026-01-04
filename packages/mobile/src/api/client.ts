@@ -9,24 +9,85 @@ import type {
   OnboardingResponseInput,
   OnboardingState,
 } from '@524/shared';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import {
+  NETWORK_ERROR,
+  REFRESH_TIMEOUT,
+  SESSION_INVALIDATED_CODE,
+  TOKEN_EXPIRED_CODE,
+  TOKEN_INVALID_CODE,
+} from '@524/shared';
+
+import { TokenService } from '../services/tokenService';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:5240';
+
+// Error codes imported from shared package
+
+// Refresh state management
+let isRefreshing = false;
+let refreshSubscribers: Array<(token: string) => void> = [];
+let refreshFailedSubscribers: Array<(error: Error) => void> = [];
+
+// Callback for auth failures that require re-login
+let onAuthFailure: (() => void) | null = null;
+
+/**
+ * Register a callback to be called when authentication fails completely
+ * (refresh token expired or session invalidated)
+ */
+export function setAuthFailureCallback(callback: () => void) {
+  onAuthFailure = callback;
+}
+
+/**
+ * Subscribe to token refresh completion
+ */
+function subscribeTokenRefresh(
+  onSuccess: (token: string) => void,
+  onFailure: (error: Error) => void
+) {
+  refreshSubscribers.push(onSuccess);
+  refreshFailedSubscribers.push(onFailure);
+}
+
+/**
+ * Notify all subscribers that token refresh completed successfully
+ */
+function onTokenRefreshed(token: string) {
+  for (const callback of refreshSubscribers) {
+    callback(token);
+  }
+  refreshSubscribers = [];
+  refreshFailedSubscribers = [];
+}
+
+/**
+ * Notify all subscribers that token refresh failed
+ */
+function onRefreshFailed(error: Error) {
+  for (const callback of refreshFailedSubscribers) {
+    callback(error);
+  }
+  refreshSubscribers = [];
+  refreshFailedSubscribers = [];
+}
 
 export class ApiError extends Error {
   status: number;
   body?: unknown;
+  code?: string;
 
-  constructor(message: string, status: number, body?: unknown) {
+  constructor(message: string, status: number, body?: unknown, code?: string) {
     super(message);
     this.status = status;
     this.body = body;
+    this.code = code;
   }
 }
 
 export class AuthenticationError extends ApiError {
-  constructor(message = 'Authentication required') {
-    super(message, 401);
+  constructor(message = 'Authentication required', code?: string) {
+    super(message, 401, undefined, code);
   }
 }
 
@@ -50,12 +111,135 @@ export class ConflictError extends ApiError {
 
 function buildError(message: string | string[] | undefined, status: number, body?: unknown) {
   const normalizedMessage = Array.isArray(message) ? message.join(', ') : message;
-  return new ApiError(normalizedMessage || 'Request failed', status, body);
+  const code = (body as { code?: string } | undefined)?.code;
+  return new ApiError(normalizedMessage || 'Request failed', status, body, code);
 }
 
-async function request<T>(path: string, options: RequestInit): Promise<T> {
+/**
+ * Refresh the access token using the stored refresh token
+ */
+async function refreshAccessToken(): Promise<string> {
+  const refreshToken = await TokenService.getRefreshToken();
+
+  if (!refreshToken) {
+    throw new AuthenticationError('No refresh token available', 'NO_REFRESH_TOKEN');
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/v1/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken }),
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.json().catch(() => ({}));
+      const code = (errorBody as { code?: string }).code;
+      throw new AuthenticationError(
+        (errorBody as { error?: string }).error || 'Token refresh failed',
+        code
+      );
+    }
+
+    const data = (await response.json()) as {
+      accessToken: string;
+      refreshToken: string;
+      expiresIn: number;
+    };
+
+    // Store the new tokens
+    await TokenService.setTokens(data.accessToken, data.refreshToken, data.expiresIn);
+
+    return data.accessToken;
+  } catch (error) {
+    // Handle network errors and other fetch failures
+    if (error instanceof AuthenticationError) {
+      throw error;
+    }
+    // Network error, timeout, or other fetch failure
+    throw new AuthenticationError('Network error during token refresh', 'NETWORK_ERROR');
+  }
+}
+
+/**
+ * Handle token refresh with request queueing
+ * Ensures only one refresh request is made at a time
+ */
+async function handleTokenRefresh(): Promise<string> {
+  if (isRefreshing) {
+    // Wait for the ongoing refresh to complete with timeout
+    return new Promise<string>((resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        reject(new AuthenticationError('Token refresh timeout', 'REFRESH_TIMEOUT'));
+      }, 30000); // 30 second timeout
+
+      subscribeTokenRefresh(
+        (token) => {
+          clearTimeout(timeoutId);
+          resolve(token);
+        },
+        (error) => {
+          clearTimeout(timeoutId);
+          reject(error);
+        }
+      );
+    });
+  }
+
+  isRefreshing = true;
+
+  try {
+    const newToken = await refreshAccessToken();
+    onTokenRefreshed(newToken);
+    return newToken;
+  } catch (error) {
+    const authError =
+      error instanceof AuthenticationError
+        ? error
+        : new AuthenticationError('Token refresh failed');
+
+    onRefreshFailed(authError);
+
+    // Trigger auth failure callback for any unrecoverable refresh error
+    // This includes token expiry, revocation, network errors, and other auth failures
+    if (
+      authError.code === SESSION_INVALIDATED_CODE ||
+      authError.code === 'REFRESH_TOKEN_EXPIRED' ||
+      authError.code === 'REFRESH_TOKEN_REVOKED' ||
+      authError.code === 'NO_REFRESH_TOKEN' ||
+      authError.code === 'NETWORK_ERROR' ||
+      authError.code === 'INVALID_REFRESH_TOKEN' ||
+      authError.code === 'USER_NOT_FOUND' ||
+      authError.code === 'ACCOUNT_BANNED'
+    ) {
+      onAuthFailure?.();
+    }
+
+    throw authError;
+  } finally {
+    isRefreshing = false;
+  }
+}
+
+/**
+ * Make an authenticated API request with automatic token refresh
+ */
+async function request<T>(path: string, options: RequestInit, skipRefresh = false): Promise<T> {
   // Get auth token from storage
-  const token = await AsyncStorage.getItem('auth_token');
+  let token = await TokenService.getAccessToken();
+
+  // Proactive token refresh: if token is expiring soon, refresh it before making the request
+  if (token && !skipRefresh) {
+    const isExpiringSoon = await TokenService.isAccessTokenExpiringSoon();
+    if (isExpiringSoon) {
+      try {
+        token = await handleTokenRefresh();
+      } catch (error) {
+        // If proactive refresh fails, continue with current token
+        // The reactive refresh logic below will handle it if needed
+      }
+    }
+  }
 
   // Merge headers safely so Authorization is not dropped when custom headers are provided
   const headers = new Headers({ 'Content-Type': 'application/json' });
@@ -82,6 +266,50 @@ async function request<T>(path: string, options: RequestInit): Promise<T> {
   if (!response.ok) {
     const errorBody = await response.json().catch(() => undefined);
     const message = (errorBody as { error?: string | string[] } | undefined)?.error;
+    const code = (errorBody as { code?: string } | undefined)?.code;
+
+    // Handle token expiration - attempt refresh and retry
+    if (response.status === 401 && code === TOKEN_EXPIRED_CODE && !skipRefresh) {
+      try {
+        const newToken = await handleTokenRefresh();
+
+        // Retry the original request with new token
+        const retryHeaders = new Headers(headers);
+        retryHeaders.set('Authorization', `Bearer ${newToken}`);
+
+        const retryResponse = await fetch(`${API_BASE_URL}${path}`, {
+          ...options,
+          headers: retryHeaders,
+        });
+
+        if (!retryResponse.ok) {
+          const retryErrorBody = await retryResponse.json().catch(() => undefined);
+          const retryMessage = (retryErrorBody as { error?: string | string[] } | undefined)?.error;
+          throw buildError(
+            retryMessage ?? retryResponse.statusText,
+            retryResponse.status,
+            retryErrorBody
+          );
+        }
+
+        return (await retryResponse.json()) as T;
+      } catch (refreshError) {
+        // If refresh fails, throw the original error or the refresh error
+        if (refreshError instanceof AuthenticationError) {
+          throw refreshError;
+        }
+        throw buildError(message ?? response.statusText, response.status, errorBody);
+      }
+    }
+
+    // For session invalidated or invalid token, trigger auth failure
+    if (
+      response.status === 401 &&
+      (code === SESSION_INVALIDATED_CODE || code === TOKEN_INVALID_CODE)
+    ) {
+      onAuthFailure?.();
+    }
+
     throw buildError(message ?? response.statusText, response.status, errorBody);
   }
 
@@ -123,7 +351,9 @@ export interface AuthUser {
 
 export interface AuthResponse {
   user: AuthUser;
-  token: string;
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
 }
 
 export interface GetBookingsParams {
@@ -278,6 +508,7 @@ export interface Review {
   timelinessRating: number;
   reviewText?: string | null;
   artistResponse?: string | null;
+  reviewImages?: string[];
   isVisible: boolean;
   createdAt: string;
   updatedAt: string;

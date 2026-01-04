@@ -4,8 +4,11 @@ import {
   ADMIN_USER_STORAGE_KEY,
   API_BASE_URL,
   clearStoredAuth,
+  getStoredRefreshToken,
   getStoredToken,
-  setStoredToken,
+  handleTokenRefresh,
+  isTokenExpired,
+  setTokens,
 } from './adminApi';
 
 type LoginParams = {
@@ -35,12 +38,15 @@ export const adminAuthProvider: AuthProvider = {
     }
 
     const payload = await response.json();
-    console.log('[AdminAuthProvider] Login successful, received token:', !!payload.token);
+    const accessToken = payload.accessToken || payload.token;
+    const refreshToken = payload.refreshToken;
+    const expiresIn = payload.expiresIn || 900; // Default to 15 minutes if not provided
 
-    setStoredToken(payload.token);
+    // Store both tokens and expiry
+    setTokens(accessToken, refreshToken, expiresIn);
+
     if (typeof window !== 'undefined' && payload.user) {
       localStorage.setItem(ADMIN_USER_STORAGE_KEY, JSON.stringify(payload.user));
-      console.log('[AdminAuthProvider] User data stored:', payload.user);
     }
   },
 
@@ -51,7 +57,24 @@ export const adminAuthProvider: AuthProvider = {
 
   async checkAuth() {
     const token = getStoredToken();
-    console.log('[AdminAuthProvider] checkAuth called, token exists:', !!token);
+    const refreshToken = getStoredRefreshToken();
+
+    if (!token && !refreshToken) {
+      return Promise.reject();
+    }
+
+    // If token is expired but we have a refresh token, try to refresh
+    if (isTokenExpired() && refreshToken) {
+      try {
+        await handleTokenRefresh();
+        return Promise.resolve();
+      } catch (error) {
+        console.error('[AdminAuthProvider] Token refresh failed:', error);
+        clearStoredAuth();
+        return Promise.reject();
+      }
+    }
+
     return token ? Promise.resolve() : Promise.reject();
   },
 
@@ -69,7 +92,6 @@ export const adminAuthProvider: AuthProvider = {
 
   async getIdentity() {
     const token = getStoredToken();
-    console.log('[AdminAuthProvider] getIdentity called, token exists:', !!token);
     if (!token) {
       return Promise.reject();
     }
@@ -82,13 +104,11 @@ export const adminAuthProvider: AuthProvider = {
       });
 
       if (!response.ok) {
-        console.log('[AdminAuthProvider] getIdentity failed with status:', response.status);
         clearStoredAuth();
         return Promise.reject();
       }
 
       const user = await response.json();
-      console.log('[AdminAuthProvider] getIdentity successful for user:', user.email);
 
       return {
         id: user.id ?? 'admin',

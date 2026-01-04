@@ -5,11 +5,16 @@ import { Admin, Resource, defaultTheme } from 'react-admin';
 import { adminAuthProvider } from '../lib/adminAuthProvider';
 import { adminDataProvider } from '../lib/adminDataProvider';
 import AdminLoginPage from './AdminLoginPage';
+import ArtistEdit from './artists/ArtistEdit';
+import ArtistShow from './artists/ArtistShow';
+import ArtistsList from './artists/ArtistsList';
 import BookingShow from './bookings/BookingShow';
 import BookingsList from './bookings/BookingsList';
 import PendingArtistEdit from './pendingArtists/PendingArtistEdit';
 import PendingArtistShow from './pendingArtists/PendingArtistShow';
 import PendingArtistsList from './pendingArtists/PendingArtistsList';
+import ReviewShow from './reviews/ReviewShow';
+import ReviewsList from './reviews/ReviewsList';
 import UserEdit from './users/UserEdit';
 import UserShow from './users/UserShow';
 import UsersList from './users/UsersList';
@@ -71,6 +76,13 @@ const AdminApp = () => (
       options={{ label: 'Pending Artists' }}
     />
     <Resource
+      name="artists"
+      list={ArtistsList}
+      show={ArtistShow}
+      edit={ArtistEdit}
+      options={{ label: 'Artists' }}
+    />
+    <Resource
       name="bookings"
       list={BookingsList}
       show={BookingShow}
@@ -83,6 +95,7 @@ const AdminApp = () => (
       edit={UserEdit}
       options={{ label: 'Users' }}
     />
+    <Resource name="reviews" list={ReviewsList} show={ReviewShow} options={{ label: 'Reviews' }} />
   </Admin>
 );
 

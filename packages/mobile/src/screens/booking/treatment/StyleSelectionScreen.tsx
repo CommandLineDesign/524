@@ -9,6 +9,8 @@ import { colors, spacing } from '../../../theme';
 interface StyleSelectionScreenProps {
   onContinue: () => void;
   onBack?: () => void;
+  onExit?: () => void;
+  showBackButton?: boolean;
   progress: number;
 }
 
@@ -22,7 +24,13 @@ const mockStyles = [
   { id: 'style-6', imageUrl: 'https://placeholder.com/style6.jpg', label: '시크' },
 ];
 
-export function StyleSelectionScreen({ onContinue, onBack, progress }: StyleSelectionScreenProps) {
+export function StyleSelectionScreen({
+  onContinue,
+  onBack,
+  onExit,
+  showBackButton = false,
+  progress,
+}: StyleSelectionScreenProps) {
   const { selectedStyles, addStyle, removeStyle, customStyleImage, setCustomStyleImage } =
     useBookingFlowStore();
 
@@ -58,8 +66,10 @@ export function StyleSelectionScreen({ onContinue, onBack, progress }: StyleSele
     <BookingLayout
       title={styleSelectionStrings.title}
       subtitle={styleSelectionStrings.subtitle}
-      showCloseButton={Boolean(onBack)}
-      onClose={onBack}
+      showCloseButton={Boolean(onExit)}
+      onClose={onExit}
+      onBack={onBack}
+      showBackButton={showBackButton}
       footer={
         <ContinueButton label={hasAnySelection ? '다음' : '건너뛰기'} onPress={handleContinue} />
       }

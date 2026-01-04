@@ -12,6 +12,7 @@ export interface ArtistProfile {
   specialties: ServiceType[] | string[];
   yearsExperience: number;
   businessVerified: boolean;
+  businessRegistrationNumber?: string | null;
   serviceRadiusKm: number;
   primaryLocation: ArtistLocation;
   isAcceptingBookings: boolean;
@@ -19,6 +20,9 @@ export interface ArtistProfile {
   averageRating: number;
   totalReviews: number;
   totalServices: number;
+  portfolioImages?: PortfolioImage[];
+  services?: ArtistServiceOffering[];
+  profileImageUrl?: string;
 }
 export interface ArtistSearchFilters {
   query?: string;
@@ -32,5 +36,15 @@ export interface ArtistSearchResult {
   averageRating: number;
   reviewCount: number;
   priceRange: [number, number];
+  profileImageUrl?: string | null;
+}
+export interface PortfolioImage {
+  url: string;
+  caption?: string;
+}
+export interface ArtistServiceOffering {
+  name: string;
+  description?: string;
+  price: number;
 }
 //# sourceMappingURL=artists.d.ts.map

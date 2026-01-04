@@ -16,8 +16,6 @@ export interface ArtistDetailHeaderProps {
   rating?: number;
   /** Number of reviews */
   reviewCount?: number;
-  /** Whether the artist is bookmarked (UI only) */
-  isBookmarked?: boolean;
   /** Callback when chat button is pressed (optional) */
   onChatPress?: () => void;
   /** Test ID */
@@ -31,7 +29,6 @@ export function ArtistDetailHeader({
   specialty,
   rating,
   reviewCount,
-  isBookmarked = false,
   onChatPress,
   testID,
 }: ArtistDetailHeaderProps) {
@@ -89,11 +86,6 @@ export function ArtistDetailHeader({
           {reviewCount !== undefined && <Text style={styles.reviewCount}>리뷰 {reviewCount}</Text>}
         </View>
       </View>
-
-      {/* Bookmark button (UI only, non-functional) */}
-      <View style={styles.iconButton}>
-        <BookmarkIcon isBookmarked={isBookmarked} />
-      </View>
     </View>
   );
 }
@@ -110,14 +102,6 @@ function ChatIcon() {
   return (
     <View style={styles.chatIcon}>
       <Text style={styles.chatIconText}>💬</Text>
-    </View>
-  );
-}
-
-function BookmarkIcon({ isBookmarked }: { isBookmarked: boolean }) {
-  return (
-    <View style={styles.bookmarkIcon}>
-      <Text style={styles.bookmarkIconText}>{isBookmarked ? '🔖' : '📑'}</Text>
     </View>
   );
 }
@@ -230,14 +214,5 @@ const styles = StyleSheet.create({
   },
   chatIconText: {
     fontSize: 16,
-  },
-  bookmarkIcon: {
-    width: 24,
-    height: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  bookmarkIconText: {
-    fontSize: 20,
   },
 });

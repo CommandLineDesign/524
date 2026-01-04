@@ -37,23 +37,15 @@ export const reviews = pgTable('reviews', {
 
 export type Review = typeof reviews.$inferSelect;
 
-export const reviewImages = pgTable(
-  'review_images',
-  {
-    id: uuid('id').primaryKey().defaultRandom(),
-    reviewId: uuid('review_id')
-      .references(() => reviews.id, { onDelete: 'cascade', onUpdate: 'restrict' })
-      .notNull(),
-    s3Key: text('s3_key').notNull(),
-    fileSize: integer('file_size').notNull(),
-    mimeType: text('mime_type').notNull(),
-    displayOrder: integer('display_order').notNull(), // Client must provide explicit order (0, 1, 2, 3, 4)
-    publicUrl: text('public_url'),
-    createdAt: timestamp('created_at').defaultNow().notNull(),
-  },
-  (table) => ({
-    reviewImagesReviewIdIdx: index('review_images_review_id_idx').on(table.reviewId), // Optimize queries for photos by review
-  })
-);
+export const reviewImages = pgTable('review_images', {
+  id: uuid().defaultRandom().primaryKey().notNull(),
+  reviewId: uuid('review_id').notNull(),
+  s3Key: text('s3_key').notNull(),
+  fileSize: integer('file_size').notNull(),
+  mimeType: text('mime_type').notNull(),
+  displayOrder: integer('display_order').notNull(),
+  publicUrl: text('public_url'),
+  createdAt: timestamp('created_at', { mode: 'string' }).defaultNow().notNull(),
+});
 
 export type ReviewImage = typeof reviewImages.$inferSelect;

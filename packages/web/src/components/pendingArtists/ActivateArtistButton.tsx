@@ -9,7 +9,7 @@ import {
   useRefresh,
 } from 'react-admin';
 
-import type { PendingArtistDetail } from '@524/shared/admin';
+import type { PendingArtistDetail } from '@524/shared';
 import type { AdminDataProvider } from '../../lib/adminDataProvider';
 
 const ActivateArtistButton = () => {

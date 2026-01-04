@@ -20,12 +20,16 @@ import { borderRadius, colors, spacing } from '../../../theme';
 interface PaymentConfirmationScreenProps {
   onContinue: () => void;
   onBack?: () => void;
+  onExit?: () => void;
+  showBackButton?: boolean;
   progress: number;
 }
 
 export function PaymentConfirmationScreen({
   onContinue,
   onBack,
+  onExit,
+  showBackButton = false,
   progress,
 }: PaymentConfirmationScreenProps) {
   const {
@@ -112,8 +116,10 @@ export function PaymentConfirmationScreen({
     <BookingLayout
       title={paymentStrings.title}
       subtitle={paymentStrings.subtitle}
-      showCloseButton={Boolean(onBack)}
-      onClose={onBack}
+      showCloseButton={Boolean(onExit)}
+      onClose={onExit}
+      onBack={onBack}
+      showBackButton={showBackButton}
       scrollable={false}
       footer={
         <View style={styles.footerContent}>

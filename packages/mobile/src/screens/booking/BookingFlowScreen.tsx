@@ -78,16 +78,21 @@ export function BookingFlowScreen({ entryPath: initialEntryPath }: BookingFlowSc
     [setStep]
   );
 
-  // Handle back navigation
+  // Handle back navigation (go to previous step)
   const handleBack = useCallback(() => {
     if (canGoBack()) {
       goBack();
-    } else {
-      // Exit flow if at the beginning
-      reset();
-      navigation.goBack();
     }
-  }, [canGoBack, goBack, reset, navigation]);
+  }, [canGoBack, goBack]);
+
+  // Handle exit (close the entire booking flow and return to home)
+  const handleExit = useCallback(() => {
+    reset();
+    navigation.navigate('Home');
+  }, [reset, navigation]);
+
+  // Determine if back button should be shown
+  const showBackButton = canGoBack();
 
   // Handle flow completion
   const handleComplete = useCallback(() => {
@@ -122,6 +127,8 @@ export function BookingFlowScreen({ entryPath: initialEntryPath }: BookingFlowSc
             progress={progress}
             onContinue={() => handleNext('serviceSelection')}
             onBack={handleBack}
+            onExit={handleExit}
+            showBackButton={showBackButton}
           />
         );
 
@@ -131,6 +138,8 @@ export function BookingFlowScreen({ entryPath: initialEntryPath }: BookingFlowSc
             progress={progress}
             onContinue={() => handleNext('occasionSelection')}
             onBack={handleBack}
+            onExit={handleExit}
+            showBackButton={showBackButton}
           />
         );
 
@@ -141,6 +150,8 @@ export function BookingFlowScreen({ entryPath: initialEntryPath }: BookingFlowSc
             progress={progress}
             onContinue={() => handleNext('scheduleSelection')}
             onBack={handleBack}
+            onExit={handleExit}
+            showBackButton={showBackButton}
           />
         );
 
@@ -150,6 +161,8 @@ export function BookingFlowScreen({ entryPath: initialEntryPath }: BookingFlowSc
             progress={progress}
             onContinue={() => handleNext('artistList')}
             onBack={handleBack}
+            onExit={handleExit}
+            showBackButton={showBackButton}
           />
         );
 
@@ -160,6 +173,8 @@ export function BookingFlowScreen({ entryPath: initialEntryPath }: BookingFlowSc
             progress={progress}
             onContinue={() => handleNext('treatmentSelection')}
             onBack={handleBack}
+            onExit={handleExit}
+            showBackButton={showBackButton}
             variant="default"
           />
         );
@@ -170,6 +185,8 @@ export function BookingFlowScreen({ entryPath: initialEntryPath }: BookingFlowSc
             progress={progress}
             onContinue={() => handleNext('treatmentSelection')}
             onBack={handleBack}
+            onExit={handleExit}
+            showBackButton={showBackButton}
             variant="bookmarked"
           />
         );
@@ -181,6 +198,8 @@ export function BookingFlowScreen({ entryPath: initialEntryPath }: BookingFlowSc
             progress={progress}
             onContinue={() => handleNext('styleSelection')}
             onBack={handleBack}
+            onExit={handleExit}
+            showBackButton={showBackButton}
           />
         );
 
@@ -190,6 +209,8 @@ export function BookingFlowScreen({ entryPath: initialEntryPath }: BookingFlowSc
             progress={progress}
             onContinue={() => handleNext('paymentConfirmation')}
             onBack={handleBack}
+            onExit={handleExit}
+            showBackButton={showBackButton}
           />
         );
 
@@ -200,6 +221,8 @@ export function BookingFlowScreen({ entryPath: initialEntryPath }: BookingFlowSc
             progress={progress}
             onContinue={handleComplete}
             onBack={handleBack}
+            onExit={handleExit}
+            showBackButton={showBackButton}
           />
         );
 
@@ -213,6 +236,8 @@ export function BookingFlowScreen({ entryPath: initialEntryPath }: BookingFlowSc
             progress={progress}
             onContinue={() => handleNext('occasionSelection')}
             onBack={handleBack}
+            onExit={handleExit}
+            showBackButton={showBackButton}
           />
         );
     }

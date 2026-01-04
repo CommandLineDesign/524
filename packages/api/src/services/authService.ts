@@ -1,24 +1,42 @@
+import * as crypto from 'node:crypto';
 import * as bcrypt from 'bcryptjs';
-import { eq, sql } from 'drizzle-orm';
+import { and, eq, isNotNull, isNull, lt, or, sql } from 'drizzle-orm';
 import jwt from 'jsonwebtoken';
+import { v4 as uuidv4 } from 'uuid';
 
-import { artistProfiles, userRoles, users } from '@524/database';
+import { artistProfiles, refreshTokens, userRoles, users } from '@524/database';
 import { env } from '../config/env.js';
 import { db } from '../db/client.js';
 
 import type { AuthTokens, OAuthCallbackPayload, PhoneVerificationPayload } from '@524/shared/auth';
 
+// Token expiration times
+const ACCESS_TOKEN_EXPIRY = '15m'; // 15 minutes
+const ACCESS_TOKEN_EXPIRY_SECONDS = 15 * 60; // 900 seconds
+const REFRESH_TOKEN_EXPIRY_DAYS = 7;
+
+export interface AuthUser {
+  id: string;
+  email: string;
+  name: string;
+  roles: string[];
+  primaryRole: string;
+  phoneNumber: string;
+  onboardingCompleted: boolean;
+}
+
 export interface LoginResponse {
-  user: {
-    id: string;
-    email: string;
-    name: string;
-    roles: string[];
-    primaryRole: string;
-    phoneNumber: string;
-    onboardingCompleted: boolean;
-  };
-  token: string;
+  user: AuthUser;
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+}
+
+interface RefreshTokenPayload {
+  user_id: string;
+  token_version: number;
+  family_id: string;
+  jti: string; // unique token identifier
 }
 
 export class AuthService {
@@ -215,7 +233,6 @@ export class AuthService {
       .limit(1);
 
     if (!user) {
-      console.warn('[AuthService] Login failed - user not found', { email: normalizedEmail });
       return null;
     }
 
@@ -237,29 +254,27 @@ export class AuthService {
     // Verify password
     const isValid = await bcrypt.compare(password, user.passwordHash);
     if (!isValid) {
-      console.warn('[AuthService] Login failed - invalid password', { email: normalizedEmail });
       return null;
     }
-
-    // Generate JWT token
-    const primaryRole = user.roles?.[0] ?? 'customer';
-
-    const token = jwt.sign(
-      {
-        user_id: user.id,
-        role: primaryRole,
-        roles: user.roles ?? [],
-        phone_number: user.phoneNumber ?? '',
-        token_version: user.tokenVersion ?? 1,
-      },
-      env.JWT_SECRET || 'dev-secret',
-      { expiresIn: '24h' }
-    );
 
     if (!user.email) {
       console.warn('[AuthService] Login failed - missing email', { userId: user.id });
       return null;
     }
+
+    const primaryRole = user.roles?.[0] ?? 'customer';
+    const tokenVersion = user.tokenVersion ?? 1;
+
+    // Generate token pair with a new family ID (fresh login)
+    const familyId = uuidv4();
+    const { accessToken, refreshToken } = await this.generateTokenPair({
+      userId: user.id,
+      primaryRole,
+      roles: user.roles ?? [],
+      phoneNumber: user.phoneNumber ?? '',
+      tokenVersion,
+      familyId,
+    });
 
     return {
       user: {
@@ -271,8 +286,67 @@ export class AuthService {
         phoneNumber: user.phoneNumber ?? '',
         onboardingCompleted: Boolean(user.onboardingCompleted),
       },
-      token,
+      accessToken,
+      refreshToken,
+      expiresIn: ACCESS_TOKEN_EXPIRY_SECONDS,
     };
+  }
+
+  /**
+   * Generate a pair of access and refresh tokens
+   */
+  private async generateTokenPair(params: {
+    userId: string;
+    primaryRole: string;
+    roles: string[];
+    phoneNumber: string;
+    tokenVersion: number;
+    familyId: string;
+  }): Promise<{ accessToken: string; refreshToken: string }> {
+    const { userId, primaryRole, roles, phoneNumber, tokenVersion, familyId } = params;
+
+    // Generate access token (short-lived)
+    const accessToken = jwt.sign(
+      {
+        user_id: userId,
+        role: primaryRole,
+        roles,
+        phone_number: phoneNumber,
+        token_version: tokenVersion,
+      },
+      env.JWT_SECRET || 'dev-secret',
+      { expiresIn: ACCESS_TOKEN_EXPIRY }
+    );
+
+    // Generate refresh token (longer-lived)
+    const jti = uuidv4();
+    const refreshToken = jwt.sign(
+      {
+        user_id: userId,
+        token_version: tokenVersion,
+        family_id: familyId,
+        jti,
+      } as RefreshTokenPayload,
+      env.JWT_REFRESH_SECRET || env.JWT_SECRET,
+      { expiresIn: `${REFRESH_TOKEN_EXPIRY_DAYS}d` }
+    );
+
+    // Hash the refresh token for storage (don't store plain tokens)
+    const tokenHash = crypto.createHash('sha256').update(refreshToken).digest('hex');
+
+    // Calculate expiration date
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + REFRESH_TOKEN_EXPIRY_DAYS);
+
+    // Store refresh token in database
+    await db.insert(refreshTokens).values({
+      userId,
+      tokenHash,
+      familyId,
+      expiresAt,
+    });
+
+    return { accessToken, refreshToken };
   }
 
   /**
@@ -331,10 +405,163 @@ export class AuthService {
 
   /**
    * Refresh access token using refresh token
-   * TODO: Implement refresh token logic
+   * Implements token rotation: old refresh token is revoked and new pair is issued
    */
-  async refreshTokens(_refreshToken: string): Promise<AuthTokens> {
-    // TODO: Implement token refresh
-    throw new Error('Token refresh not yet implemented');
+  async refreshTokens(refreshTokenString: string): Promise<AuthTokens> {
+    // Clean up expired and old revoked refresh tokens opportunistically
+    await db
+      .delete(refreshTokens)
+      .where(
+        or(
+          lt(refreshTokens.expiresAt, new Date()),
+          and(
+            isNotNull(refreshTokens.revokedAt),
+            lt(refreshTokens.revokedAt, sql`NOW() - INTERVAL '7 days'`)
+          )
+        )
+      );
+
+    // Verify the refresh token signature
+    let payload: RefreshTokenPayload;
+    try {
+      payload = jwt.verify(
+        refreshTokenString,
+        env.JWT_REFRESH_SECRET || env.JWT_SECRET
+      ) as RefreshTokenPayload;
+    } catch (error) {
+      if (error instanceof jwt.TokenExpiredError) {
+        throw Object.assign(new Error('Refresh token expired'), {
+          status: 401,
+          code: 'REFRESH_TOKEN_EXPIRED',
+        });
+      }
+      throw Object.assign(new Error('Invalid refresh token'), {
+        status: 401,
+        code: 'INVALID_REFRESH_TOKEN',
+      });
+    }
+
+    const { user_id: userId, token_version: tokenVersion, family_id: familyId } = payload;
+
+    // Hash the token to look it up in database
+    const tokenHash = crypto.createHash('sha256').update(refreshTokenString).digest('hex');
+
+    // Find the token in database
+    const [storedToken] = await db
+      .select()
+      .from(refreshTokens)
+      .where(
+        and(
+          eq(refreshTokens.tokenHash, tokenHash),
+          eq(refreshTokens.userId, userId),
+          isNull(refreshTokens.revokedAt)
+        )
+      )
+      .limit(1);
+
+    if (!storedToken) {
+      // Token not found or already revoked - possible token reuse attack
+      // Revoke all tokens in this family as a security measure
+      await this.revokeTokenFamily(familyId);
+      throw Object.assign(new Error('Refresh token not found or revoked'), {
+        status: 401,
+        code: 'REFRESH_TOKEN_REVOKED',
+      });
+    }
+
+    // Check if token has expired (belt and suspenders - JWT also checks this)
+    if (storedToken.expiresAt < new Date()) {
+      throw Object.assign(new Error('Refresh token expired'), {
+        status: 401,
+        code: 'REFRESH_TOKEN_EXPIRED',
+      });
+    }
+
+    // Get the user to verify token version and get current data
+    const user = await this.getUserById(userId);
+    if (!user) {
+      throw Object.assign(new Error('User not found'), {
+        status: 401,
+        code: 'USER_NOT_FOUND',
+      });
+    }
+
+    // Check if user has been banned
+    if (user.isBanned) {
+      throw Object.assign(new Error('Account banned'), {
+        status: 403,
+        code: 'ACCOUNT_BANNED',
+      });
+    }
+
+    // Verify token version matches (allows forced logout by incrementing user's tokenVersion)
+    if (user.tokenVersion !== tokenVersion) {
+      // Token version mismatch - user has been logged out on all devices
+      await this.revokeTokenFamily(familyId);
+      throw Object.assign(new Error('Session invalidated'), {
+        status: 401,
+        code: 'SESSION_INVALIDATED',
+      });
+    }
+
+    // Revoke the old refresh token (token rotation)
+    await db
+      .update(refreshTokens)
+      .set({ revokedAt: new Date() })
+      .where(eq(refreshTokens.id, storedToken.id));
+
+    // Generate new token pair with same family ID
+    const primaryRole = user.roles?.[0] ?? 'customer';
+    const { accessToken, refreshToken } = await this.generateTokenPair({
+      userId: user.id,
+      primaryRole,
+      roles: user.roles ?? [],
+      phoneNumber: user.phoneNumber ?? '',
+      tokenVersion: user.tokenVersion ?? 1,
+      familyId, // Keep same family for tracking
+    });
+
+    return {
+      accessToken,
+      refreshToken,
+      expiresIn: ACCESS_TOKEN_EXPIRY_SECONDS,
+    };
+  }
+
+  /**
+   * Revoke all refresh tokens for a user (logout from all devices)
+   */
+  async revokeAllUserTokens(userId: string): Promise<void> {
+    await db
+      .update(refreshTokens)
+      .set({ revokedAt: new Date() })
+      .where(and(eq(refreshTokens.userId, userId), isNull(refreshTokens.revokedAt)));
+
+    // Also increment token version to invalidate any tokens not yet in database
+    await db
+      .update(users)
+      .set({ tokenVersion: sql`${users.tokenVersion} + 1` })
+      .where(eq(users.id, userId));
+  }
+
+  /**
+   * Revoke all tokens in a family (for detecting token reuse attacks)
+   */
+  async revokeTokenFamily(familyId: string): Promise<void> {
+    await db
+      .update(refreshTokens)
+      .set({ revokedAt: new Date() })
+      .where(and(eq(refreshTokens.familyId, familyId), isNull(refreshTokens.revokedAt)));
+  }
+
+  /**
+   * Revoke a specific refresh token (single device logout)
+   */
+  async revokeRefreshToken(refreshTokenString: string): Promise<void> {
+    const tokenHash = crypto.createHash('sha256').update(refreshTokenString).digest('hex');
+    await db
+      .update(refreshTokens)
+      .set({ revokedAt: new Date() })
+      .where(eq(refreshTokens.tokenHash, tokenHash));
   }
 }

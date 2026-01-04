@@ -19,7 +19,6 @@ type StepKey = 'basic' | 'specialties' | 'service_area' | 'photo';
 const SPECIALTY_OPTIONS = [
   { id: 'hair', label: 'Hair styling' },
   { id: 'makeup', label: 'Makeup' },
-  { id: 'combo', label: 'Hair + Makeup' },
 ];
 
 type DraftProfile = Pick<
@@ -281,7 +280,7 @@ export function ArtistOnboardingFlowScreen() {
             options={SPECIALTY_OPTIONS}
             selected={draft.specialties as string[]}
             onToggle={(id) => {
-              const serviceId = id as 'hair' | 'makeup' | 'combo';
+              const serviceId = id as 'hair' | 'makeup';
               const next = draft.specialties.includes(serviceId)
                 ? draft.specialties.filter((x) => x !== serviceId)
                 : [...draft.specialties, serviceId];

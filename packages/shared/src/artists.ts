@@ -40,6 +40,7 @@ export interface ArtistSearchResult {
   averageRating: number;
   reviewCount: number;
   priceRange: [number, number];
+  profileImageUrl?: string | null;
 }
 
 export interface PortfolioImage {
