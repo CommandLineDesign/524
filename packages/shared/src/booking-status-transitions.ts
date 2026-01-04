@@ -1,4 +1,4 @@
-import type { BookingSummary } from './bookings.js';
+import type { BookingSummary } from './bookings';
 
 /**
  * Defines allowed booking status transitions for the booking state machine.

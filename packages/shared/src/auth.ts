@@ -1,4 +1,4 @@
-import type { UserRole } from './constants.js';
+import type { UserRole } from './constants';
 
 export type OAuthProvider = 'kakao' | 'naver' | 'apple' | 'google';
 

@@ -3,7 +3,7 @@ import type {
   ArtistProfile,
   ArtistServiceOffering,
   PortfolioImage,
-} from './artists.js';
+} from './artists';
 
 export interface PendingArtistListItem {
   id: string;

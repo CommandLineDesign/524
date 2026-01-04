@@ -1,4 +1,4 @@
-import type { ServiceType } from './constants.js';
+import type { ServiceType } from './constants';
 
 export interface ArtistLocation {
   latitude: number;
