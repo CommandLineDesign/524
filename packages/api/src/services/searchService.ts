@@ -78,21 +78,6 @@ export class SearchService {
     const priceRange: [number, number] =
       prices.length > 0 ? [Math.min(...prices), Math.max(...prices)] : defaultRange;
 
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/894ed83a-4085-4fe3-ad0a-11d8954f2764', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        location: 'packages/api/src/services/searchService.ts:58',
-        message: 'Mapping row to result - checking userId vs profile id',
-        data: { profileId: row.id, userId: row.userId, stageName: row.stageName },
-        timestamp: Date.now(),
-        sessionId: 'debug-session',
-        hypothesisId: 'A',
-      }),
-    }).catch(() => {});
-    // #endregion
-
     return {
       id: row.userId, // Return userId so bookings can reference the correct user
       stageName: row.stageName,

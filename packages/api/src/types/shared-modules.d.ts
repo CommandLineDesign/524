@@ -12,6 +12,9 @@ declare module '@524/shared/bookings' {
   export type CreateBookingPayload = import('@524/shared').CreateBookingPayload;
   export type UpdateBookingStatusPayload = import('@524/shared').UpdateBookingStatusPayload;
   export type BookedService = import('@524/shared').BookedService;
+  export type AdminBookingDetail = import('@524/shared').AdminBookingDetail;
+  export type AdminBookingListItem = import('@524/shared').AdminBookingListItem;
+  export type BookingStatusHistoryEntry = import('@524/shared').BookingStatusHistoryEntry;
 }
 
 declare module '@524/shared/artists' {

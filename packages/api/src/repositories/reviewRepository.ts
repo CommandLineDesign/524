@@ -376,7 +376,7 @@ export class ReviewRepository {
       conditions.push(sql`${reviews.reviewText} ILIKE ${`%${params.search}%`}`);
     }
 
-    let orderBy: SQL | any;
+    let orderBy: SQL;
     switch (params.sortField) {
       case 'createdAt':
         orderBy = params.sortOrder === 'DESC' ? desc(reviews.createdAt) : reviews.createdAt;

@@ -249,16 +249,6 @@ const artistProfileSelect = {
 };
 
 export class ArtistRepository {
-  async findById(userId: string): Promise<ArtistProfile | null> {
-    const [record] = await db
-      .select(artistProfileSelect)
-      .from(artistProfiles)
-      .leftJoin(users, eq(users.id, artistProfiles.userId))
-      .where(eq(artistProfiles.userId, userId))
-      .limit(1);
-    return record ? mapRowToProfile(record) : null;
-  }
-
   async findByUserId(userId: string): Promise<ArtistProfile | null> {
     const [record] = await db
       .select(artistProfileSelect)
@@ -270,11 +260,11 @@ export class ArtistRepository {
     return record ? mapRowToProfile(record) : null;
   }
 
-  async update(userId: string, updates: ArtistProfileUpdateInput): Promise<ArtistProfile> {
+  async update(artistProfileId: string, updates: ArtistProfileUpdateInput): Promise<ArtistProfile> {
     const [current] = await db
       .select({ userId: artistProfiles.userId })
       .from(artistProfiles)
-      .where(eq(artistProfiles.userId, userId))
+      .where(eq(artistProfiles.id, artistProfileId))
       .limit(1);
 
     if (!current) {
@@ -319,7 +309,7 @@ export class ArtistRepository {
     const [updated] = await db
       .update(artistProfiles)
       .set(updatePayload)
-      .where(eq(artistProfiles.userId, userId))
+      .where(eq(artistProfiles.id, artistProfileId))
       .returning();
 
     if (!updated) {
@@ -337,7 +327,7 @@ export class ArtistRepository {
       .select(artistProfileSelect)
       .from(artistProfiles)
       .leftJoin(users, eq(users.id, artistProfiles.userId))
-      .where(eq(artistProfiles.userId, userId))
+      .where(eq(artistProfiles.id, artistProfileId))
       .limit(1);
 
     if (!record) {
@@ -634,6 +624,6 @@ export class ArtistRepository {
         totalReviews: stats.totalReviews,
         updatedAt: new Date(),
       })
-      .where(eq(artistProfiles.id, artistId));
+      .where(eq(artistProfiles.userId, artistId));
   }
 }

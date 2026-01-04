@@ -15,16 +15,16 @@ export class ArtistService {
     private readonly searchService = new SearchService()
   ) {}
 
-  getArtistProfile(artistId: string): Promise<ArtistProfile | null> {
-    return this.repository.findById(artistId);
+  getArtistProfile(userId: string): Promise<ArtistProfile | null> {
+    return this.repository.findByUserId(userId);
   }
 
   getArtistProfileByUserId(userId: string): Promise<ArtistProfile | null> {
     return this.repository.findByUserId(userId);
   }
 
-  updateArtistProfile(artistId: string, updates: ArtistProfileUpdateInput): Promise<ArtistProfile> {
-    return this.repository.update(artistId, updates);
+  updateArtistProfile(userId: string, updates: ArtistProfileUpdateInput): Promise<ArtistProfile> {
+    return this.repository.updateByUserId(userId, updates);
   }
 
   updateMyArtistProfile(userId: string, updates: ArtistProfileUpdateInput): Promise<ArtistProfile> {

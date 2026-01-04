@@ -39,7 +39,9 @@ export type Review = typeof reviews.$inferSelect;
 
 export const reviewImages = pgTable('review_images', {
   id: uuid().defaultRandom().primaryKey().notNull(),
-  reviewId: uuid('review_id').notNull(),
+  reviewId: uuid('review_id')
+    .references(() => reviews.id, { onDelete: 'cascade', onUpdate: 'restrict' })
+    .notNull(),
   s3Key: text('s3_key').notNull(),
   fileSize: integer('file_size').notNull(),
   mimeType: text('mime_type').notNull(),
