@@ -1,8 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import { colors } from '../../theme';
-import { spacing } from '../../theme';
+import { borderRadius, colors, spacing } from '../../theme';
 
 export type MultiSelectOption = {
   id: string;
@@ -29,9 +28,7 @@ export function MultiSelectButtons({ options, selected, onToggle }: MultiSelectB
             activeOpacity={0.85}
           >
             <View style={styles.buttonContent}>
-              <Text style={[styles.label, isActive ? styles.labelActive : undefined]}>
-                {option.label}
-              </Text>
+              <Text style={styles.label}>{option.label}</Text>
               {option.description ? (
                 <Text style={styles.description}>{option.description}</Text>
               ) : null}
@@ -45,22 +42,23 @@ export function MultiSelectButtons({ options, selected, onToggle }: MultiSelectB
 }
 
 const styles = StyleSheet.create({
-  container: {},
+  container: {
+    gap: spacing.md,
+  },
   button: {
+    height: spacing.inputHeight,
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    paddingVertical: spacing.md,
+    borderColor: colors.borderDark,
+    borderRadius: borderRadius.md,
     paddingHorizontal: spacing.md,
-    backgroundColor: '#fff',
+    backgroundColor: colors.background,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: spacing.sm,
   },
   buttonActive: {
-    borderColor: colors.accent,
-    backgroundColor: '#fff8ed',
+    borderWidth: 3,
+    borderColor: colors.borderDark,
   },
   buttonContent: {
     flex: 1,
@@ -68,16 +66,13 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '400',
     color: colors.text,
-  },
-  labelActive: {
-    color: colors.accent,
   },
   description: {
     fontSize: 14,
     color: colors.textSecondary,
-    marginTop: 4,
+    marginTop: spacing.xs,
   },
   checkbox: {
     width: 20,
@@ -85,10 +80,10 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     borderWidth: 2,
     borderColor: colors.border,
-    backgroundColor: '#fff',
+    backgroundColor: colors.background,
   },
   checkboxActive: {
-    borderColor: colors.accent,
-    backgroundColor: colors.accent,
+    borderColor: colors.primary,
+    backgroundColor: colors.primary,
   },
 });

@@ -1,6 +1,6 @@
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export type HelperStatus = 'success' | 'error' | '';
+export type HelperStatus = 'success' | 'error' | 'neutral' | '';
 
 export interface HelperResult {
   message: string;

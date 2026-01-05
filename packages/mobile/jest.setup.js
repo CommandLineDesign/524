@@ -10,6 +10,13 @@ jest.mock('expo-image-picker', () => ({
   requestMediaLibraryPermissionsAsync: jest.fn(),
 }));
 
+// Mock expo-secure-store
+jest.mock('expo-secure-store', () => ({
+  getItemAsync: jest.fn(),
+  setItemAsync: jest.fn(),
+  deleteItemAsync: jest.fn(),
+}));
+
 // Mock other expo modules that might not be available in test environment
 jest.mock('expo-status-bar', () => ({
   StatusBar: 'StatusBar',

@@ -1,17 +1,17 @@
 # Bug Analysis Report
 
-**Date:** 2026-01-03
-**Base Ref:** origin/main
-**Feature Ref:** jl/refresh-auth (HEAD)
-**Analysis Scope:** Authentication, token refresh, API client, repositories, and services
+**Date**: January 5, 2026
+**Base Ref**: origin/main
+**Feature Ref**: jl/update-artist-onboarding (uncommitted changes)
+**Analyzed By**: Bugbot
 
 ---
 
 ## High-Level Summary
 
-**Risk Assessment:** This change introduces refresh token authentication which is a security-critical feature. The primary concerns are around data exfiltration via debug logging to an external endpoint, a variable scoping bug in the mobile API client that would cause runtime errors, and several debug console.log statements that should not be in production code.
+**Risk Assessment**: Medium risk. The changes primarily affect artist onboarding UI, authentication token storage, and email availability checking. Security concerns exist around the token service refactoring which now silently swallows errors during refresh token retrieval. The email availability check has proper abort handling but network errors could leave the UI in a confusing state.
 
-**Analysis Scope:** Focus on authentication flows (authService.ts, auth.ts middleware, auth routes), token management (tokenService.ts, mobile API client), repository layer (reviewRepository.ts, artistRepository.ts), and admin panel authentication.
+**Analysis Scope**: 10 modified files including onboarding components (MultiSelectButtons, OnboardingLayout, SelectableCard, ArtistOnboardingFlowScreen), authentication screens (ArtistSignupScreen, NewLoginScreen), token service refactoring with new StorageProvider abstraction, Jest configuration updates, and documentation.
 
 ---
 
@@ -19,71 +19,76 @@
 
 ### Critical
 
-- [status:done] File: packages/api/src/repositories/reviewRepository.ts:317-329, 344-358, 362-380, 390-412
-  - Issue: **Data exfiltration to external endpoint** - Multiple fetch calls send data to `http://127.0.0.1:7242/ingest/...` including artistId, SQL queries, and error details. While this is localhost, these debug statements send sensitive database information externally and should never be in production code.
-  - Fix: Remove all `#region agent log` blocks entirely. These appear to be debug instrumentation that was accidentally left in the code.
-
-- [status:done] File: packages/mobile/src/api/client.ts:152-162
-  - Issue: **Variable `response` used before assignment** - The code assigns `response` on line 129-133 inside a try block, but then uses it on line 152 (`await response.json()`) outside the try block. If the fetch fails, the catch block throws an AuthenticationError, but if fetch succeeds and `response.ok` is false, the code falls through and `response` is properly assigned. However, the current structure could be confusing and error-prone. More critically, the `catch` block (lines 143-150) rethrows without reaching line 152, but if an unexpected error occurs between lines 129 and 152, the variable could be in an undefined state.
-  - Fix: Move the `const data = (await response.json())` line inside the try block after checking `response.ok`, or restructure to ensure `response` is always defined before use.
+_No critical issues identified._
 
 ### Major
 
-- [status:done] File: packages/api/src/repositories/reviewRepository.ts:297
-  - Issue: **Missing closing brace for `createReviewImages` function** - The function starting at line 272 never has a closing brace. The `getReviewImages` function starts at line 298 without `createReviewImages` being closed. This will cause a syntax/compilation error.
-  - Fix: Add closing brace `}` after line 296 before the `getReviewImages` function definition.
+- [status:done] File: `packages/mobile/src/services/tokenService.ts:42-52`
+  - Issue: `getRefreshToken` now silently returns `null` on error instead of throwing, which changes the security behavior. Previously, SecureStore failures would throw an error requiring explicit handling. Now failures are silently ignored, which could mask storage configuration issues or security problems.
+  - Fix: Consider logging the error or maintaining the previous throw behavior for refresh token retrieval failures to ensure storage issues are not silently ignored. At minimum, add structured logging for observability.
+  - Resolution: Added `__DEV__` guarded console.error logging for observability while maintaining graceful degradation.
 
-- [status:done] File: packages/api/src/repositories/reviewRepository.ts:415
-  - Issue: **Missing closing brace for `getArtistReviewStats` function** - The function starting at line 314 is missing its closing brace. The `getAllReviewsCount` function starts at line 416 without proper closure.
-  - Fix: Add closing brace `}` after line 414 before the `getAllReviewsCount` function definition.
+- [status:done] File: `packages/mobile/src/services/storage/NativeStorageProvider.ts:10-21`
+  - Issue: The fallback from SecureStore to AsyncStorage for `get()` operations silently downgrades security. If SecureStore fails, sensitive refresh tokens may be read from insecure storage without any indication to the caller.
+  - Fix: Consider returning `null` instead of falling back to AsyncStorage for get operations, or add a flag to indicate the security level of the retrieved value. Alternatively, log at warning level with monitoring for production.
+  - Resolution: Removed AsyncStorage fallback for `get()` operations - now returns `null` on SecureStore failure to maintain security guarantees. Added `__DEV__` guarded logging.
 
 ### Minor
 
-- [status:done] File: packages/web/src/lib/adminAuthProvider.ts:44-48, 55, 67-72, 80, 83, 109, 122, 128
-  - Issue: **Debug console.log statements in production code** - Multiple console.log statements expose token status and user information to browser console.
-  - Fix: Remove or guard these console.log statements with a development environment check.
+- [status:done] File: `packages/mobile/src/services/storage/NativeStorageProvider.ts:14,27,41`
+  - Issue: Debug `console.error` and `console.warn` statements in production code. These should use a proper logging service or be conditionally enabled.
+  - Fix: Replace with a logging service that can be configured per environment, or wrap in `__DEV__` checks.
+  - Resolution: Wrapped all console.error/console.warn statements in `__DEV__` checks to prevent logging in production builds.
 
-- [status:done] File: packages/web/src/lib/adminDataProvider.ts:71-76, 110
-  - Issue: **Debug console.log statements in production code** - Logging API request details to console.
-  - Fix: Remove or guard these console.log statements with a development environment check.
+- [status:done] File: `packages/mobile/src/screens/ArtistSignupScreen.tsx:130-132`
+  - Issue: When `checkAvailability` throws a network error, the status is set to `'error'` but no user feedback is shown. Users may be confused about why the availability indicator disappeared.
+  - Fix: Consider showing a subtle indicator that availability could not be checked, or retry logic with exponential backoff.
+  - Resolution: Added Korean helper text "확인 실패 - 제출 시 다시 확인됩니다" (Check failed - will be verified on submit) with 'neutral' status for error cases.
 
-- [status:done] File: packages/api/src/routes/v1/auth.ts:42, 92-93, 145, 178, 214-215, 258, 361
-  - Issue: **Console.error/warn statements in auth routes** - While logging errors is acceptable, some of these log sensitive context like email addresses.
-  - Fix: Ensure no PII is logged. Consider using structured logging with redaction.
+- [status:done] File: `packages/mobile/src/screens/ArtistSignupScreen.tsx:124-135`
+  - Issue: The `emailHelperInfo` returns empty strings for `'error'` status from availability check, which makes sense for not blocking users, but the status is still `'' as const` which may cause TypeScript issues or confusion.
+  - Fix: Consider using a more explicit type like `'neutral'` or `undefined` instead of empty string for non-error/non-success states.
+  - Resolution: Changed 'checking' status to 'neutral', error status to 'neutral' with helper text, and default case to `undefined` instead of empty string.
 
-- [status:done] File: packages/mobile/src/api/client.ts:240-243
-  - Issue: **Console.warn in production code** - Warning logged when proactive token refresh fails.
-  - Fix: Remove or use a proper logging service that can be disabled in production.
-
-- [status:done] File: packages/mobile/src/services/tokenService.ts:22-23, 39-41, 52-53, 65-66, 87-88, 104, 124, 139
-  - Issue: **Console.error statements in token service** - Multiple error logging statements that expose token operation failures.
-  - Fix: Consider using a structured logging service or removing in production builds.
+- [status:done] File: `packages/mobile/src/screens/ArtistSignupScreen.tsx:176-193`
+  - Issue: The submit handler calls `checkAvailability` again even though debounced check may have already confirmed availability. This creates redundant API calls.
+  - Fix: Consider using the cached availability status if it's `'available'` and the email hasn't changed since the last check, falling back to the API call only when necessary.
+  - Resolution: Added `lastCheckedEmailRef` to track the email for which availability was confirmed. Submit handler now skips API call when `emailAvailabilityStatus === 'available'` and email matches the cached value.
 
 ### Enhancement
 
-- [status:done] File: packages/api/src/services/authService.ts:236-238, 258
-  - Issue: **Console.warn logs email during login attempts** - Lines 236 and 258 log the email address when login fails. While useful for debugging, this could be considered PII logging.
-  - Fix: Consider redacting email or removing these logs in production.
+- [status:ignored] File: `packages/mobile/src/screens/ArtistSignupScreen.tsx:78`
+  - Issue: The error message "이미 사용 중인 이메일입니다. 로그인해 주세요." is hardcoded. Consider extracting to i18n constants for consistency.
+  - Fix: Extract to a shared i18n constants file for localization support.
+  - Rationale: No i18n system exists yet. Should be addressed as part of a broader i18n implementation story rather than creating ad-hoc constants.
 
-- [status:done] File: packages/shared/src/artists.d.ts vs packages/shared/src/artists.ts
-  - Issue: **Type definition file out of sync** - The `.d.ts` file is missing properties that exist in the `.ts` file (`businessRegistrationNumber`, `portfolioImages`, `services`, `profileImageUrl`). This could cause type errors in consumers.
-  - Fix: Regenerate the `.d.ts` file from the source or manually sync the missing properties.
+- [status:ignored] File: `packages/mobile/src/screens/NewLoginScreen.tsx:185-195`
+  - Issue: TODO comment indicates i18n work needed for "아티스트로 가입" button.
+  - Fix: Track as story/task to implement i18n for this screen.
+  - Rationale: No i18n system exists yet. The existing TODO comment is sufficient to track this. Should be addressed as part of a broader i18n implementation story.
+
+- [status:ignored] File: `packages/mobile/src/components/onboarding/SelectableCard.tsx:2`
+  - Issue: `View` is imported but no longer used after refactoring.
+  - Fix: Remove unused import. (Minor cleanup, low priority)
+  - Rationale: Upon inspection, `View` is not present in the imports. The import statement only includes `Image, StyleSheet, Text, TouchableOpacity`. Issue is not applicable to current code.
 
 ---
 
 ## Highlights
 
-**Positive patterns observed:**
+- **Good abort controller handling**: The `ArtistSignupScreen` properly uses `AbortController` to cancel pending availability checks on component unmount and when new requests are made.
 
-- **Token security**: Refresh tokens are properly hashed with SHA-256 before storage in the database, preventing token theft from database compromise.
-- **Token rotation**: The refresh token flow properly implements token rotation - old tokens are revoked when new ones are issued, preventing replay attacks.
-- **Token family tracking**: Token families are tracked to detect and prevent token reuse attacks. When a revoked token is used, the entire family is invalidated.
-- **Secure token storage on mobile**: Refresh tokens use SecureStore (encrypted storage) while access tokens use AsyncStorage, balancing security with performance.
-- **Input validation**: UUID validation, rating validation, and pagination parameter validation are consistently applied in the review repository.
-- **Proactive token refresh**: The mobile client proactively refreshes tokens before they expire, reducing auth-related request failures.
-- **Request queueing during refresh**: Multiple simultaneous requests properly queue and wait for a single refresh operation, preventing race conditions.
-- **Banned user checks**: Both the auth middleware and refresh token flow check for banned users and deny access appropriately.
-- **Token version checking**: The system supports forced logout across all devices by incrementing a user's token version.
+- **Proper ref tracking for mount state**: The component uses `isMountedRef` to prevent state updates after unmount, avoiding React warnings.
+
+- **Clean StorageProvider abstraction**: The new `StorageProvider` interface enables dependency injection for testing and platform-specific implementations. The factory pattern with `createTokenService` improves testability.
+
+- **Defensive coding in token service**: The token service methods properly handle errors with try-catch and return sensible defaults (`null` for missing tokens, `true` for expired checks on error).
+
+- **Accessibility improvements**: The `ArtistOnboardingFlowScreen` now includes proper `accessibilityRole`, `accessibilityLabel`, and `accessibilityHint` props on interactive elements.
+
+- **StyleSheet extraction**: Inline styles in `ArtistOnboardingFlowScreen` have been properly extracted to a `StyleSheet.create()` block, improving performance and maintainability.
+
+- **Consistent theme usage**: Components now use theme constants (`borderRadius`, `colors`, `spacing`) consistently instead of hardcoded values.
 
 ---
 
@@ -93,7 +98,7 @@
 - [x] Compared all similar patterns within each file for consistency
 - [x] Checked for debug statements (console.log, console.error, debugger)
 - [x] Verified that repository mapping functions convert types correctly
-- [x] Searched for sensitive data being logged (found email logging issues)
+- [x] Searched for sensitive data being logged (tokens, passwords, PII)
 - [x] Checked that new fields follow the same patterns as existing fields
 - [x] Verified authorization checks exist where needed
 - [x] Confirmed error handling is present and doesn't leak sensitive info
