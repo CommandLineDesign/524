@@ -177,7 +177,25 @@ Location: `packages/mobile/src/components/onboarding/`
 - `selected: string[]` - Array of selected option IDs
 - `onToggle: (id: string) => void` - Toggle handler
 
-**Styling**: Accent border/background when selected, checkbox indicator
+**Styling** (Updated January 2026 - Black/Grey Theme):
+- Height: 52px (`spacing.inputHeight`)
+- Border radius: 10px (`borderRadius.md`)
+- Unselected: 1px dark border, white background
+- Selected: 3px dark border, white background
+- Checkbox: Dark (`colors.primary`) when selected
+- Text color remains `colors.text` in both states
+
+**Usage Example**:
+```tsx
+<MultiSelectButtons
+  options={[
+    { id: 'hair', label: 'Hair styling' },
+    { id: 'makeup', label: 'Makeup' },
+  ]}
+  selected={selectedServices}
+  onToggle={(id) => toggleService(id)}
+/>
+```
 
 ### OnboardingLayout
 **File**: `OnboardingLayout.tsx`
@@ -188,7 +206,29 @@ Location: `packages/mobile/src/components/onboarding/`
 - `step: number` - Current step number
 - `totalSteps: number` - Total steps for progress bar
 - `children: React.ReactNode` - Screen content
-- `footer?: React.ReactNode` - Footer content (usually continue button)
+- `footer?: React.ReactNode` - Footer content (usually ContinueButton)
+
+**Styling** (Updated January 2026 - Black/Grey Theme):
+- Progress bar: Dark (`colors.primary`) instead of accent
+
+**Usage with ContinueButton**:
+```tsx
+<OnboardingLayout
+  title="Your specialties"
+  subtitle="Pick the services you provide."
+  step={2}
+  totalSteps={4}
+  footer={
+    <ContinueButton
+      label="Next"
+      onPress={goNext}
+      disabled={isPending}
+    />
+  }
+>
+  {/* Content */}
+</OnboardingLayout>
+```
 
 ### SelectableCard
 **File**: `SelectableCard.tsx`
@@ -199,7 +239,10 @@ Location: `packages/mobile/src/components/onboarding/`
 - `selected?: boolean` - Selection state
 - `onPress: () => void` - Press handler
 
-**Styling**: Accent border/background when selected
+**Styling** (Updated January 2026 - Black/Grey Theme):
+- Unselected: 1px light border, white background
+- Selected: 3px dark border (`colors.borderDark`), white background
+- Image selected: 3px dark border (`colors.primary`)
 
 ---
 
@@ -434,7 +477,7 @@ When creating new components, follow these standards:
 
 ---
 
-**Document Version**: 1.1
-**Last Updated**: January 1, 2026
+**Document Version**: 1.2
+**Last Updated**: January 5, 2026
 **Maintained By**: 524 Development Team
 

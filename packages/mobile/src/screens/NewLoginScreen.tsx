@@ -84,6 +84,10 @@ export function NewLoginScreen() {
     Alert.alert('비밀번호 찾기', '비밀번호 찾기 기능은 곧 제공될 예정입니다.');
   };
 
+  const handleArtistSignup = () => {
+    navigation.navigate('ArtistSignup');
+  };
+
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <View style={styles.content}>
@@ -177,6 +181,18 @@ export function NewLoginScreen() {
             accessibilityLabel="비밀번호 찾기"
           >
             <Text style={styles.linkText}>비밀번호 찾기</Text>
+          </TouchableOpacity>
+
+          <View style={styles.divider} />
+
+          {/* TODO: i18n - "아티스트로 가입" = "Sign up as artist" */}
+          <TouchableOpacity
+            onPress={handleArtistSignup}
+            disabled={isLoading}
+            accessibilityRole="button"
+            accessibilityLabel="아티스트로 가입"
+          >
+            <Text style={styles.linkText}>아티스트로 가입</Text>
           </TouchableOpacity>
         </View>
 

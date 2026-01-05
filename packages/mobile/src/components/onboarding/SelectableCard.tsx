@@ -1,8 +1,7 @@
 import React from 'react';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, StyleSheet, Text, TouchableOpacity } from 'react-native';
 
-import { colors } from '../../theme';
-import { spacing } from '../../theme';
+import { borderRadius, colors, spacing } from '../../theme';
 
 type SelectableCardProps = {
   title?: string;
@@ -40,9 +39,9 @@ const styles = StyleSheet.create({
   card: {
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 12,
+    borderRadius: borderRadius.lg,
     padding: spacing.md,
-    backgroundColor: '#fff',
+    backgroundColor: colors.background,
     marginBottom: spacing.md,
     alignItems: 'center',
     justifyContent: 'center',
@@ -55,19 +54,20 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   cardSelected: {
-    borderColor: colors.accent,
-    backgroundColor: '#fff8ed',
+    borderWidth: 3,
+    borderColor: colors.borderDark,
+    backgroundColor: colors.background,
   },
   image: {
     width: 280,
     height: 360,
-    borderRadius: 16,
+    borderRadius: borderRadius.xl,
     backgroundColor: colors.border,
     resizeMode: 'cover',
   },
   imageSelected: {
     borderWidth: 3,
-    borderColor: colors.accent,
+    borderColor: colors.primary,
   },
   fallback: {
     color: colors.textSecondary,

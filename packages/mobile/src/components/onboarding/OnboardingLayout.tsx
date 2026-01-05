@@ -54,7 +54,7 @@ const styles = StyleSheet.create({
   },
   progressBar: {
     height: '100%',
-    backgroundColor: colors.accent,
+    backgroundColor: colors.primary,
   },
   content: {
     paddingHorizontal: spacing.lg,

@@ -1,18 +1,28 @@
 import { ArtistProfile } from '@524/shared';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useMemo, useState } from 'react';
-import { Alert, Image, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import {
+  Alert,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { presignProfilePhoto } from '../api/client';
+import { ContinueButton } from '../components/booking/ContinueButton';
 import { MultiSelectButtons } from '../components/onboarding/MultiSelectButtons';
 import { OnboardingLayout } from '../components/onboarding/OnboardingLayout';
 import type { RootStackParamList } from '../navigation/AppNavigator';
 import { useUpdateArtistProfile } from '../query/artist';
 import { useAuthStore } from '../store/authStore';
-import { colors } from '../theme';
-import { spacing } from '../theme';
+import { borderRadius, colors, spacing } from '../theme';
+import { formStyles } from '../theme/formStyles';
 
 type StepKey = 'basic' | 'specialties' | 'service_area' | 'photo';
 
@@ -181,35 +191,26 @@ export function ArtistOnboardingFlowScreen() {
   };
 
   const renderFooter = (ctaLabel: string) => (
-    <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: spacing.sm }}>
+    <View style={styles.footerRow}>
       <TouchableOpacity
         onPress={goBack}
         disabled={stepIndex === 0 || isPending || uploading}
-        style={{
-          flex: 1,
-          padding: spacing.md,
-          backgroundColor: stepIndex === 0 ? colors.border : '#fff',
-          borderRadius: 12,
-          borderWidth: 1,
-          borderColor: colors.border,
-        }}
+        style={[styles.backButton, stepIndex === 0 && styles.backButtonDisabled]}
+        accessibilityRole="button"
+        accessibilityLabel="Back"
+        accessibilityHint="Go to previous step"
       >
-        <Text style={{ textAlign: 'center', color: colors.text, fontWeight: '600' }}>Back</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        onPress={goNext}
-        disabled={isPending || uploading}
-        style={{
-          flex: 1,
-          padding: spacing.md,
-          backgroundColor: colors.accent,
-          borderRadius: 12,
-        }}
-      >
-        <Text style={{ textAlign: 'center', color: '#fff', fontWeight: '700' }}>
-          {isPending || uploading ? 'Saving...' : ctaLabel}
+        <Text style={[styles.backButtonText, stepIndex === 0 && styles.backButtonTextDisabled]}>
+          Back
         </Text>
       </TouchableOpacity>
+      <View style={styles.continueButtonWrapper}>
+        <ContinueButton
+          label={isPending || uploading ? 'Saving...' : ctaLabel}
+          onPress={goNext}
+          disabled={isPending || uploading}
+        />
+      </View>
     </View>
   );
 
@@ -222,43 +223,33 @@ export function ArtistOnboardingFlowScreen() {
         totalSteps={steps.length}
         footer={renderFooter('Next')}
       >
-        <ScrollView contentContainerStyle={{ gap: spacing.md }}>
+        <ScrollView contentContainerStyle={styles.formContent}>
           <View>
-            <Text style={{ fontWeight: '700', marginBottom: 6, color: colors.text }}>
-              Stage name
-            </Text>
+            <Text style={formStyles.label}>Stage name</Text>
             <TextInput
               value={draft.stageName}
               onChangeText={(text) => updateField({ stageName: text })}
               placeholder="e.g., Glow Studio"
+              placeholderTextColor={colors.muted}
               selectionColor={colors.text}
               cursorColor={colors.text}
-              style={{
-                borderWidth: 1,
-                borderColor: colors.border,
-                padding: spacing.md,
-                borderRadius: 10,
-              }}
+              style={formStyles.input}
+              accessibilityLabel="Stage name"
             />
           </View>
           <View>
-            <Text style={{ fontWeight: '700', marginBottom: 6, color: colors.text }}>Bio</Text>
+            <Text style={formStyles.label}>Bio</Text>
             <TextInput
               value={draft.bio}
               onChangeText={(text) => updateField({ bio: text })}
               multiline
               numberOfLines={4}
               placeholder="Highlight your style and experience."
+              placeholderTextColor={colors.muted}
               selectionColor={colors.text}
               cursorColor={colors.text}
-              style={{
-                borderWidth: 1,
-                borderColor: colors.border,
-                padding: spacing.md,
-                borderRadius: 10,
-                minHeight: 120,
-                textAlignVertical: 'top',
-              }}
+              style={[formStyles.input, styles.textArea]}
+              accessibilityLabel="Bio"
             />
           </View>
         </ScrollView>
@@ -275,7 +266,7 @@ export function ArtistOnboardingFlowScreen() {
         totalSteps={steps.length}
         footer={renderFooter('Next')}
       >
-        <View style={{ gap: spacing.md }}>
+        <View style={styles.formContent}>
           <MultiSelectButtons
             options={SPECIALTY_OPTIONS}
             selected={draft.specialties as string[]}
@@ -288,22 +279,17 @@ export function ArtistOnboardingFlowScreen() {
             }}
           />
           <View>
-            <Text style={{ fontWeight: '700', marginBottom: 6, color: colors.text }}>
-              Years of experience
-            </Text>
+            <Text style={formStyles.label}>Years of experience</Text>
             <TextInput
               value={draft.yearsExperience?.toString() ?? ''}
               onChangeText={(text) => updateField({ yearsExperience: Number(text) || 0 })}
               placeholder="e.g., 5"
+              placeholderTextColor={colors.muted}
               keyboardType="number-pad"
               selectionColor={colors.text}
               cursorColor={colors.text}
-              style={{
-                borderWidth: 1,
-                borderColor: colors.border,
-                padding: spacing.md,
-                borderRadius: 10,
-              }}
+              style={formStyles.input}
+              accessibilityLabel="Years of experience"
             />
           </View>
         </View>
@@ -320,32 +306,25 @@ export function ArtistOnboardingFlowScreen() {
         totalSteps={steps.length}
         footer={renderFooter('Next')}
       >
-        <View style={{ gap: spacing.md }}>
+        <View style={styles.formContent}>
           <View>
-            <Text style={{ fontWeight: '700', marginBottom: 6, color: colors.text }}>
-              Address / neighborhood
-            </Text>
+            <Text style={formStyles.label}>Address / neighborhood</Text>
             <TextInput
               value={draft.primaryLocation.address ?? ''}
               onChangeText={(text) =>
                 updateField({ primaryLocation: { ...draft.primaryLocation, address: text } })
               }
               placeholder="e.g., Gangnam, Seoul"
+              placeholderTextColor={colors.muted}
               selectionColor={colors.text}
               cursorColor={colors.text}
-              style={{
-                borderWidth: 1,
-                borderColor: colors.border,
-                padding: spacing.md,
-                borderRadius: 10,
-              }}
+              style={formStyles.input}
+              accessibilityLabel="Address"
             />
           </View>
-          <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-            <View style={{ flex: 1 }}>
-              <Text style={{ fontWeight: '700', marginBottom: 6, color: colors.text }}>
-                Latitude
-              </Text>
+          <View style={styles.row}>
+            <View style={styles.flex1}>
+              <Text style={formStyles.label}>Latitude</Text>
               <TextInput
                 value={draft.primaryLocation.latitude?.toString() ?? ''}
                 onChangeText={(text) =>
@@ -357,21 +336,16 @@ export function ArtistOnboardingFlowScreen() {
                   })
                 }
                 placeholder="37.4979"
+                placeholderTextColor={colors.muted}
                 keyboardType="decimal-pad"
                 selectionColor={colors.text}
                 cursorColor={colors.text}
-                style={{
-                  borderWidth: 1,
-                  borderColor: colors.border,
-                  padding: spacing.md,
-                  borderRadius: 10,
-                }}
+                style={formStyles.input}
+                accessibilityLabel="Latitude"
               />
             </View>
-            <View style={{ flex: 1 }}>
-              <Text style={{ fontWeight: '700', marginBottom: 6, color: colors.text }}>
-                Longitude
-              </Text>
+            <View style={styles.flex1}>
+              <Text style={formStyles.label}>Longitude</Text>
               <TextInput
                 value={draft.primaryLocation.longitude?.toString() ?? ''}
                 onChangeText={(text) =>
@@ -383,35 +357,27 @@ export function ArtistOnboardingFlowScreen() {
                   })
                 }
                 placeholder="127.0276"
+                placeholderTextColor={colors.muted}
                 keyboardType="decimal-pad"
                 selectionColor={colors.text}
                 cursorColor={colors.text}
-                style={{
-                  borderWidth: 1,
-                  borderColor: colors.border,
-                  padding: spacing.md,
-                  borderRadius: 10,
-                }}
+                style={formStyles.input}
+                accessibilityLabel="Longitude"
               />
             </View>
           </View>
           <View>
-            <Text style={{ fontWeight: '700', marginBottom: 6, color: colors.text }}>
-              Service radius (km)
-            </Text>
+            <Text style={formStyles.label}>Service radius (km)</Text>
             <TextInput
               value={draft.serviceRadiusKm?.toString() ?? ''}
               onChangeText={(text) => updateField({ serviceRadiusKm: Number(text) || 0 })}
               placeholder="e.g., 10"
+              placeholderTextColor={colors.muted}
               keyboardType="decimal-pad"
               selectionColor={colors.text}
               cursorColor={colors.text}
-              style={{
-                borderWidth: 1,
-                borderColor: colors.border,
-                padding: spacing.md,
-                borderRadius: 10,
-              }}
+              style={formStyles.input}
+              accessibilityLabel="Service radius"
             />
           </View>
         </View>
@@ -427,47 +393,126 @@ export function ArtistOnboardingFlowScreen() {
       totalSteps={steps.length}
       footer={renderFooter('Submit')}
     >
-      <View style={{ gap: spacing.md, alignItems: 'center' }}>
+      <View style={styles.photoSection}>
         {draft.profileImageUrl ? (
           <Image
             source={{ uri: draft.profileImageUrl }}
-            style={{ width: 200, height: 200, borderRadius: 16 }}
+            style={styles.profileImage}
             resizeMode="cover"
+            accessibilityLabel="Profile photo preview"
           />
         ) : (
-          <View
-            style={{
-              width: 200,
-              height: 200,
-              borderRadius: 16,
-              borderWidth: 1,
-              borderColor: colors.border,
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: '#fafafa',
-            }}
-          >
-            <Text style={{ color: colors.textSecondary }}>No photo selected</Text>
+          <View style={styles.photoPlaceholder}>
+            <Text style={styles.photoPlaceholderText}>No photo selected</Text>
           </View>
         )}
         <TouchableOpacity
           onPress={pickImage}
           disabled={uploading || isPending}
-          style={{
-            paddingVertical: spacing.md,
-            paddingHorizontal: spacing.lg,
-            backgroundColor: colors.accent,
-            borderRadius: 12,
-          }}
+          style={[styles.choosePhotoButton, (uploading || isPending) && styles.buttonDisabled]}
+          accessibilityRole="button"
+          accessibilityLabel="Choose photo"
+          accessibilityHint="Opens image picker"
         >
-          <Text style={{ color: '#fff', fontWeight: '700' }}>
+          <Text style={styles.choosePhotoButtonText}>
             {uploading ? 'Uploading...' : 'Choose photo'}
           </Text>
         </TouchableOpacity>
-        <Text style={{ color: colors.textSecondary, textAlign: 'center' }}>
+        <Text style={styles.helperText}>
           We store your photo securely in S3 using a time-limited upload link.
         </Text>
       </View>
     </OnboardingLayout>
   );
 }
+
+const styles = StyleSheet.create({
+  formContent: {
+    gap: spacing.md,
+  },
+  textArea: {
+    minHeight: 120,
+    textAlignVertical: 'top',
+    paddingTop: spacing.md,
+  },
+  row: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  flex1: {
+    flex: 1,
+  },
+  footerRow: {
+    flexDirection: 'row',
+    gap: spacing.md,
+  },
+  backButton: {
+    height: spacing.inputHeight,
+    paddingHorizontal: spacing.lg,
+    borderRadius: borderRadius.pill,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    backgroundColor: colors.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  backButtonDisabled: {
+    borderColor: colors.border,
+    opacity: 0.5,
+  },
+  backButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.primary,
+  },
+  backButtonTextDisabled: {
+    color: colors.muted,
+  },
+  continueButtonWrapper: {
+    flex: 1,
+  },
+  photoSection: {
+    gap: spacing.md,
+    alignItems: 'center',
+  },
+  profileImage: {
+    width: 200,
+    height: 200,
+    borderRadius: borderRadius.xl,
+  },
+  photoPlaceholder: {
+    width: 200,
+    height: 200,
+    borderRadius: borderRadius.xl,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.surface,
+  },
+  photoPlaceholderText: {
+    color: colors.textSecondary,
+    fontSize: 14,
+  },
+  choosePhotoButton: {
+    height: spacing.inputHeight,
+    paddingHorizontal: spacing.xl,
+    backgroundColor: colors.primary,
+    borderRadius: borderRadius.pill,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  choosePhotoButtonText: {
+    color: colors.background,
+    fontWeight: '700',
+    fontSize: 16,
+  },
+  buttonDisabled: {
+    opacity: 0.5,
+  },
+  helperText: {
+    color: colors.textSecondary,
+    textAlign: 'center',
+    fontSize: 14,
+  },
+});
