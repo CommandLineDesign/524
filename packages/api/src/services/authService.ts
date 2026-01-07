@@ -8,6 +8,37 @@ import { artistProfiles, refreshTokens, userRoles, users } from '@524/database';
 import { env } from '../config/env.js';
 import { db } from '../db/client.js';
 
+/**
+ * Get JWT secret, failing hard in production if not configured.
+ * In development, allows a fallback for convenience.
+ */
+function getJwtSecret(): string {
+  if (env.JWT_SECRET) {
+    return env.JWT_SECRET;
+  }
+  if (env.NODE_ENV === 'production') {
+    throw new Error('JWT_SECRET must be configured in production');
+  }
+  return 'dev-secret-do-not-use-in-production';
+}
+
+/**
+ * Get JWT refresh secret, failing hard in production if not configured.
+ * Falls back to JWT_SECRET if JWT_REFRESH_SECRET is not set.
+ */
+function getJwtRefreshSecret(): string {
+  if (env.JWT_REFRESH_SECRET) {
+    return env.JWT_REFRESH_SECRET;
+  }
+  if (env.JWT_SECRET) {
+    return env.JWT_SECRET;
+  }
+  if (env.NODE_ENV === 'production') {
+    throw new Error('JWT_REFRESH_SECRET or JWT_SECRET must be configured in production');
+  }
+  return 'dev-refresh-secret-do-not-use-in-production';
+}
+
 import type { AuthTokens, OAuthCallbackPayload, PhoneVerificationPayload } from '@524/shared/auth';
 
 // Token expiration times
@@ -314,7 +345,7 @@ export class AuthService {
         phone_number: phoneNumber,
         token_version: tokenVersion,
       },
-      env.JWT_SECRET || 'dev-secret',
+      getJwtSecret(),
       { expiresIn: ACCESS_TOKEN_EXPIRY }
     );
 
@@ -327,7 +358,7 @@ export class AuthService {
         family_id: familyId,
         jti,
       } as RefreshTokenPayload,
-      env.JWT_REFRESH_SECRET || env.JWT_SECRET || 'fallback-secret',
+      getJwtRefreshSecret(),
       { expiresIn: `${REFRESH_TOKEN_EXPIRY_DAYS}d` }
     );
 
@@ -424,10 +455,7 @@ export class AuthService {
     // Verify the refresh token signature
     let payload: RefreshTokenPayload;
     try {
-      payload = jwt.verify(
-        refreshTokenString,
-        env.JWT_REFRESH_SECRET || env.JWT_SECRET || 'fallback-secret'
-      ) as RefreshTokenPayload;
+      payload = jwt.verify(refreshTokenString, getJwtRefreshSecret()) as RefreshTokenPayload;
     } catch (error) {
       if (error instanceof jwt.TokenExpiredError) {
         throw Object.assign(new Error('Refresh token expired'), {
@@ -446,24 +474,57 @@ export class AuthService {
     // Hash the token to look it up in database
     const tokenHash = crypto.createHash('sha256').update(refreshTokenString).digest('hex');
 
-    // Find the token in database
+    // Find the token in database (including recently revoked for race condition handling)
     const [storedToken] = await db
       .select()
       .from(refreshTokens)
-      .where(
-        and(
-          eq(refreshTokens.tokenHash, tokenHash),
-          eq(refreshTokens.userId, userId),
-          isNull(refreshTokens.revokedAt)
-        )
-      )
+      .where(and(eq(refreshTokens.tokenHash, tokenHash), eq(refreshTokens.userId, userId)))
       .limit(1);
 
     if (!storedToken) {
-      // Token not found or already revoked - possible token reuse attack
+      // Token not found at all - definitely invalid
+      throw Object.assign(new Error('Refresh token not found'), {
+        status: 401,
+        code: 'REFRESH_TOKEN_INVALID',
+      });
+    }
+
+    // Check if token was revoked
+    if (storedToken.revokedAt) {
+      // Grace period: if token was revoked within last 10 seconds, this is likely
+      // a race condition from concurrent refresh requests, not a reuse attack.
+      const gracePeriodMs = 10_000; // 10 seconds
+      const timeSinceRevoked = Date.now() - storedToken.revokedAt.getTime();
+
+      if (timeSinceRevoked < gracePeriodMs) {
+        // Look for the newest valid token in this family (the one that replaced this token)
+        const [newestToken] = await db
+          .select()
+          .from(refreshTokens)
+          .where(
+            and(
+              eq(refreshTokens.userId, userId),
+              eq(refreshTokens.familyId, familyId),
+              isNull(refreshTokens.revokedAt)
+            )
+          )
+          .orderBy(sql`${refreshTokens.createdAt} DESC`)
+          .limit(1);
+
+        if (newestToken) {
+          // A concurrent request already rotated this token - return error
+          // but don't revoke the family (it's not an attack)
+          throw Object.assign(new Error('Token already refreshed'), {
+            status: 401,
+            code: 'REFRESH_TOKEN_ALREADY_USED',
+          });
+        }
+      }
+
+      // Token was revoked outside grace period - possible reuse attack
       // Revoke all tokens in this family as a security measure
       await this.revokeTokenFamily(familyId);
-      throw Object.assign(new Error('Refresh token not found or revoked'), {
+      throw Object.assign(new Error('Refresh token revoked'), {
         status: 401,
         code: 'REFRESH_TOKEN_REVOKED',
       });
