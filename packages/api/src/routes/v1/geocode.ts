@@ -122,4 +122,4 @@ router.post('/reverse', async (req: Request, res: Response) => {
   }
 });
 
-export const geocodeRouter = router;
+export const geocodeRouter: Router = router;
