@@ -175,7 +175,7 @@ export async function geocodeAddress(address: string): Promise<GeocodingResult |
     logger.debug('Geocode result cached');
 
     return result;
-  } catch (error) {
+  } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
       logger.error({ status: error.response?.status }, 'Kakao geocode API error');
     } else {
@@ -248,7 +248,7 @@ export async function keywordSearch(
       return [];
     }
 
-    const results: KeywordSearchResult[] = documents.map((doc) => ({
+    const results: KeywordSearchResult[] = documents.map((doc: KakaoKeywordDocument) => ({
       id: doc.id,
       placeName: doc.place_name,
       addressName: doc.address_name,
@@ -264,7 +264,7 @@ export async function keywordSearch(
     logger.debug({ resultCount: results.length }, 'Keyword search results cached');
 
     return results;
-  } catch (error) {
+  } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
       logger.error({ status: error.response?.status }, 'Kakao keyword search API error');
     } else {
@@ -333,7 +333,7 @@ export async function reverseGeocode(
     logger.debug('Reverse geocode result cached');
 
     return result;
-  } catch (error) {
+  } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
       const status = error.response?.status;
       logger.error({ status }, 'Kakao reverse geocode API error');
