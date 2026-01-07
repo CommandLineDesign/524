@@ -41,6 +41,7 @@ const envSchema = z.object({
   RATE_LIMIT_WINDOW_MS: z.coerce.number().default(60000), // 1 minute in milliseconds
   RATE_LIMIT_MAX_MESSAGES: z.coerce.number().default(30), // 30 messages per minute
   MAX_CONNECTIONS_PER_USER: z.coerce.number().default(3), // Maximum concurrent websocket connections per user
+  GEOCODE_CACHE_STATS_INTERVAL_MS: z.coerce.number().default(300000), // 5 minutes
 });
 
 // Support alternative AWS-style variable names (AWS_S3_BUCKET, AWS_ACCESS_KEY_ID, etc.)

@@ -1,17 +1,17 @@
 # Bug Analysis Report
 
-**Date**: January 5, 2026
-**Base Ref**: origin/main
-**Feature Ref**: jl/update-artist-onboarding (uncommitted changes)
-**Analyzed By**: Bugbot
+**Date:** 2026-01-08
+**Base Ref:** origin/main
+**Feature Ref:** jl/add-kakao-maps
+**Analyzed by:** Bugbot
 
 ---
 
 ## High-Level Summary
 
-**Risk Assessment**: Medium risk. The changes primarily affect artist onboarding UI, authentication token storage, and email availability checking. Security concerns exist around the token service refactoring which now silently swallows errors during refresh token retrieval. The email availability check has proper abort handling but network errors could leave the UI in a confusing state.
+**Risk Assessment:** This feature introduces Kakao Maps integration for location services across the mobile app and API. The primary risks include potential API key exposure in logs, missing rate limiting on geocoding endpoints, and minor type consistency issues between mobile and shared packages. The core logic is sound with good error handling patterns.
 
-**Analysis Scope**: 10 modified files including onboarding components (MultiSelectButtons, OnboardingLayout, SelectableCard, ArtistOnboardingFlowScreen), authentication screens (ArtistSignupScreen, NewLoginScreen), token service refactoring with new StorageProvider abstraction, Jest configuration updates, and documentation.
+**Analysis Scope:** Focus on geocoding API endpoints, mobile location components (LocationPicker, MapAddressPicker, AddressSearchBar), Kakao service integrations, and type definitions. Cross-file analysis performed between `@524/shared` types and mobile/API implementations.
 
 ---
 
@@ -19,76 +19,130 @@
 
 ### Critical
 
-_No critical issues identified._
+*No critical issues identified.*
 
 ### Major
 
-- [status:done] File: `packages/mobile/src/services/tokenService.ts:42-52`
-  - Issue: `getRefreshToken` now silently returns `null` on error instead of throwing, which changes the security behavior. Previously, SecureStore failures would throw an error requiring explicit handling. Now failures are silently ignored, which could mask storage configuration issues or security problems.
-  - Fix: Consider logging the error or maintaining the previous throw behavior for refresh token retrieval failures to ensure storage issues are not silently ignored. At minimum, add structured logging for observability.
-  - Resolution: Added `__DEV__` guarded console.error logging for observability while maintaining graceful degradation.
+- [status:done] File: [geocode.ts:51](packages/api/src/routes/v1/geocode.ts#L51) | Replaced console.error with structured logger
+  - Issue: Debug `console.error` statement logs full error object which could include sensitive API response details in production logs
+  - Fix: Use structured logger (`createLogger`) instead of console.error, and sanitize error output to avoid logging full Kakao API responses which may contain internal details
 
-- [status:done] File: `packages/mobile/src/services/storage/NativeStorageProvider.ts:10-21`
-  - Issue: The fallback from SecureStore to AsyncStorage for `get()` operations silently downgrades security. If SecureStore fails, sensitive refresh tokens may be read from insecure storage without any indication to the caller.
-  - Fix: Consider returning `null` instead of falling back to AsyncStorage for get operations, or add a flag to indicate the security level of the retrieved value. Alternatively, log at warning level with monitoring for production.
-  - Resolution: Removed AsyncStorage fallback for `get()` operations - now returns `null` on SecureStore failure to maintain security guarantees. Added `__DEV__` guarded logging.
+- [status:done] File: [geocode.ts:76](packages/api/src/routes/v1/geocode.ts#L76) | Replaced console.error with structured logger
+  - Issue: Debug `console.error` statement logs full error object in keyword-search route
+  - Fix: Replace with structured logger and sanitize error output
+
+- [status:done] File: [geocode.ts:110](packages/api/src/routes/v1/geocode.ts#L110) | Replaced console.error with structured logger
+  - Issue: Debug `console.error` statement logs full error object in reverse-geocode route
+  - Fix: Replace with structured logger and sanitize error output
+
+- [status:done] File: [geocodeService.ts:128](packages/api/src/services/geocodeService.ts#L128) | Replaced with debug-level structured logging
+  - Issue: `console.log` debug statement logs cache hit with address data - could expose user search patterns in production logs
+  - Fix: Remove or replace with debug-level structured logging that can be disabled in production
+
+- [status:done] File: [geocodeService.ts:152](packages/api/src/services/geocodeService.ts#L152) | Replaced with debug-level structured logging
+  - Issue: `console.warn` logs the searched address when no results found - could expose user search queries
+  - Fix: Use structured logging with appropriate log levels
+
+- [status:done] File: [geocodeService.ts:172](packages/api/src/services/geocodeService.ts#L172) | Replaced with debug-level structured logging
+  - Issue: `console.log` logs cached result with address data
+  - Fix: Remove or use debug-level structured logging
+
+- [status:done] File: [geocodeService.ts:177](packages/api/src/services/geocodeService.ts#L177) | Replaced with structured logger, sanitized error details
+  - Issue: `console.error` logs full Kakao API error response which could include sensitive API details
+  - Fix: Use structured logger and sanitize error details
+
+- [status:done] File: [geocodeService.ts:201](packages/api/src/services/geocodeService.ts#L201), [255](packages/api/src/services/geocodeService.ts#L255), [282](packages/api/src/services/geocodeService.ts#L282) | Replaced with structured logging
+  - Issue: Multiple `console.log` debug statements in keywordSearch and reverseGeocode functions logging query/coordinate data
+  - Fix: Replace all with structured logging using appropriate levels
+
+- [status:story] File: [geocode.ts](packages/api/src/routes/v1/geocode.ts) | Story: [geocode-rate-limiting-caching.md](../stories/geocode-rate-limiting-caching.md)
+  - Issue: No rate limiting on geocoding endpoints - external Kakao API has rate limits and could be exhausted by excessive client requests
+  - Fix: Add rate limiting middleware to protect both the app and Kakao API quota (consider IP-based or user-based rate limiting)
 
 ### Minor
 
-- [status:done] File: `packages/mobile/src/services/storage/NativeStorageProvider.ts:14,27,41`
-  - Issue: Debug `console.error` and `console.warn` statements in production code. These should use a proper logging service or be conditionally enabled.
-  - Fix: Replace with a logging service that can be configured per environment, or wrap in `__DEV__` checks.
-  - Resolution: Wrapped all console.error/console.warn statements in `__DEV__` checks to prevent logging in production builds.
+- [status:done] File: [geocodeService.ts:260-267](packages/api/src/services/geocodeService.ts#L260-L267) | Already fixed above in Major section
+  - Issue: `console.error` statements log Kakao API errors with full response data
+  - Fix: Use structured logger
 
-- [status:done] File: `packages/mobile/src/screens/ArtistSignupScreen.tsx:130-132`
-  - Issue: When `checkAvailability` throws a network error, the status is set to `'error'` but no user feedback is shown. Users may be confused about why the availability indicator disappeared.
-  - Fix: Consider showing a subtle indicator that availability could not be checked, or retry logic with exponential backoff.
-  - Resolution: Added Korean helper text "확인 실패 - 제출 시 다시 확인됩니다" (Check failed - will be verified on submit) with 'neutral' status for error cases.
+- [status:done] File: [geocodeService.ts:309](packages/api/src/services/geocodeService.ts#L309) | Already fixed above in Major section
+  - Issue: `console.warn` logs coordinates when no reverse geocode results found
+  - Fix: Use structured logging
 
-- [status:done] File: `packages/mobile/src/screens/ArtistSignupScreen.tsx:124-135`
-  - Issue: The `emailHelperInfo` returns empty strings for `'error'` status from availability check, which makes sense for not blocking users, but the status is still `'' as const` which may cause TypeScript issues or confusion.
-  - Fix: Consider using a more explicit type like `'neutral'` or `undefined` instead of empty string for non-error/non-success states.
-  - Resolution: Changed 'checking' status to 'neutral', error status to 'neutral' with helper text, and default case to `undefined` instead of empty string.
+- [status:done] File: [geocodeService.ts:332-349](packages/api/src/services/geocodeService.ts#L332-L349) | Already fixed above in Major section
+  - Issue: Multiple `console.error` statements logging Kakao API errors with detailed response info
+  - Fix: Use structured logger and avoid logging full API responses
 
-- [status:done] File: `packages/mobile/src/screens/ArtistSignupScreen.tsx:176-193`
-  - Issue: The submit handler calls `checkAvailability` again even though debounced check may have already confirmed availability. This creates redundant API calls.
-  - Fix: Consider using the cached availability status if it's `'available'` and the email hasn't changed since the last check, falling back to the API call only when necessary.
-  - Resolution: Added `lastCheckedEmailRef` to track the email for which availability was confirmed. Submit handler now skips API call when `emailAvailabilityStatus === 'available'` and email matches the cached value.
+- [status:done] File: [kakaoService.ts:14](packages/mobile/src/services/kakaoService.ts#L14) | Removed console.error
+  - Issue: `console.error` logs geocoding failures on mobile client
+  - Fix: Consider removing client-side error logging or using a proper mobile logging solution
+
+- [status:done] File: [kakaoService.ts:47](packages/mobile/src/services/kakaoService.ts#L47) | Removed console.error
+  - Issue: `console.error` logs keyword search failures
+  - Fix: Remove or use proper mobile logging
+
+- [status:done] File: [kakaoService.ts:69](packages/mobile/src/services/kakaoService.ts#L69) | Removed console.error
+  - Issue: `console.error` logs reverse geocoding failures
+  - Fix: Remove or use proper mobile logging
+
+- [status:done] File: [useCurrentLocation.ts:51](packages/mobile/src/hooks/useCurrentLocation.ts#L51) | Removed console.error
+  - Issue: `console.error` logs location errors
+  - Fix: Remove debug logging or use proper mobile logging solution
+
+- [status:done] File: [AddressSearchBar.tsx:62](packages/mobile/src/components/location/AddressSearchBar.tsx#L62) | Removed console.error
+  - Issue: `console.error` logs search errors
+  - Fix: Remove debug logging
+
+- [status:done] File: [LocationPicker.tsx:204](packages/mobile/src/components/location/LocationPicker.tsx#L204) | Removed console.error
+  - Issue: `console.error` logs reverse geocode errors
+  - Fix: Remove debug logging
+
+- [status:done] File: [LocationPicker.tsx:279](packages/mobile/src/components/location/LocationPicker.tsx#L279) | Removed console.error
+  - Issue: `console.error` logs GPS reverse geocode errors
+  - Fix: Remove debug logging
+
+- [status:done] File: [MapAddressPicker.tsx:175](packages/mobile/src/components/location/MapAddressPicker.tsx#L175) | Removed console.error
+  - Issue: `console.error` logs reverse geocode errors
+  - Fix: Remove debug logging
+
+- [status:done] File: [MapAddressPicker.tsx:233](packages/mobile/src/components/location/MapAddressPicker.tsx#L233) | Removed console.error
+  - Issue: `console.error` logs GPS reverse geocode errors
+  - Fix: Remove debug logging
+
+- [status:done] File: [DaumPostcodeSearch.tsx:79](packages/mobile/src/components/location/DaumPostcodeSearch.tsx#L79) | Removed console.error
+  - Issue: `console.error` logs message parsing failures
+  - Fix: Remove debug logging
+
+- [status:done] File: [DaumPostcodeSearch.tsx:170](packages/mobile/src/components/location/DaumPostcodeSearch.tsx#L170) | Removed console.error
+  - Issue: `console.error` logs message parsing failures in native component
+  - Fix: Remove debug logging
 
 ### Enhancement
 
-- [status:ignored] File: `packages/mobile/src/screens/ArtistSignupScreen.tsx:78`
-  - Issue: The error message "이미 사용 중인 이메일입니다. 로그인해 주세요." is hardcoded. Consider extracting to i18n constants for consistency.
-  - Fix: Extract to a shared i18n constants file for localization support.
-  - Rationale: No i18n system exists yet. Should be addressed as part of a broader i18n implementation story rather than creating ad-hoc constants.
+- [status:done] File: [geocodeCache.ts:7](packages/api/src/services/geocodeCache.ts#L7) | Story: [geocode-cache-monitoring.md](../stories/geocode-cache-monitoring.md)
+  - Issue: Logger is imported but not used consistently - `logCacheStats` function exists but cache statistics are not automatically logged on any schedule
+  - Fix: Added periodic cache stats logging (configurable via GEOCODE_CACHE_STATS_INTERVAL_MS env var, default 5 min) and exposed cache stats via health endpoint
 
-- [status:ignored] File: `packages/mobile/src/screens/NewLoginScreen.tsx:185-195`
-  - Issue: TODO comment indicates i18n work needed for "아티스트로 가입" button.
-  - Fix: Track as story/task to implement i18n for this screen.
-  - Rationale: No i18n system exists yet. The existing TODO comment is sufficient to track this. Should be addressed as part of a broader i18n implementation story.
+- [status:ignored] File: [LocationPicker.tsx:14-18](packages/mobile/src/components/location/LocationPicker.tsx#L14-L18) vs [types/kakao.ts](packages/mobile/src/types/kakao.ts) | Deferred - existing story [consolidate-geocoding-types.md](../stories/consolidate-geocoding-types.md) covers this
+  - Issue: `LocationData` and `LocationDataWithAddress` types are defined locally in LocationPicker.tsx rather than being centralized with other Kakao/geocoding types
+  - Fix: Consider moving these types to `types/kakao.ts` or `@524/shared` for consistency with other location-related types
 
-- [status:ignored] File: `packages/mobile/src/components/onboarding/SelectableCard.tsx:2`
-  - Issue: `View` is imported but no longer used after refactoring.
-  - Fix: Remove unused import. (Minor cleanup, low priority)
-  - Rationale: Upon inspection, `View` is not present in the imports. The import statement only includes `Image, StyleSheet, Text, TouchableOpacity`. Issue is not applicable to current code.
+- [status:ignored] File: [DaumPostcodeSearch.tsx:217](packages/mobile/src/components/location/DaumPostcodeSearch.tsx#L217)
+  - Issue: `originWhitelist={['*']}` allows all origins in WebView - this is intentional for loading the Daum postcode script from CDN
+  - Fix: N/A - This is necessary for the widget to function and is contained within a controlled context
 
 ---
 
 ## Highlights
 
-- **Good abort controller handling**: The `ArtistSignupScreen` properly uses `AbortController` to cancel pending availability checks on component unmount and when new requests are made.
-
-- **Proper ref tracking for mount state**: The component uses `isMountedRef` to prevent state updates after unmount, avoiding React warnings.
-
-- **Clean StorageProvider abstraction**: The new `StorageProvider` interface enables dependency injection for testing and platform-specific implementations. The factory pattern with `createTokenService` improves testability.
-
-- **Defensive coding in token service**: The token service methods properly handle errors with try-catch and return sensible defaults (`null` for missing tokens, `true` for expired checks on error).
-
-- **Accessibility improvements**: The `ArtistOnboardingFlowScreen` now includes proper `accessibilityRole`, `accessibilityLabel`, and `accessibilityHint` props on interactive elements.
-
-- **StyleSheet extraction**: Inline styles in `ArtistOnboardingFlowScreen` have been properly extracted to a `StyleSheet.create()` block, improving performance and maintainability.
-
-- **Consistent theme usage**: Components now use theme constants (`borderRadius`, `colors`, `spacing`) consistently instead of hardcoded values.
+- **Good error handling pattern**: The geocoding service properly handles and caches "not found" results to prevent repeated lookups for non-existent addresses, reducing unnecessary API calls
+- **Type consistency**: Shared types in `@524/shared` are properly used across both API and mobile packages through re-exports
+- **Input validation**: All API endpoints use Zod schemas with appropriate constraints (address length, coordinate ranges, pagination limits)
+- **Cache implementation**: Well-designed LRU cache with TTL and wrapper type to distinguish between "not cached" and "cached as not found"
+- **Debounced operations**: Both AddressSearchBar and LocationPicker properly debounce user input to prevent excessive API calls
+- **Platform-aware components**: InteractiveKakaoMap and DaumPostcodeSearch correctly use platform-specific implementations (web iframe vs native WebView)
+- **Graceful fallbacks**: Location components provide coordinate-based fallback addresses when reverse geocoding fails
+- **Keyboard handling**: AddressSearchBar implements proper blur delay to ensure touch events register before dropdown hides
 
 ---
 
@@ -96,10 +150,10 @@ _No critical issues identified._
 
 - [x] Read type definition files for any interfaces/types used in changed files
 - [x] Compared all similar patterns within each file for consistency
-- [x] Checked for debug statements (console.log, console.error, debugger)
+- [x] Checked for debug statements (console.log, console.error, debugger) - **Multiple found, see Minor issues**
 - [x] Verified that repository mapping functions convert types correctly
-- [x] Searched for sensitive data being logged (tokens, passwords, PII)
+- [x] Searched for sensitive data being logged - **Address/coordinate logging found in debug statements**
 - [x] Checked that new fields follow the same patterns as existing fields
-- [x] Verified authorization checks exist where needed
-- [x] Confirmed error handling is present and doesn't leak sensitive info
-- [x] Looked for type mismatches at serialization boundaries
+- [x] Verified authorization checks exist where needed - Geocode routes are public (appropriate for maps)
+- [x] Confirmed error handling is present and doesn't leak sensitive info - **Error logging needs attention**
+- [x] Looked for type mismatches at serialization boundaries - Types are consistent

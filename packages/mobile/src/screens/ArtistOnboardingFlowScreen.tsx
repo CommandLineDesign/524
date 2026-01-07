@@ -16,6 +16,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { presignProfilePhoto } from '../api/client';
 import { ContinueButton } from '../components/booking/ContinueButton';
+import { LocationPicker } from '../components/location';
 import { MultiSelectButtons } from '../components/onboarding/MultiSelectButtons';
 import { OnboardingLayout } from '../components/onboarding/OnboardingLayout';
 import type { RootStackParamList } from '../navigation/AppNavigator';
@@ -221,6 +222,7 @@ export function ArtistOnboardingFlowScreen() {
         subtitle="Share your stage name and a short bio."
         step={stepIndex + 1}
         totalSteps={steps.length}
+        showStepText={false}
         footer={renderFooter('Next')}
       >
         <ScrollView contentContainerStyle={styles.formContent}>
@@ -264,6 +266,7 @@ export function ArtistOnboardingFlowScreen() {
         subtitle="Pick the services you provide and your experience."
         step={stepIndex + 1}
         totalSteps={steps.length}
+        showStepText={false}
         footer={renderFooter('Next')}
       >
         <View style={styles.formContent}>
@@ -301,86 +304,20 @@ export function ArtistOnboardingFlowScreen() {
     return (
       <OnboardingLayout
         title="Where do you serve?"
-        subtitle="Set your primary location and travel radius."
+        subtitle="Set your location and how far you'll travel."
         step={stepIndex + 1}
         totalSteps={steps.length}
+        showStepText={false}
         footer={renderFooter('Next')}
+        fillContent
       >
-        <View style={styles.formContent}>
-          <View>
-            <Text style={formStyles.label}>Address / neighborhood</Text>
-            <TextInput
-              value={draft.primaryLocation.address ?? ''}
-              onChangeText={(text) =>
-                updateField({ primaryLocation: { ...draft.primaryLocation, address: text } })
-              }
-              placeholder="e.g., Gangnam, Seoul"
-              placeholderTextColor={colors.muted}
-              selectionColor={colors.text}
-              cursorColor={colors.text}
-              style={formStyles.input}
-              accessibilityLabel="Address"
-            />
-          </View>
-          <View style={styles.row}>
-            <View style={styles.flex1}>
-              <Text style={formStyles.label}>Latitude</Text>
-              <TextInput
-                value={draft.primaryLocation.latitude?.toString() ?? ''}
-                onChangeText={(text) =>
-                  updateField({
-                    primaryLocation: {
-                      ...draft.primaryLocation,
-                      latitude: Number(text) || 0,
-                    },
-                  })
-                }
-                placeholder="37.4979"
-                placeholderTextColor={colors.muted}
-                keyboardType="decimal-pad"
-                selectionColor={colors.text}
-                cursorColor={colors.text}
-                style={formStyles.input}
-                accessibilityLabel="Latitude"
-              />
-            </View>
-            <View style={styles.flex1}>
-              <Text style={formStyles.label}>Longitude</Text>
-              <TextInput
-                value={draft.primaryLocation.longitude?.toString() ?? ''}
-                onChangeText={(text) =>
-                  updateField({
-                    primaryLocation: {
-                      ...draft.primaryLocation,
-                      longitude: Number(text) || 0,
-                    },
-                  })
-                }
-                placeholder="127.0276"
-                placeholderTextColor={colors.muted}
-                keyboardType="decimal-pad"
-                selectionColor={colors.text}
-                cursorColor={colors.text}
-                style={formStyles.input}
-                accessibilityLabel="Longitude"
-              />
-            </View>
-          </View>
-          <View>
-            <Text style={formStyles.label}>Service radius (km)</Text>
-            <TextInput
-              value={draft.serviceRadiusKm?.toString() ?? ''}
-              onChangeText={(text) => updateField({ serviceRadiusKm: Number(text) || 0 })}
-              placeholder="e.g., 10"
-              placeholderTextColor={colors.muted}
-              keyboardType="decimal-pad"
-              selectionColor={colors.text}
-              cursorColor={colors.text}
-              style={formStyles.input}
-              accessibilityLabel="Service radius"
-            />
-          </View>
-        </View>
+        <LocationPicker
+          location={draft.primaryLocation}
+          onLocationChange={(location) => updateField({ primaryLocation: location })}
+          showRadiusSelector={true}
+          radiusKm={draft.serviceRadiusKm}
+          onRadiusChange={(radiusKm) => updateField({ serviceRadiusKm: radiusKm })}
+        />
       </OnboardingLayout>
     );
   }
@@ -391,6 +328,7 @@ export function ArtistOnboardingFlowScreen() {
       subtitle="Upload a photo clients will see on your profile."
       step={stepIndex + 1}
       totalSteps={steps.length}
+      showStepText={false}
       footer={renderFooter('Submit')}
     >
       <View style={styles.photoSection}>
@@ -434,13 +372,6 @@ const styles = StyleSheet.create({
     minHeight: 120,
     textAlignVertical: 'top',
     paddingTop: spacing.md,
-  },
-  row: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  flex1: {
-    flex: 1,
   },
   footerRow: {
     flexDirection: 'row',

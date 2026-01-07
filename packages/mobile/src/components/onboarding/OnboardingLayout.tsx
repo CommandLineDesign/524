@@ -7,10 +7,14 @@ import { spacing } from '../../theme';
 type OnboardingLayoutProps = {
   title: string;
   subtitle?: string;
-  step: number;
-  totalSteps: number;
+  step?: number;
+  totalSteps?: number;
   children: React.ReactNode;
   footer?: React.ReactNode;
+  /** When true, children fill available space without scrolling */
+  fillContent?: boolean;
+  /** When false, hides the "Step x of y" text */
+  showStepText?: boolean;
 };
 
 export function OnboardingLayout({
@@ -20,20 +24,37 @@ export function OnboardingLayout({
   totalSteps,
   children,
   footer,
+  fillContent = false,
+  showStepText = true,
 }: OnboardingLayoutProps) {
-  const progress = Math.min(Math.max(step / totalSteps, 0), 1);
+  const progress = step && totalSteps ? Math.min(Math.max(step / totalSteps, 0), 1) : 1;
+
+  const headerContent = (
+    <>
+      {showStepText && step && totalSteps ? (
+        <Text style={styles.stepLabel}>{`Step ${step} of ${totalSteps}`}</Text>
+      ) : null}
+      <Text style={styles.title}>{title}</Text>
+      {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+    </>
+  );
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.progressTrack}>
         <View style={[styles.progressBar, { width: `${progress * 100}%` }]} />
       </View>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={styles.stepLabel}>{`Step ${step} of ${totalSteps}`}</Text>
-        <Text style={styles.title}>{title}</Text>
-        {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
-        <View style={styles.body}>{children}</View>
-      </ScrollView>
+      {fillContent ? (
+        <View style={styles.fillContent}>
+          {headerContent}
+          <View style={styles.fillBody}>{children}</View>
+        </View>
+      ) : (
+        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          {headerContent}
+          <View style={styles.body}>{children}</View>
+        </ScrollView>
+      )}
       {footer ? <View style={styles.footer}>{footer}</View> : null}
     </SafeAreaView>
   );
@@ -78,8 +99,17 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   body: {},
+  fillContent: {
+    flex: 1,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+  },
+  fillBody: {
+    flex: 1,
+  },
   footer: {
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.lg,
+    marginTop: spacing.lg,
   },
 });
