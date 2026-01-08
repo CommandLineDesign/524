@@ -5,28 +5,6 @@ import type { DeviceTokenRepository } from '../repositories/deviceTokenRepositor
 import type { DeviceTokenService } from './deviceTokenService.js';
 import { PushNotificationService } from './pushNotificationService.js';
 
-// Mock firebase-admin module
-mock.module('firebase-admin', {
-  namedExports: {
-    default: {
-      initializeApp: () => {},
-      credential: {
-        cert: () => ({}),
-      },
-      messaging: () => ({
-        send: async () => 'message-id',
-        sendEachForMulticast: async () => ({
-          successCount: 1,
-          failureCount: 0,
-          responses: [{ success: true }],
-        }),
-        subscribeToTopic: async () => ({ successCount: 1, failureCount: 0 }),
-        unsubscribeFromTopic: async () => ({ successCount: 1, failureCount: 0 }),
-      }),
-    },
-  },
-});
-
 // Mock features config
 mock.module('../config/features.js', {
   namedExports: {
@@ -65,7 +43,7 @@ function createMock<T>(defaultReturn: T): MockFn<T> {
 const mockDeviceToken = {
   id: 'device-token-id',
   userId: 'user-id',
-  token: 'fcm-token-abc123',
+  token: 'ExponentPushToken[abc123]',
   platform: 'ios' as const,
   deviceId: 'device-123',
   appVersion: '1.0.0',
@@ -74,6 +52,17 @@ const mockDeviceToken = {
   createdAt: new Date(),
   updatedAt: new Date(),
 };
+
+// Mock successful Expo Push API response
+const mockExpoSuccessResponse = {
+  ok: true,
+  json: async () => ({
+    data: [{ status: 'ok', id: 'ticket-id-123' }],
+  }),
+};
+
+// Store original fetch
+const originalFetch = globalThis.fetch;
 
 describe('PushNotificationService', () => {
   let service: PushNotificationService;
@@ -87,7 +76,7 @@ describe('PushNotificationService', () => {
 
   beforeEach(() => {
     mockTokenService = {
-      getActiveTokensForUser: createMock(['fcm-token-abc123']),
+      getActiveTokensForUser: createMock(['ExponentPushToken[abc123]']),
       handleInvalidToken: createMock(undefined),
     };
 
@@ -102,6 +91,14 @@ describe('PushNotificationService', () => {
       mockTokenService as unknown as DeviceTokenService;
     (service as unknown as { tokenRepository: typeof mockTokenRepository }).tokenRepository =
       mockTokenRepository as unknown as DeviceTokenRepository;
+
+    // Mock fetch for Expo Push API
+    globalThis.fetch = mock.fn(async () => mockExpoSuccessResponse) as typeof fetch;
+  });
+
+  // Restore original fetch after tests
+  after(() => {
+    globalThis.fetch = originalFetch;
   });
 
   describe('sendToUser', () => {
@@ -114,6 +111,17 @@ describe('PushNotificationService', () => {
       });
 
       assert.equal(result.successCount, 0);
+      assert.equal(result.failureCount, 0);
+      assert.deepEqual(result.invalidTokens, []);
+    });
+
+    it('should send notification successfully', async () => {
+      const result = await service.sendToUser('user-id', {
+        title: 'Test',
+        body: 'Test body',
+      });
+
+      assert.equal(result.successCount, 1);
       assert.equal(result.failureCount, 0);
       assert.deepEqual(result.invalidTokens, []);
     });
@@ -163,9 +171,8 @@ describe('PushNotificationService', () => {
         title: 'Test Title',
         body: 'Test body',
         data: { key: 'value' },
-        imageUrl: 'https://example.com/image.png',
         badge: 5,
-        sound: 'custom-sound',
+        sound: 'default',
       });
 
       // The method should complete without error
@@ -179,6 +186,33 @@ describe('PushNotificationService', () => {
       });
 
       assert.ok(result);
+    });
+  });
+
+  describe('error handling', () => {
+    it('should handle invalid token errors and mark for deactivation', async () => {
+      // Mock response with DeviceNotRegistered error
+      globalThis.fetch = mock.fn(async () => ({
+        ok: true,
+        json: async () => ({
+          data: [
+            {
+              status: 'error',
+              message: 'Device not registered',
+              details: { error: 'DeviceNotRegistered' },
+            },
+          ],
+        }),
+      })) as typeof fetch;
+
+      const result = await service.sendToUser('user-id', {
+        title: 'Test',
+        body: 'Test body',
+      });
+
+      assert.equal(result.successCount, 0);
+      assert.equal(result.failureCount, 1);
+      assert.equal(result.invalidTokens.length, 1);
     });
   });
 });

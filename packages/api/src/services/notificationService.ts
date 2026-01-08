@@ -1,7 +1,7 @@
 import type { BookingSummary } from '@524/shared/bookings';
 
 import { createLogger } from '../utils/logger.js';
-import { PushNotificationService, type PushPayload } from './pushNotificationService.js';
+import { PushNotificationService } from './pushNotificationService.js';
 
 const logger = createLogger('notifications');
 
@@ -59,18 +59,6 @@ export class NotificationService {
       body: notification.message,
       data: notification.data,
     });
-  }
-
-  async sendToTopic(topic: string, payload: PushPayload): Promise<boolean> {
-    return this.pushService.sendToTopic(topic, payload);
-  }
-
-  async subscribeToTopic(userId: string, topic: string): Promise<void> {
-    await this.pushService.subscribeToTopic(userId, topic);
-  }
-
-  async unsubscribeFromTopic(userId: string, topic: string): Promise<void> {
-    await this.pushService.unsubscribeFromTopic(userId, topic);
   }
 
   private getStatusChangeNotification(booking: BookingSummary): {

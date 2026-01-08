@@ -72,22 +72,29 @@ export class PushNotificationService {
   }
 
   /**
-   * Get push token (Expo push token or FCM token)
+   * Get Expo Push Token for sending notifications via Expo's push service.
+   * The backend uses Expo Push API, so we need ExpoPushToken format.
    */
   private static async getPushToken(): Promise<string | null> {
     try {
       const projectId = Constants.expoConfig?.extra?.eas?.projectId;
 
-      if (projectId) {
-        // Use Expo push token when EAS project is configured
-        const tokenData = await Notifications.getExpoPushTokenAsync({
-          projectId,
-        });
-        return tokenData.data;
+      if (!projectId) {
+        if (__DEV__) {
+          console.warn(
+            '[PushNotifications] No EAS projectId configured. ' +
+              'Push notifications require an EAS project. ' +
+              'Run `eas init` to configure your project.'
+          );
+        }
+        return null;
       }
 
-      // Fall back to FCM token directly
-      const tokenData = await Notifications.getDevicePushTokenAsync();
+      // Get Expo Push Token (format: ExponentPushToken[xxxx])
+      // This is required for Expo Push API on the backend
+      const tokenData = await Notifications.getExpoPushTokenAsync({
+        projectId,
+      });
       return tokenData.data;
     } catch (error) {
       if (__DEV__) {

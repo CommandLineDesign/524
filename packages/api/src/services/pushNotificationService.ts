@@ -1,5 +1,3 @@
-import admin from 'firebase-admin';
-
 import { features } from '../config/features.js';
 import { DeviceTokenRepository } from '../repositories/deviceTokenRepository.js';
 import { createLogger } from '../utils/logger.js';
@@ -7,42 +5,41 @@ import { DeviceTokenService } from './deviceTokenService.js';
 
 const logger = createLogger('push-notification-service');
 
-// FCM error codes that indicate invalid tokens
-const INVALID_TOKEN_ERRORS = [
-  'messaging/invalid-registration-token',
-  'messaging/registration-token-not-registered',
-  'messaging/mismatched-credential',
-];
+const EXPO_PUSH_API_URL = 'https://exp.host/--/api/v2/push/send';
 
-let firebaseInitialized = false;
+// Expo Push error codes that indicate invalid tokens
+const INVALID_TOKEN_ERRORS = ['DeviceNotRegistered', 'InvalidCredentials'];
 
-function ensureFirebaseInitialized(): boolean {
-  if (firebaseInitialized) return true;
+interface ExpoPushMessage {
+  to: string;
+  title: string;
+  body: string;
+  data?: Record<string, string>;
+  sound?: 'default' | null;
+  badge?: number;
+  ttl?: number;
+  expiration?: number;
+  priority?: 'default' | 'normal' | 'high';
+  channelId?: string;
+}
 
-  if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
-    logger.warn('Firebase not configured - push notifications disabled');
-    return false;
-  }
+interface ExpoPushTicket {
+  status: 'ok' | 'error';
+  id?: string;
+  message?: string;
+  details?: {
+    error?: string;
+  };
+}
 
-  try {
-    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
-    });
-    firebaseInitialized = true;
-    logger.info('Firebase initialized for push notifications');
-    return true;
-  } catch (error) {
-    logger.error({ error }, 'Failed to initialize Firebase');
-    return false;
-  }
+interface ExpoPushResponse {
+  data: ExpoPushTicket[];
 }
 
 export interface PushPayload {
   title: string;
   body: string;
   data?: Record<string, string>;
-  imageUrl?: string;
   badge?: number;
   sound?: string;
 }
@@ -93,121 +90,62 @@ export class PushNotificationService {
     return this.sendToTokens(tokens, payload);
   }
 
-  async sendToTopic(topic: string, payload: PushPayload): Promise<boolean> {
-    if (!features.ENABLE_PUSH_NOTIFICATIONS) {
-      return false;
-    }
-
-    if (!ensureFirebaseInitialized()) {
-      return false;
-    }
-
-    try {
-      const message: admin.messaging.Message = {
-        topic,
-        notification: {
-          title: payload.title,
-          body: payload.body,
-          imageUrl: payload.imageUrl,
-        },
-        data: payload.data,
-        android: {
-          notification: {
-            sound: payload.sound ?? 'default',
-          },
-        },
-        apns: {
-          payload: {
-            aps: {
-              badge: payload.badge,
-              sound: payload.sound ?? 'default',
-            },
-          },
-        },
-      };
-
-      await admin.messaging().send(message);
-      logger.info({ topic }, 'Topic notification sent successfully');
-      return true;
-    } catch (error) {
-      logger.error({ error, topic }, 'Failed to send topic notification');
-      return false;
-    }
-  }
-
-  async subscribeToTopic(userId: string, topic: string): Promise<void> {
-    if (!ensureFirebaseInitialized()) return;
-
-    const tokens = await this.tokenService.getActiveTokensForUser(userId);
-
-    if (tokens.length > 0) {
-      await admin.messaging().subscribeToTopic(tokens, topic);
-      logger.info({ userId, topic, tokenCount: tokens.length }, 'Subscribed to topic');
-    }
-  }
-
-  async unsubscribeFromTopic(userId: string, topic: string): Promise<void> {
-    if (!ensureFirebaseInitialized()) return;
-
-    const tokens = await this.tokenService.getActiveTokensForUser(userId);
-
-    if (tokens.length > 0) {
-      await admin.messaging().unsubscribeFromTopic(tokens, topic);
-      logger.info({ userId, topic }, 'Unsubscribed from topic');
-    }
-  }
-
   private async sendToTokens(tokens: string[], payload: PushPayload): Promise<SendResult> {
-    if (!ensureFirebaseInitialized()) {
-      return { successCount: 0, failureCount: tokens.length, invalidTokens: [] };
-    }
-
     const invalidTokens: string[] = [];
     let successCount = 0;
     let failureCount = 0;
 
-    // FCM supports up to 500 tokens per multicast
-    const batches = this.chunkArray(tokens, 500);
+    // Expo Push API supports up to 100 messages per request
+    const batches = this.chunkArray(tokens, 100);
 
     for (const batch of batches) {
       try {
-        const message: admin.messaging.MulticastMessage = {
-          tokens: batch,
-          notification: {
-            title: payload.title,
-            body: payload.body,
-            imageUrl: payload.imageUrl,
-          },
+        const messages: ExpoPushMessage[] = batch.map((token) => ({
+          to: token,
+          title: payload.title,
+          body: payload.body,
           data: payload.data,
-          android: {
-            notification: {
-              sound: payload.sound ?? 'default',
-            },
-            priority: 'high',
+          sound: (payload.sound as 'default' | null) ?? 'default',
+          badge: payload.badge,
+          priority: 'high' as const,
+        }));
+
+        const response = await fetch(EXPO_PUSH_API_URL, {
+          method: 'POST',
+          headers: {
+            Accept: 'application/json',
+            'Accept-Encoding': 'gzip, deflate',
+            'Content-Type': 'application/json',
           },
-          apns: {
-            payload: {
-              aps: {
-                badge: payload.badge,
-                sound: payload.sound ?? 'default',
-                'content-available': 1,
-              },
-            },
-          },
-        };
+          body: JSON.stringify(messages),
+        });
 
-        const response = await admin.messaging().sendEachForMulticast(message);
+        if (!response.ok) {
+          logger.error(
+            { status: response.status, statusText: response.statusText },
+            'Expo Push API request failed'
+          );
+          failureCount += batch.length;
+          continue;
+        }
 
-        successCount += response.successCount;
-        failureCount += response.failureCount;
+        const result = (await response.json()) as ExpoPushResponse;
 
-        // Handle failures and collect invalid tokens
-        response.responses.forEach((resp: admin.messaging.SendResponse, idx: number) => {
-          if (!resp.success && resp.error) {
-            const errorCode = resp.error.code;
-            if (INVALID_TOKEN_ERRORS.includes(errorCode)) {
+        // Process each ticket in the response
+        result.data.forEach((ticket: ExpoPushTicket, idx: number) => {
+          if (ticket.status === 'ok') {
+            successCount++;
+          } else {
+            failureCount++;
+            // Check if the error indicates an invalid token
+            const errorCode = ticket.details?.error;
+            if (errorCode && INVALID_TOKEN_ERRORS.includes(errorCode)) {
               invalidTokens.push(batch[idx]);
             }
+            logger.warn(
+              { token: batch[idx], error: ticket.message, errorCode },
+              'Failed to send push notification'
+            );
           }
         });
       } catch (error) {

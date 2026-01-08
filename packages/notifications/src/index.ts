@@ -1,50 +1,65 @@
-// Firebase Cloud Messaging for push notifications only
-// Note: Using FCM for push notifications, NOT for authentication
-// Authentication is handled via SENS (phone OTP), Kakao, Naver, and Apple OAuth
+// Expo Push Notifications
+// Using Expo's push notification service for React Native apps
 
-import admin from 'firebase-admin';
-
-let appInitialized = false;
-
-function ensureApp() {
-  if (!appInitialized && process.env.FIREBASE_SERVICE_ACCOUNT) {
-    try {
-      const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-      admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
-      });
-      appInitialized = true;
-    } catch (error) {
-      console.warn('Firebase not configured - push notifications disabled');
-    }
-  }
-}
+const EXPO_PUSH_API_URL = 'https://exp.host/--/api/v2/push/send';
 
 export interface PushPayload {
   title: string;
   body: string;
   data?: Record<string, string>;
+  sound?: 'default' | null;
+  badge?: number;
 }
 
-export async function sendPushNotification(token: string, payload: PushPayload) {
-  if (!appInitialized) {
-    ensureApp();
-  }
+interface ExpoPushTicket {
+  status: 'ok' | 'error';
+  id?: string;
+  message?: string;
+  details?: {
+    error?: string;
+  };
+}
 
-  if (!appInitialized) {
-    console.warn('Push notification skipped - Firebase not configured');
-    return;
-  }
+interface ExpoPushResponse {
+  data: ExpoPushTicket[];
+}
 
+export async function sendPushNotification(
+  token: string,
+  payload: PushPayload
+): Promise<{ success: boolean; ticketId?: string; error?: string }> {
   try {
-    await admin.messaging().send({
-      token,
-      notification: {
+    const response = await fetch(EXPO_PUSH_API_URL, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Accept-Encoding': 'gzip, deflate',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        to: token,
         title: payload.title,
         body: payload.body,
-      },
-      data: payload.data,
+        data: payload.data,
+        sound: payload.sound ?? 'default',
+        badge: payload.badge,
+      }),
     });
+
+    if (!response.ok) {
+      console.error('Expo Push API request failed:', response.status, response.statusText);
+      return { success: false, error: `HTTP ${response.status}: ${response.statusText}` };
+    }
+
+    const result = (await response.json()) as ExpoPushResponse;
+    const ticket = result.data[0];
+
+    if (ticket.status === 'ok') {
+      return { success: true, ticketId: ticket.id };
+    }
+
+    console.error('Failed to send push notification:', ticket.message);
+    return { success: false, error: ticket.message };
   } catch (error) {
     console.error('Failed to send push notification:', error);
     throw error;
