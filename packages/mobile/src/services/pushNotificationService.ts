@@ -8,6 +8,9 @@ import { apiClient } from '../api/client';
 
 const PUSH_TOKEN_KEY = 'push_notification_token';
 
+// Android notification channel configuration
+const BOOKING_CHANNEL_ID = 'booking-notifications';
+
 // Configure notification handling
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -19,22 +22,42 @@ Notifications.setNotificationHandler({
   }),
 });
 
+export type InitializeResult =
+  | { success: true; token: string }
+  | {
+      success: false;
+      reason:
+        | 'not_device'
+        | 'permission_denied'
+        | 'no_project_id'
+        | 'token_error'
+        | 'registration_error';
+      error?: Error;
+    };
+
 export class PushNotificationService {
   private static tokenRefreshListener: Notifications.EventSubscription | null = null;
+  private static isInitialized = false;
 
   /**
    * Initialize push notifications.
    * Call this after successful login.
+   * Returns a result object indicating success/failure with reason.
    */
-  static async initialize(): Promise<string | null> {
+  static async initialize(): Promise<InitializeResult> {
     if (!Device.isDevice) {
       if (__DEV__) {
         console.log('[PushNotifications] Push notifications require a physical device');
       }
-      return null;
+      return { success: false, reason: 'not_device' };
     }
 
     try {
+      // Set up Android notification channel
+      if (Platform.OS === 'android') {
+        await PushNotificationService.setupAndroidChannel();
+      }
+
       // Request permissions
       const { status: existingStatus } = await Notifications.getPermissionsAsync();
       let finalStatus = existingStatus;
@@ -48,34 +71,69 @@ export class PushNotificationService {
         if (__DEV__) {
           console.log('[PushNotifications] Permission not granted');
         }
-        return null;
+        return { success: false, reason: 'permission_denied' };
       }
 
       // Get the push token
-      const token = await PushNotificationService.getPushToken();
+      const tokenResult = await PushNotificationService.getPushToken();
 
-      if (token) {
-        // Register with backend
-        await PushNotificationService.registerToken(token);
-
-        // Set up token refresh listener
-        PushNotificationService.setupTokenRefreshListener();
+      if (!tokenResult.success) {
+        return tokenResult;
       }
 
-      return token;
+      const token = tokenResult.token;
+
+      // Register with backend - this can fail and caller should know
+      try {
+        await PushNotificationService.registerToken(token);
+      } catch (error) {
+        return {
+          success: false,
+          reason: 'registration_error',
+          error: error instanceof Error ? error : new Error(String(error)),
+        };
+      }
+
+      // Set up token refresh listener
+      PushNotificationService.setupTokenRefreshListener();
+      PushNotificationService.isInitialized = true;
+
+      return { success: true, token };
     } catch (error) {
       if (__DEV__) {
         console.error('[PushNotifications] Failed to initialize:', error);
       }
-      return null;
+      return {
+        success: false,
+        reason: 'token_error',
+        error: error instanceof Error ? error : new Error(String(error)),
+      };
     }
+  }
+
+  /**
+   * Set up Android notification channel for booking notifications
+   */
+  private static async setupAndroidChannel(): Promise<void> {
+    await Notifications.setNotificationChannelAsync(BOOKING_CHANNEL_ID, {
+      name: 'Booking Notifications',
+      importance: Notifications.AndroidImportance.HIGH,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: '#FF6B35',
+      sound: 'default',
+      enableVibrate: true,
+      enableLights: true,
+    });
   }
 
   /**
    * Get Expo Push Token for sending notifications via Expo's push service.
    * The backend uses Expo Push API, so we need ExpoPushToken format.
    */
-  private static async getPushToken(): Promise<string | null> {
+  private static async getPushToken(): Promise<
+    | { success: true; token: string }
+    | { success: false; reason: 'no_project_id' | 'token_error'; error?: Error }
+  > {
     try {
       const projectId = Constants.expoConfig?.extra?.eas?.projectId;
 
@@ -87,7 +145,7 @@ export class PushNotificationService {
               'Run `eas init` to configure your project.'
           );
         }
-        return null;
+        return { success: false, reason: 'no_project_id' };
       }
 
       // Get Expo Push Token (format: ExponentPushToken[xxxx])
@@ -95,12 +153,16 @@ export class PushNotificationService {
       const tokenData = await Notifications.getExpoPushTokenAsync({
         projectId,
       });
-      return tokenData.data;
+      return { success: true, token: tokenData.data };
     } catch (error) {
       if (__DEV__) {
         console.error('[PushNotifications] Failed to get push token:', error);
       }
-      return null;
+      return {
+        success: false,
+        reason: 'token_error',
+        error: error instanceof Error ? error : new Error(String(error)),
+      };
     }
   }
 
@@ -108,29 +170,22 @@ export class PushNotificationService {
    * Register token with backend
    */
   private static async registerToken(token: string): Promise<void> {
-    try {
-      const platform = Platform.OS as 'ios' | 'android';
-      const deviceId = Constants.deviceId;
-      const appVersion = Constants.expoConfig?.version;
+    const platform = Platform.OS as 'ios' | 'android';
+    const deviceId = Constants.deviceId;
+    const appVersion = Constants.expoConfig?.version;
 
-      await apiClient.post('/api/v1/devices/register', {
-        token,
-        platform,
-        deviceId,
-        appVersion,
-      });
+    await apiClient.post('/api/v1/devices/register', {
+      token,
+      platform,
+      deviceId,
+      appVersion,
+    });
 
-      // Store token locally
-      await AsyncStorage.setItem(PUSH_TOKEN_KEY, token);
+    // Store token locally
+    await AsyncStorage.setItem(PUSH_TOKEN_KEY, token);
 
-      if (__DEV__) {
-        console.log('[PushNotifications] Token registered successfully');
-      }
-    } catch (error) {
-      if (__DEV__) {
-        console.error('[PushNotifications] Failed to register token:', error);
-      }
-      throw error;
+    if (__DEV__) {
+      console.log('[PushNotifications] Token registered successfully');
     }
   }
 
@@ -148,7 +203,14 @@ export class PushNotificationService {
         if (__DEV__) {
           console.log('[PushNotifications] Token refreshed');
         }
-        await PushNotificationService.registerToken(tokenData.data);
+        try {
+          await PushNotificationService.registerToken(tokenData.data);
+        } catch (error) {
+          // Log but don't crash on refresh failure - will retry on next refresh
+          if (__DEV__) {
+            console.error('[PushNotifications] Failed to register refreshed token:', error);
+          }
+        }
       }
     );
   }
@@ -172,11 +234,27 @@ export class PushNotificationService {
         PushNotificationService.tokenRefreshListener.remove();
         PushNotificationService.tokenRefreshListener = null;
       }
+
+      PushNotificationService.isInitialized = false;
     } catch (error) {
       if (__DEV__) {
         console.error('[PushNotifications] Failed to unregister:', error);
       }
+      // Still clear local state even if API call fails
+      await AsyncStorage.removeItem(PUSH_TOKEN_KEY);
+      if (PushNotificationService.tokenRefreshListener) {
+        PushNotificationService.tokenRefreshListener.remove();
+        PushNotificationService.tokenRefreshListener = null;
+      }
+      PushNotificationService.isInitialized = false;
     }
+  }
+
+  /**
+   * Check if push notifications are initialized
+   */
+  static getIsInitialized(): boolean {
+    return PushNotificationService.isInitialized;
   }
 
   /**

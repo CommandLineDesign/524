@@ -1,3 +1,13 @@
+import {
+  type ExpoPushMessage,
+  type ExpoPushTicket,
+  type PushPayload,
+  type SendResult,
+  chunkArray,
+  isInvalidTokenError,
+  sendExpoPushNotifications,
+} from '@524/notifications';
+
 import { features } from '../config/features.js';
 import { DeviceTokenRepository } from '../repositories/deviceTokenRepository.js';
 import { createLogger } from '../utils/logger.js';
@@ -5,50 +15,10 @@ import { DeviceTokenService } from './deviceTokenService.js';
 
 const logger = createLogger('push-notification-service');
 
-const EXPO_PUSH_API_URL = 'https://exp.host/--/api/v2/push/send';
+// Android notification channel for booking-related notifications
+const BOOKING_CHANNEL_ID = 'booking-notifications';
 
-// Expo Push error codes that indicate invalid tokens
-const INVALID_TOKEN_ERRORS = ['DeviceNotRegistered', 'InvalidCredentials'];
-
-interface ExpoPushMessage {
-  to: string;
-  title: string;
-  body: string;
-  data?: Record<string, string>;
-  sound?: 'default' | null;
-  badge?: number;
-  ttl?: number;
-  expiration?: number;
-  priority?: 'default' | 'normal' | 'high';
-  channelId?: string;
-}
-
-interface ExpoPushTicket {
-  status: 'ok' | 'error';
-  id?: string;
-  message?: string;
-  details?: {
-    error?: string;
-  };
-}
-
-interface ExpoPushResponse {
-  data: ExpoPushTicket[];
-}
-
-export interface PushPayload {
-  title: string;
-  body: string;
-  data?: Record<string, string>;
-  badge?: number;
-  sound?: string;
-}
-
-export interface SendResult {
-  successCount: number;
-  failureCount: number;
-  invalidTokens: string[];
-}
+export type { PushPayload, SendResult };
 
 export class PushNotificationService {
   private tokenService: DeviceTokenService;
@@ -96,7 +66,7 @@ export class PushNotificationService {
     let failureCount = 0;
 
     // Expo Push API supports up to 100 messages per request
-    const batches = this.chunkArray(tokens, 100);
+    const batches = chunkArray(tokens, 100);
 
     for (const batch of batches) {
       try {
@@ -105,31 +75,16 @@ export class PushNotificationService {
           title: payload.title,
           body: payload.body,
           data: payload.data,
-          sound: (payload.sound as 'default' | null) ?? 'default',
+          sound: payload.sound ?? 'default',
           badge: payload.badge,
           priority: 'high' as const,
+          channelId: payload.channelId ?? BOOKING_CHANNEL_ID,
         }));
 
-        const response = await fetch(EXPO_PUSH_API_URL, {
-          method: 'POST',
-          headers: {
-            Accept: 'application/json',
-            'Accept-Encoding': 'gzip, deflate',
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(messages),
+        const result = await sendExpoPushNotifications(messages, {
+          retries: 3,
+          retryDelayMs: 1000,
         });
-
-        if (!response.ok) {
-          logger.error(
-            { status: response.status, statusText: response.statusText },
-            'Expo Push API request failed'
-          );
-          failureCount += batch.length;
-          continue;
-        }
-
-        const result = (await response.json()) as ExpoPushResponse;
 
         // Process each ticket in the response
         result.data.forEach((ticket: ExpoPushTicket, idx: number) => {
@@ -138,18 +93,21 @@ export class PushNotificationService {
           } else {
             failureCount++;
             // Check if the error indicates an invalid token
-            const errorCode = ticket.details?.error;
-            if (errorCode && INVALID_TOKEN_ERRORS.includes(errorCode)) {
+            if (isInvalidTokenError(ticket.details?.error)) {
               invalidTokens.push(batch[idx]);
             }
             logger.warn(
-              { token: batch[idx], error: ticket.message, errorCode },
+              {
+                tokenPrefix: batch[idx].substring(0, 10),
+                error: ticket.message,
+                errorCode: ticket.details?.error,
+              },
               'Failed to send push notification'
             );
           }
         });
       } catch (error) {
-        logger.error({ error, batchSize: batch.length }, 'Batch send failed');
+        logger.error({ error, batchSize: batch.length }, 'Batch send failed after retries');
         failureCount += batch.length;
       }
     }
@@ -171,7 +129,7 @@ export class PushNotificationService {
 
   private async deactivateInvalidTokens(tokens: string[]): Promise<void> {
     const BATCH_SIZE = 10; // Limit concurrent deactivations
-    const batches = this.chunkArray(tokens, BATCH_SIZE);
+    const batches = chunkArray(tokens, BATCH_SIZE);
 
     for (const batch of batches) {
       try {
@@ -186,13 +144,5 @@ export class PushNotificationService {
     }
 
     logger.info({ count: tokens.length }, 'Finished deactivating invalid tokens');
-  }
-
-  private chunkArray<T>(array: T[], size: number): T[][] {
-    const chunks: T[][] = [];
-    for (let i = 0; i < array.length; i += size) {
-      chunks.push(array.slice(i, i + size));
-    }
-    return chunks;
   }
 }

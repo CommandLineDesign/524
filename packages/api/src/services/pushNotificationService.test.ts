@@ -1,18 +1,9 @@
 import assert from 'node:assert/strict';
-import { beforeEach, describe, it, mock } from 'node:test';
+import { after, beforeEach, describe, it, mock } from 'node:test';
 
 import type { DeviceTokenRepository } from '../repositories/deviceTokenRepository.js';
 import type { DeviceTokenService } from './deviceTokenService.js';
 import { PushNotificationService } from './pushNotificationService.js';
-
-// Mock features config
-mock.module('../config/features.js', {
-  namedExports: {
-    features: {
-      ENABLE_PUSH_NOTIFICATIONS: true,
-    },
-  },
-});
 
 // Create mock functions
 interface MockFn<T = unknown> {
@@ -129,6 +120,9 @@ describe('PushNotificationService', () => {
 
   describe('sendToUsers', () => {
     it('should return empty result when no user IDs provided', async () => {
+      // For empty userIds, findActiveByUserIds returns [] before even being called
+      mockTokenRepository.findActiveByUserIds = createMock([]);
+
       const result = await service.sendToUsers([], {
         title: 'Test',
         body: 'Test body',

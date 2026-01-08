@@ -2,13 +2,24 @@ import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/
 import * as Notifications from 'expo-notifications';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { PushNotificationService } from '../services/pushNotificationService';
+import {
+  type InitializeResult,
+  PushNotificationService,
+} from '../services/pushNotificationService';
+
+type FailureReason =
+  | 'not_device'
+  | 'permission_denied'
+  | 'no_project_id'
+  | 'token_error'
+  | 'registration_error';
 
 export interface PushNotificationState {
   token: string | null;
   isEnabled: boolean;
   isLoading: boolean;
   error: string | null;
+  failureReason: FailureReason | null;
 }
 
 interface NotificationData {
@@ -16,6 +27,25 @@ interface NotificationData {
   bookingId?: string;
   chatId?: string;
   [key: string]: unknown;
+}
+
+function getErrorMessage(result: InitializeResult): string | null {
+  if (result.success) return null;
+
+  switch (result.reason) {
+    case 'not_device':
+      return 'Push notifications require a physical device';
+    case 'permission_denied':
+      return 'Notification permission was denied';
+    case 'no_project_id':
+      return 'Push notifications not configured for this app';
+    case 'token_error':
+      return result.error?.message ?? 'Failed to get push token';
+    case 'registration_error':
+      return result.error?.message ?? 'Failed to register with server';
+    default:
+      return 'Unknown error occurred';
+  }
 }
 
 /**
@@ -29,6 +59,7 @@ export function usePushNotifications(isAuthenticated: boolean) {
     isEnabled: false,
     isLoading: false,
     error: null,
+    failureReason: null,
   });
 
   const navigation = useNavigation<NavigationProp<ParamListBase>>();
@@ -61,6 +92,26 @@ export function usePushNotifications(isAuthenticated: boolean) {
     [navigation]
   );
 
+  const handleInitResult = useCallback((result: InitializeResult) => {
+    if (result.success) {
+      setState({
+        token: result.token,
+        isEnabled: true,
+        isLoading: false,
+        error: null,
+        failureReason: null,
+      });
+    } else {
+      setState({
+        token: null,
+        isEnabled: false,
+        isLoading: false,
+        error: getErrorMessage(result),
+        failureReason: result.reason,
+      });
+    }
+  }, []);
+
   useEffect(() => {
     if (!isAuthenticated) {
       // Clean up when user logs out
@@ -69,6 +120,7 @@ export function usePushNotifications(isAuthenticated: boolean) {
         isEnabled: false,
         isLoading: false,
         error: null,
+        failureReason: null,
       });
       return;
     }
@@ -76,23 +128,7 @@ export function usePushNotifications(isAuthenticated: boolean) {
     setState((prev) => ({ ...prev, isLoading: true }));
 
     // Initialize push notifications
-    PushNotificationService.initialize()
-      .then((token) => {
-        setState({
-          token,
-          isEnabled: !!token,
-          isLoading: false,
-          error: null,
-        });
-      })
-      .catch((error) => {
-        setState({
-          token: null,
-          isEnabled: false,
-          isLoading: false,
-          error: error instanceof Error ? error.message : 'Failed to initialize push notifications',
-        });
-      });
+    PushNotificationService.initialize().then(handleInitResult);
 
     // Listen for incoming notifications while app is foregrounded
     notificationListener.current = PushNotificationService.addNotificationReceivedListener(
@@ -120,29 +156,16 @@ export function usePushNotifications(isAuthenticated: boolean) {
         responseListener.current.remove();
       }
     };
-  }, [isAuthenticated, handleNotificationNavigation]);
+  }, [isAuthenticated, handleNotificationNavigation, handleInitResult]);
 
   /**
    * Manually refresh the push token
    */
   const refreshToken = useCallback(async () => {
     setState((prev) => ({ ...prev, isLoading: true }));
-    try {
-      const token = await PushNotificationService.initialize();
-      setState({
-        token,
-        isEnabled: !!token,
-        isLoading: false,
-        error: null,
-      });
-    } catch (error) {
-      setState((prev) => ({
-        ...prev,
-        isLoading: false,
-        error: error instanceof Error ? error.message : 'Failed to refresh token',
-      }));
-    }
-  }, []);
+    const result = await PushNotificationService.initialize();
+    handleInitResult(result);
+  }, [handleInitResult]);
 
   /**
    * Request notification permissions

@@ -1,4 +1,4 @@
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray, lt } from 'drizzle-orm';
 
 import { type DevicePlatform, type DeviceToken, deviceTokens } from '@524/database';
 
@@ -105,7 +105,9 @@ export class DeviceTokenRepository {
       .set({ isActive: false, updatedAt: new Date() })
       .where(eq(deviceTokens.token, token));
 
-    logger.info({ token: `${token.substring(0, 20)}...` }, 'Device token deactivated');
+    // Log only a hash suffix to avoid exposing token content
+    const tokenHash = token.length > 8 ? token.slice(-8) : '***';
+    logger.info({ tokenSuffix: tokenHash }, 'Device token deactivated');
   }
 
   async deactivateAllForUser(userId: string): Promise<void> {
@@ -135,5 +137,52 @@ export class DeviceTokenRepository {
       .select()
       .from(deviceTokens)
       .where(and(eq(deviceTokens.isActive, true), inArray(deviceTokens.userId, userIds)));
+  }
+
+  /**
+   * Deactivate tokens that haven't been used in the specified number of days.
+   * This helps clean up stale tokens from devices that are no longer active.
+   * @param daysInactive Number of days of inactivity before deactivation (default: 30)
+   * @returns Number of tokens deactivated
+   */
+  async deactivateStaleTokens(daysInactive = 30): Promise<number> {
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - daysInactive);
+
+    const result = await db
+      .update(deviceTokens)
+      .set({ isActive: false, updatedAt: new Date() })
+      .where(and(eq(deviceTokens.isActive, true), lt(deviceTokens.lastUsedAt, cutoffDate)))
+      .returning({ id: deviceTokens.id });
+
+    const count = result.length;
+    if (count > 0) {
+      logger.info({ count, daysInactive }, 'Deactivated stale device tokens');
+    }
+
+    return count;
+  }
+
+  /**
+   * Delete tokens that have been inactive for a long period.
+   * Call this periodically to clean up old records.
+   * @param daysInactive Number of days of inactivity before deletion (default: 90)
+   * @returns Number of tokens deleted
+   */
+  async deleteStaleTokens(daysInactive = 90): Promise<number> {
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - daysInactive);
+
+    const result = await db
+      .delete(deviceTokens)
+      .where(and(eq(deviceTokens.isActive, false), lt(deviceTokens.updatedAt, cutoffDate)))
+      .returning({ id: deviceTokens.id });
+
+    const count = result.length;
+    if (count > 0) {
+      logger.info({ count, daysInactive }, 'Deleted old inactive device tokens');
+    }
+
+    return count;
   }
 }
