@@ -89,7 +89,6 @@ await sendMessage.mutateAsync({
 
 ### 🚧 Future Enhancements
 
-- Push notifications (Notification System epic)
 - End-to-end encryption
 - Message reactions and threads
 - Voice/video messaging

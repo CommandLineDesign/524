@@ -1,4 +1,4 @@
-import { NavigationContainer } from '@react-navigation/native';
+import { LinkingOptions, NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React, { useEffect, useMemo } from 'react';
 import { ActivityIndicator, View } from 'react-native';
@@ -21,6 +21,7 @@ import { ChatsListScreen } from '../screens/ChatsListScreen';
 import { HomeScreen } from '../screens/HomeScreen';
 import { LoginScreen } from '../screens/LoginScreen';
 import { MyReviewsScreen } from '../screens/MyReviewsScreen';
+import { NotificationInboxScreen } from '../screens/NotificationInboxScreen';
 import { OccasionSelectionScreen } from '../screens/OccasionSelectionScreen';
 import { OnboardingFlowScreen } from '../screens/OnboardingFlowScreen';
 import { OnboardingLookalikeScreen } from '../screens/OnboardingLookalikeScreen';
@@ -127,9 +128,22 @@ export type RootStackParamList = {
     customerId?: string;
     bookingId?: string;
   };
+  NotificationInbox: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
+
+const linking: LinkingOptions<RootStackParamList> = {
+  prefixes: ['fivetwofour://'],
+  config: {
+    screens: {
+      BookingDetail: 'booking/:bookingId',
+      Chat: 'chat/:conversationId',
+      NotificationInbox: 'notifications',
+      Home: 'home',
+    },
+  },
+};
 
 export function AppNavigator() {
   const { user, isLoading, loadSession } = useAuthStore();
@@ -186,7 +200,7 @@ export function AppNavigator() {
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer linking={linking}>
       <Stack.Navigator initialRouteName={initialRoute}>
         {!user ? (
           <>
@@ -326,6 +340,11 @@ export function AppNavigator() {
                   options={{ title: 'Messages' }}
                 />
                 <Stack.Screen name="Chat" component={ChatScreen} options={{ title: 'Chat' }} />
+                <Stack.Screen
+                  name="NotificationInbox"
+                  component={NotificationInboxScreen}
+                  options={{ title: '알림' }}
+                />
               </>
             )}
             {/* Ensure Home is available even while onboarding to avoid reset race */}

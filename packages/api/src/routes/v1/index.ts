@@ -7,6 +7,7 @@ import { bookingRouter } from './booking.js';
 import { deviceRouter } from './devices.js';
 import { geocodeRouter } from './geocode.js';
 import { messagingRouter } from './messaging.js';
+import { notificationRouter } from './notifications.js';
 import { onboardingRouter } from './onboarding.js';
 import { reviewRouter } from './review.js';
 import { uploadRouter } from './upload.js';
@@ -22,6 +23,7 @@ router.use('/geocode', geocodeRouter);
 router.use('/onboarding', onboardingRouter);
 router.use('/reviews', reviewRouter);
 router.use('/uploads', uploadRouter);
+router.use('/notifications', notificationRouter);
 router.use('/', messagingRouter);
 
 export const v1Router: ExpressRouter = router;

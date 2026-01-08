@@ -1,8 +1,9 @@
 // @ts-nocheck - Test utilities file, types are not critical
 import crypto from 'node:crypto';
-import { sql } from 'drizzle-orm';
+import { inArray, sql } from 'drizzle-orm';
 import jwt from 'jsonwebtoken';
 
+import type { NewNotification, Notification, NotificationPreference } from '@524/database';
 import type { BookingStatus } from '@524/shared';
 import type { BookedService, BookingSummary, CreateBookingPayload } from '@524/shared/bookings';
 
@@ -12,7 +13,7 @@ interface BookingStatusHistoryEntry {
   timestamp: string;
 }
 
-import { bookings } from '@524/database';
+import { bookings, notificationPreferences, notifications } from '@524/database';
 import { env } from '../config/env.js';
 import { db } from '../db/client.js';
 
@@ -32,6 +33,62 @@ export const TEST_USER_ROLES = {
   [TEST_USERS.artist2]: 'artist',
   [TEST_USERS.admin]: 'admin',
 } as const;
+
+/**
+ * Create test notification data
+ */
+export function createTestNotification(overrides: Partial<NewNotification> = {}): NewNotification {
+  return {
+    userId: TEST_USERS.customer1,
+    type: 'booking_created',
+    title: 'Test Notification',
+    body: 'Test notification body',
+    data: { bookingId: 'test-booking-id' },
+    ...overrides,
+  };
+}
+
+/**
+ * Insert test notification into database
+ */
+export async function createTestNotificationInDB(
+  overrides: Partial<NewNotification> = {}
+): Promise<Notification> {
+  const notificationData = createTestNotification(overrides);
+  const [record] = await db.insert(notifications).values(notificationData).returning();
+  return record;
+}
+
+/**
+ * Create test notification preference data
+ */
+export function createTestNotificationPreference(
+  overrides: Partial<NotificationPreference> = {}
+): Partial<NotificationPreference> {
+  return {
+    userId: TEST_USERS.customer1,
+    bookingCreated: true,
+    bookingConfirmed: true,
+    bookingDeclined: true,
+    bookingCancelled: true,
+    bookingInProgress: true,
+    bookingCompleted: true,
+    newMessage: true,
+    marketing: false,
+    ...overrides,
+  };
+}
+
+/**
+ * Insert test notification preference into database
+ */
+export async function createTestNotificationPreferenceInDB(
+  overrides: Partial<NotificationPreference> = {}
+): Promise<NotificationPreference> {
+  const prefData = createTestNotificationPreference(overrides);
+  const [record] = await db.insert(notificationPreferences).values(prefData).returning();
+  return record;
+}
 
 /**
  * Generate mock JWT token for testing
@@ -195,7 +252,37 @@ export async function createTestBookingWithStatus(
  * Clean up test bookings from database
  */
 export async function cleanupTestBookings(): Promise<void> {
-  await db.delete(bookings).where(sql`booking_number LIKE 'BK-%'`);
+  try {
+    await db.delete(bookings).where(sql`booking_number LIKE 'BK-%'`);
+  } catch {
+    // Ignore cleanup errors - table might not exist or DB might be unavailable
+  }
+}
+
+/**
+ * Clean up test notifications from database
+ */
+export async function cleanupNotifications(): Promise<void> {
+  try {
+    const testUserIds = Object.values(TEST_USERS);
+    await db.delete(notifications).where(inArray(notifications.userId, testUserIds));
+  } catch {
+    // Ignore cleanup errors - table might not exist or DB might be unavailable
+  }
+}
+
+/**
+ * Clean up test notification preferences from database
+ */
+export async function cleanupNotificationPreferences(): Promise<void> {
+  try {
+    const testUserIds = Object.values(TEST_USERS);
+    await db
+      .delete(notificationPreferences)
+      .where(inArray(notificationPreferences.userId, testUserIds));
+  } catch {
+    // Ignore cleanup errors - table might not exist or DB might be unavailable
+  }
 }
 
 /**
@@ -203,6 +290,8 @@ export async function cleanupTestBookings(): Promise<void> {
  */
 export async function cleanupTestData(): Promise<void> {
   await cleanupTestBookings();
+  await cleanupNotifications();
+  await cleanupNotificationPreferences();
 }
 
 /**

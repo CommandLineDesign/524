@@ -2,13 +2,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useMemo, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { MenuButton } from '../components/MenuButton';
 import { NavigationMenu } from '../components/NavigationMenu';
 import { Carousel } from '../components/common/Carousel';
 import { homeStrings } from '../constants/homeStrings';
+import { useUnreadNotificationCount } from '../hooks/useNotifications';
 import type { RootStackParamList } from '../navigation/AppNavigator';
 import { useCustomerBookings } from '../query/bookings';
 import { useAuthStore } from '../store/authStore';
@@ -32,6 +33,7 @@ export function HomeScreen() {
   const navigation = useNavigation<HomeNavigationProp>();
   const { user } = useAuthStore();
   const { data: bookings } = useCustomerBookings();
+  const { data: unreadCount = 0 } = useUnreadNotificationCount();
   const [menuVisible, setMenuVisible] = useState(false);
 
   const userName = user?.name || 'Guest';
@@ -60,9 +62,7 @@ export function HomeScreen() {
     : null;
 
   const handleBellPress = () => {
-    Alert.alert(homeStrings.notifications.title, homeStrings.notifications.comingSoon, [
-      { text: 'OK' },
-    ]);
+    navigation.navigate('NotificationInbox');
   };
 
   const handleBookService = () => {
@@ -93,7 +93,16 @@ export function HomeScreen() {
               accessibilityLabel={homeStrings.notifications.label}
               accessibilityHint={homeStrings.notifications.hint}
             >
-              <Ionicons name="notifications-outline" size={24} color={colors.text} />
+              <View>
+                <Ionicons name="notifications-outline" size={24} color={colors.text} />
+                {unreadCount > 0 && (
+                  <View style={styles.bellBadge}>
+                    <Text style={styles.bellBadgeText}>
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </Text>
+                  </View>
+                )}
+              </View>
             </TouchableOpacity>
           </View>
 
@@ -211,6 +220,23 @@ const styles = StyleSheet.create({
   },
   bellButton: {
     padding: spacing.xs,
+  },
+  bellBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -6,
+    backgroundColor: colors.primary,
+    borderRadius: 10,
+    minWidth: 18,
+    height: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+  },
+  bellBadgeText: {
+    color: colors.background,
+    fontSize: 10,
+    fontWeight: '700',
   },
   headerContent: {
     alignItems: 'center',

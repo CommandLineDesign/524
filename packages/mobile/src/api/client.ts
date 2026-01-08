@@ -708,6 +708,87 @@ export async function presignProfilePhoto(
   });
 }
 
+// === Notifications API ===
+
+export interface NotificationPreferences {
+  bookingCreated: boolean;
+  bookingConfirmed: boolean;
+  bookingDeclined: boolean;
+  bookingCancelled: boolean;
+  bookingInProgress: boolean;
+  bookingCompleted: boolean;
+  newMessage: boolean;
+  marketing: boolean;
+}
+
+export interface NotificationItem {
+  id: string;
+  type: string;
+  title: string;
+  body: string;
+  data?: Record<string, string>;
+  readAt: string | null;
+  createdAt: string;
+}
+
+export async function getNotificationPreferences(): Promise<{
+  preferences: NotificationPreferences;
+}> {
+  return request('/api/v1/notifications/preferences', { method: 'GET' });
+}
+
+export async function updateNotificationPreferences(
+  preferences: Partial<NotificationPreferences>
+): Promise<{ preferences: NotificationPreferences }> {
+  return request('/api/v1/notifications/preferences', {
+    method: 'PUT',
+    body: JSON.stringify(preferences),
+  });
+}
+
+export interface GetNotificationsParams {
+  limit?: number;
+  offset?: number;
+}
+
+export interface GetNotificationsResponse {
+  notifications: NotificationItem[];
+  total: number;
+  hasMore: boolean;
+}
+
+export async function getNotifications(
+  params: GetNotificationsParams = {}
+): Promise<GetNotificationsResponse> {
+  const query = new URLSearchParams();
+  if (params.limit) {
+    query.append('limit', params.limit.toString());
+  }
+  if (params.offset) {
+    query.append('offset', params.offset.toString());
+  }
+
+  const path = query.size ? `/api/v1/notifications?${query.toString()}` : '/api/v1/notifications';
+  return request(path, { method: 'GET' });
+}
+
+export async function getUnreadNotificationCount(): Promise<{ unreadCount: number }> {
+  return request('/api/v1/notifications/unread-count', { method: 'GET' });
+}
+
+export async function markNotificationAsRead(
+  id: string
+): Promise<{ notification: NotificationItem }> {
+  return request(`/api/v1/notifications/${id}/read`, { method: 'POST' });
+}
+
+export async function markAllNotificationsAsRead(): Promise<{
+  success: boolean;
+  markedCount: number;
+}> {
+  return request('/api/v1/notifications/read-all', { method: 'POST' });
+}
+
 // Axios-like API client for compatibility
 export const apiClient = {
   async get<T>(path: string, config?: { params?: Record<string, string> }): Promise<T> {
