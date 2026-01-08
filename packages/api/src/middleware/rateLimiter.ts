@@ -33,3 +33,25 @@ export function createGeocodeRateLimiter() {
     },
   });
 }
+
+/**
+ * Rate limiter for device registration endpoints.
+ * 10 requests per minute per IP to prevent registration spam.
+ */
+export function createDeviceRateLimiter() {
+  return rateLimit({
+    windowMs: 60 * 1000, // 1 minute
+    max: 10, // 10 requests per minute
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+      error: 'Too many device registration requests, please try again later.',
+    },
+    keyGenerator: (req) => {
+      // Use X-Forwarded-For if behind proxy, otherwise use IP
+      return (
+        (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip || 'unknown'
+      );
+    },
+  });
+}
