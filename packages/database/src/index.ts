@@ -12,3 +12,5 @@ export * from './schema/users.js';
 export * from './schema/onboardingResponses.js';
 export * from './schema/refreshTokens.js';
 export * from './schema/deviceTokens.js';
+export * from './schema/notificationPreferences.js';
+export * from './schema/notifications.js';

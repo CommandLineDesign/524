@@ -3,7 +3,7 @@
 **Epic**: [Notification System](../epics/notification-system.md)
 **Role**: Customer
 **Priority**: Medium
-**Status**: ⏳ Not Started
+**Status**: ✅ Completed
 **Dependencies**:
 
 - [Setup Push Notifications](./setup-push-notifications.md)

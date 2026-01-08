@@ -85,7 +85,8 @@ export function usePushNotifications(isAuthenticated: boolean) {
           break;
 
         default:
-          // For unknown notification types, navigate to notifications inbox when implemented
+          // For unknown notification types, navigate to notifications inbox
+          navigation.navigate('NotificationInbox');
           break;
       }
     },

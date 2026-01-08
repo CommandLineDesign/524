@@ -8,6 +8,7 @@ export const colors = {
   subtle: '#4b5563',
   surface: '#f9fafb',
   surfaceAlt: '#efeff0',
+  surfaceHighlight: '#fefce8',
   border: '#e5e7eb',
   borderDark: '#19191b',
   success: '#2e7d32',
