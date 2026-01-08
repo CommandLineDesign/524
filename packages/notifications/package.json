@@ -22,7 +22,6 @@
   },
   "dependencies": {
     "@types/node": "^20.19.25",
-    "firebase-admin": "^12.1.0",
     "typescript": "^5.4.5"
   },
   "devDependencies": {

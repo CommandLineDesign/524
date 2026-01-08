@@ -192,53 +192,88 @@ Stage all intended changes and analyze the diff to generate a meaningful, descri
 - [ ] **Diff Reviewed**: All staged changes have been reviewed and understood
 - [ ] **Message Prepared**: Commit message accurately summarizes all changes
 
-### 5. Cross-Package Type Validation
+### 5. Cross-Package Type Validation and Build Simulation
 
 **Purpose:**
-Run a dedicated typecheck across all packages in the monorepo to catch type errors that may not be caught by pre-commit hooks, particularly cross-package import issues and module resolution errors. This step runs independently of git hooks to ensure CI/CD compatibility.
+Run both the typecheck (matching GitHub Actions CI) and build simulation (matching Vercel deployment) to catch all errors before pushing. This two-step validation ensures compatibility with both CI pipelines:
+1. `pnpm typecheck` - matches GitHub Actions CI typecheck job
+2. Sequential package builds - matches Vercel's `vercel-build` process
+
+The build step catches additional errors like missing dependencies that typecheck alone might miss due to pnpm hoisting.
 
 **Input:**
 
 - Staged changes from Step 4
 - All package source files in the monorepo
 - TypeScript configurations for each package
+- Package.json files with dependency declarations
 
 **Actions:**
 
 1. **Install Dependencies**: Ensure all dependencies are installed with `pnpm install`
-2. **Run Monorepo Typecheck**: Execute `pnpm typecheck` to run TypeScript validation across all packages
-3. **Analyze Type Errors**: If typecheck fails, analyze the error output:
-   - Identify which packages have errors
-   - Categorize errors (module resolution, type mismatch, missing exports, etc.)
-   - Determine root cause (missing dependency, incorrect import path, type definition issue)
-4. **Fix Module Resolution Errors**: For errors like `Cannot find module '@524/shared'`:
-   - Verify the package is listed in dependencies in `package.json`
-   - Check that the shared package exports the required types/modules
-   - Ensure workspace linking is correct (`"@524/shared": "workspace:*"`)
-   - Run `pnpm install` again if dependencies were modified
-5. **Fix Type Errors**: Address TypeScript compilation issues:
+2. **Run Monorepo Typecheck**: Execute `pnpm typecheck` to run TypeScript validation across all packages (matches GitHub Actions CI)
+3. **Clean Previous Builds** (Optional): Run `rm -rf packages/*/dist` to ensure clean build state
+4. **Run Vercel Build Simulation**: Execute the exact build command Vercel uses:
+   ```bash
+   pnpm --filter @524/shared build && \
+   pnpm --filter @524/database build && \
+   pnpm --filter @524/notifications build && \
+   pnpm --filter @524/api build
+   ```
+   This mirrors the `vercel-build` script's build sequence.
+5. **Analyze Errors**: If typecheck or build fails, analyze the error output:
+   - **Module Not Found Errors** (e.g., `Cannot find module 'firebase-admin'`): The dependency is missing from the package's `package.json` - add it to `dependencies`
+   - **Implicit Any Errors** (e.g., `Parameter 'x' implicitly has an 'any' type`): Add explicit type annotations
+   - **Type Mismatch Errors**: Fix the type incompatibility in source code
+   - **Missing Export Errors**: Ensure shared packages export required types/modules
+   - **Cross-Package Import Errors**: Verify workspace linking (`"@524/shared": "workspace:*"`)
+6. **Fix Dependency Errors**: For missing module errors:
+   - Add the missing dependency to the package's `package.json` (not relying on hoisting)
+   - Run `pnpm install` to update the lockfile
+   - Example: If `@524/api` imports `firebase-admin` directly, it must be in api's dependencies
+7. **Fix Type Errors**: Address TypeScript compilation issues:
+   - Add explicit type annotations where implicit any is not allowed
    - Fix type mismatches in source files
    - Add missing type exports to shared packages
    - Update type definitions where needed
-   - Ensure all cross-package imports use correct paths
-6. **Re-stage Fixed Files**: If fixes were made, run `git add <fixed-files>` to include them
-7. **Verify Typecheck Passes**: Re-run `pnpm typecheck` to confirm all errors are resolved
-8. **Iterate Until Success**: Continue fixing and re-running until typecheck passes
+8. **Re-stage Fixed Files**: If fixes were made, run `git add <fixed-files>` to include them
+9. **Verify Both Pass**: Re-run both `pnpm typecheck` and build simulation to confirm all errors are resolved
+10. **Iterate Until Success**: Continue fixing and re-running until both pass
 
 **Output:**
 
-- All packages pass TypeScript type checking
+- All packages pass TypeScript type checking (`pnpm typecheck`)
+- All packages build successfully (tsc with emit)
 - Cross-package imports are validated
 - Module resolution errors are resolved
+- All dependencies are properly declared
 - Any fixes are staged for commit
 
 **Validation:**
 
-- [ ] **Typecheck Success**: `pnpm typecheck` completes without errors
-- [ ] **All Packages Pass**: Every package in the monorepo passes type validation
-- [ ] **Module Resolution**: All cross-package imports resolve correctly (e.g., `@524/shared`)
+- [ ] **Typecheck Success**: `pnpm typecheck` completes without errors (matches GitHub Actions)
+- [ ] **Build Success**: Sequential package builds complete without errors (matches Vercel)
+- [ ] **All Packages Pass**: `@524/shared`, `@524/database`, `@524/notifications`, `@524/api` all typecheck and build
+- [ ] **Dependencies Declared**: All imported modules are in the package's own `package.json`
 - [ ] **No Type Errors**: No TypeScript compilation errors in any package
-- [ ] **Fixes Staged**: Any type-related fixes are staged for commit
+- [ ] **No Implicit Any**: All parameters and variables have explicit types where required
+- [ ] **Module Resolution**: All cross-package imports resolve correctly (e.g., `@524/shared`)
+- [ ] **Fixes Staged**: Any type/build-related fixes are staged for commit
+
+**Why Both Typecheck AND Build Simulation:**
+
+GitHub Actions CI runs `pnpm typecheck` which uses `tsc --noEmit`:
+- Validates types without generating output
+- Runs packages in parallel
+- Catches type errors quickly
+
+Vercel runs `tsc --project tsconfig.json` (with emit) sequentially:
+- Requires all dependencies to be explicitly declared in each package
+- May catch missing dependencies that typecheck misses due to pnpm hoisting
+- Runs sequentially: shared → database → notifications → api
+- Validates the full compilation including output generation
+
+Running both ensures your code passes both GitHub Actions CI AND Vercel deployment.
 
 ### 6. Commit Changes with Pre-Commit Hook Handling
 
@@ -506,9 +541,9 @@ This workflow is designed to handle the complete git commit-push cycle with robu
 4. **Build Failures**: Resolve compilation or bundling errors
 5. **Format Issues**: Apply auto-formatting or manual formatting corrections
 
-**Cross-Package Type Error Resolution:**
+**Cross-Package Type and Build Error Resolution:**
 
-The dedicated typecheck step (Step 5) catches errors that pre-commit hooks may miss, particularly in monorepo setups:
+The dedicated typecheck and build simulation step (Step 5) catches errors that pre-commit hooks may miss, particularly in monorepo setups:
 
 1. **Module Resolution Errors** (`Cannot find module '@524/shared'`):
    - Verify the package is in `dependencies` in the consuming package's `package.json`
@@ -516,26 +551,32 @@ The dedicated typecheck step (Step 5) catches errors that pre-commit hooks may m
    - Check workspace linking: should be `"@524/shared": "workspace:*"`
    - Run `pnpm install` to refresh workspace links
 
-2. **Missing Type Exports**:
+2. **Missing External Dependencies** (`Cannot find module 'firebase-admin'`):
+   - This occurs when a package imports an external module but doesn't declare it in its own `package.json`
+   - Locally, pnpm hoisting may make the dependency available from another package
+   - On Vercel/CI with `--frozen-lockfile`, this fails because dependencies must be explicitly declared
+   - **Fix**: Add the missing dependency to the package's own `package.json`
+
+3. **Missing Type Exports**:
    - Ensure types are exported from the shared package's `src/index.ts`
    - Verify `tsconfig.json` includes the source files
    - Check that `declaration: true` is set in the shared package's TypeScript config
 
-3. **Path Resolution Issues**:
+4. **Path Resolution Issues**:
    - Verify `baseUrl` and `paths` in `tsconfig.json` are correct
    - Ensure package `name` in `package.json` matches the import path
    - Check for circular dependencies between packages
 
-4. **Build Order Dependencies**:
+5. **Build Order Dependencies**:
    - Some packages may need to be built before others can typecheck
    - Use `pnpm build` on shared packages first if needed
    - Consider adding `references` to `tsconfig.json` for proper build order
 
-**Why Dedicated Typecheck is Necessary:**
+**Why Both Typecheck AND Build Simulation:**
 
-Pre-commit hooks often run type checking on individual files or packages, which may not catch:
-- Cross-package import errors that only manifest when all packages are checked together
-- Module resolution issues that depend on workspace linking
-- Type errors in packages that weren't directly modified but are affected by changes to shared packages
+Pre-commit hooks and `pnpm typecheck` may not catch all errors that occur in CI/CD:
+- `pnpm typecheck` uses `--noEmit` which may miss dependency resolution issues
+- Vercel runs actual builds (`tsc --project tsconfig.json`) sequentially
+- Missing external dependencies may work locally due to pnpm hoisting but fail on Vercel
 
-Running `pnpm typecheck` ensures the same validation that occurs in CI/CD happens locally before commit.
+Running both `pnpm typecheck` (matches GitHub Actions) and the sequential build simulation (matches Vercel) ensures complete validation before push.

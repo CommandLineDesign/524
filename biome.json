@@ -109,6 +109,16 @@
       "javascript": {
         "globals": ["__dirname", "__filename"]
       }
+    },
+    {
+      "include": ["packages/mobile/src/services/pushNotificationService.ts"],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "noStaticOnlyClass": "off"
+          }
+        }
+      }
     }
   ]
 }

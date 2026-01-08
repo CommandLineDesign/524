@@ -38,11 +38,21 @@ This epic establishes the infrastructure for sending notifications across multip
 - **Templates**: Centralized management of notification content and translations.
 - **Rate Limiting**: Prevent spamming users.
 
-## User Stories (Examples)
+## User Stories
 
-- As a customer, I want to be notified when the artist accepts my booking request.
-- As an artist, I want to receive a text message if I haven't seen a new booking request after 10 minutes.
-- As a user, I want to turn off marketing push notifications but keep booking alerts.
+### Core Infrastructure
+- [Setup Push Notifications](../stories/notification-system/setup-push-notifications.md): FCM integration for mobile alerts
+- [Integrate SMS Gateway](../stories/notification-system/integrate-sms-gateway.md): Naver Cloud SENS for SMS delivery
+- [Integrate Email Service](../stories/notification-system/integrate-email-service.md): Amazon SES for transactional emails
+- [Implement Notification Queue](../stories/notification-system/implement-notification-queue.md): Bull queue for async processing
+
+### User-Facing Features
+- [Manage Notification Preferences](../stories/notification-system/manage-notification-preferences.md): User preference center
+- [View In-App Notification Inbox](../stories/notification-system/view-in-app-notification-inbox.md): Notification history view
+- [Handle Notification Deep Links](../stories/notification-system/handle-notification-deep-links.md): Tap-to-navigate functionality
+
+### Observability
+- [Track Notification Status](../stories/notification-system/track-notification-status.md): Delivery status tracking and monitoring
 
 ## Risks and Assumptions
 
