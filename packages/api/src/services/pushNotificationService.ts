@@ -202,7 +202,7 @@ export class PushNotificationService {
         failureCount += response.failureCount;
 
         // Handle failures and collect invalid tokens
-        response.responses.forEach((resp, idx) => {
+        response.responses.forEach((resp: admin.messaging.SendResponse, idx: number) => {
           if (!resp.success && resp.error) {
             const errorCode = resp.error.code;
             if (INVALID_TOKEN_ERRORS.includes(errorCode)) {
