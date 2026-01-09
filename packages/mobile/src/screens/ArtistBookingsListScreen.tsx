@@ -1,4 +1,5 @@
 import type { BookingStatus, BookingSummary } from '@524/shared';
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useMemo, useState } from 'react';
@@ -17,6 +18,7 @@ import { ArtistNavigationMenu } from '../components/ArtistNavigationMenu';
 import { MenuButton } from '../components/MenuButton';
 import { BookingCard } from '../components/bookings/BookingCard';
 import { STATUS_LABELS } from '../components/bookings/bookingDisplay';
+import { useUnreadNotificationCount } from '../hooks/useNotifications';
 import type { RootStackParamList } from '../navigation/AppNavigator';
 import { useArtistBookings } from '../query/bookings';
 import { colors } from '../theme/colors';
@@ -36,6 +38,11 @@ export function ArtistBookingsListScreen() {
   const navigation = useNavigation<ArtistBookingsNavProp>();
   const [statusFilter, setStatusFilter] = useState<BookingStatus | 'all'>('pending');
   const [menuVisible, setMenuVisible] = useState(false);
+  const { data: unreadCount = 0 } = useUnreadNotificationCount();
+
+  const handleBellPress = () => {
+    navigation.navigate('NotificationInbox');
+  };
 
   const {
     data: bookings,
@@ -71,7 +78,24 @@ export function ArtistBookingsListScreen() {
           <Text style={styles.title}>예약 요청</Text>
           <Text style={styles.subtitle}>대기 중인 예약을 확인하고 응답하세요.</Text>
         </View>
-        <MenuButton onPress={() => setMenuVisible(true)} />
+        <View style={styles.headerActions}>
+          <TouchableOpacity
+            style={styles.bellButton}
+            onPress={handleBellPress}
+            accessibilityRole="button"
+            accessibilityLabel="알림"
+          >
+            <View>
+              <Ionicons name="notifications-outline" size={24} color={colors.text} />
+              {unreadCount > 0 && (
+                <View style={styles.bellBadge}>
+                  <Text style={styles.bellBadgeText}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
+                </View>
+              )}
+            </View>
+          </TouchableOpacity>
+          <MenuButton onPress={() => setMenuVisible(true)} />
+        </View>
       </View>
 
       <View style={styles.filters}>
@@ -143,6 +167,31 @@ const styles = StyleSheet.create({
   header: {
     flex: 1,
     gap: 4,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  bellButton: {
+    padding: 8,
+  },
+  bellBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -6,
+    backgroundColor: colors.primary,
+    borderRadius: 10,
+    minWidth: 18,
+    height: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+  },
+  bellBadgeText: {
+    color: colors.background,
+    fontSize: 10,
+    fontWeight: '700',
   },
   title: {
     fontSize: 24,
