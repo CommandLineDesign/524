@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import type { Application } from 'express';
+import type { Application, RequestHandler } from 'express';
 
 import { createApp } from '../src/app.js';
 
@@ -16,6 +16,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   return new Promise((resolve) => {
     res.on('finish', () => resolve());
     // Call the Express app as a function (it's callable despite TypeScript types)
-    (appInstance as any)(req, res);
+    (appInstance as unknown as RequestHandler)(req, res);
   });
 }
