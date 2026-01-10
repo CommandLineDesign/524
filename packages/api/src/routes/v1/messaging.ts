@@ -1,4 +1,4 @@
-import { type Router as ExpressRouter, Response, Router } from 'express';
+import { type Router as IRouter, Response, Router } from 'express';
 
 import { type AuthRequest, requireAuth } from '../../middleware/auth.js';
 import { ConversationService } from '../../services/conversationService.js';
@@ -14,7 +14,7 @@ function hasPrimaryRole(
   return user !== undefined && 'primaryRole' in user && typeof user.primaryRole === 'string';
 }
 
-const router: ExpressRouter = Router();
+const router = Router();
 
 // Pagination constants
 const CONVERSATIONS_DEFAULT_LIMIT = 20;
@@ -449,4 +449,4 @@ router.post('/upload-image', async (req: AuthRequest, res: Response) => {
   }
 });
 
-export const messagingRouter: ExpressRouter = router;
+export const messagingRouter: IRouter = router;

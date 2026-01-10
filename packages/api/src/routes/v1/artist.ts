@@ -1,11 +1,11 @@
-import { type Router as ExpressRouter, Router } from 'express';
+import { type Router as IRouter, Router } from 'express';
 import type { NextFunction, Request, Response } from 'express';
 
 import { ArtistController } from '../../controllers/artistController.js';
 import { requireArtist } from '../../middleware/auth.js';
 import { validateUUIDParam } from '../../utils/validation.js';
 
-const router: ExpressRouter = Router();
+const router = Router();
 
 /**
  * Validation middleware for artistId parameter
@@ -44,4 +44,4 @@ router.get('/:artistId', validateArtistId, ArtistController.getArtistProfile);
 router.patch('/:artistId', validateArtistId, ArtistController.updateArtistProfile);
 router.get('/', ArtistController.searchArtists);
 
-export const artistRouter: ExpressRouter = router;
+export const artistRouter: IRouter = router;

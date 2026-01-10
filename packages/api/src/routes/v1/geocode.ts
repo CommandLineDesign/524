@@ -1,4 +1,4 @@
-import { type Request, type Response, Router } from 'express';
+import { type Router as IRouter, type Request, type Response, Router } from 'express';
 import { z } from 'zod';
 
 import { createGeocodeRateLimiter } from '../../middleware/rateLimiter.js';
@@ -122,4 +122,4 @@ router.post('/reverse', async (req: Request, res: Response) => {
   }
 });
 
-export const geocodeRouter: Router = router;
+export const geocodeRouter: IRouter = router;

@@ -1,10 +1,10 @@
-import { type Router as ExpressRouter, NextFunction, Request, Response, Router } from 'express';
+import { type Router as IRouter, NextFunction, Request, Response, Router } from 'express';
 
 import { BookingController } from '../../controllers/bookingController.js';
 import { requireArtist, requireAuth, requireCustomer } from '../../middleware/auth.js';
 import { validateUUIDParam } from '../../utils/validation.js';
 
-const router: ExpressRouter = Router();
+const router = Router();
 
 /**
  * Validation middleware for bookingId parameter
@@ -85,4 +85,4 @@ router.post(
   BookingController.submitReview
 );
 
-export const bookingRouter: ExpressRouter = router;
+export const bookingRouter: IRouter = router;
