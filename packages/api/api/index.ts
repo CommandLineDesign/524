@@ -10,19 +10,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     appInstance = await createApp();
   }
 
-  // Express Application can be used as a request handler
-  // TypeScript doesn't recognize this, but it's valid at runtime
-  return new Promise((resolve, reject) => {
-    // Use type assertion since Express app is callable but types don't reflect it
-    (
-      appInstance as unknown as (
-        req: VercelRequest,
-        res: VercelResponse,
-        callback: (err?: Error) => void
-      ) => void
-    )(req, res, (err?: Error) => {
-      if (err) reject(err);
-      else resolve();
-    });
+  // Express Application is callable as a request handler
+  // TypeScript types don't expose this, but it works at runtime
+  // We wait for the response to finish before resolving
+  return new Promise((resolve) => {
+    res.on('finish', () => resolve());
+    // Call the Express app as a function (it's callable despite TypeScript types)
+    // Using unknown intermediate cast to satisfy both biome and TypeScript
+    (appInstance as unknown as (req: VercelRequest, res: VercelResponse) => void)(req, res);
   });
 }
