@@ -120,3 +120,39 @@ After applying these fixes:
 - ✅ Fixed (Jan 2026): Using workspace protocol eliminates duplicate drizzle-orm installations
 - ✅ Local builds pass
 - ⏳ Awaiting Vercel deployment to confirm fix
+
+---
+
+## Additional Fix: Rename `api/` directory (Jan 2026)
+
+### Problem
+
+The workspace protocol fix above was not sufficient. Vercel still failed to build because:
+
+**The `api/` directory is a special Vercel directory that triggers automatic TypeScript compilation.**
+
+Even though our `build-vercel.mjs` script correctly bundles the handler to `.vercel/output/functions/api/index.func/index.mjs`, Vercel ALSO detects the `api/index.ts` source file and runs its own TypeScript compiler on it - using the fresh Vercel environment with duplicate drizzle-orm installations.
+
+### Solution
+
+Renamed `packages/api/api/` to `packages/api/vercel-handler/` to prevent Vercel from detecting it as an API directory.
+
+**Files changed:**
+- `packages/api/api/` → `packages/api/vercel-handler/` (directory renamed)
+- `packages/api/scripts/build-vercel.mjs` - Updated entry point path
+- `packages/api/tsconfig.typecheck.json` - Updated include path
+
+### CI/CD Prevention
+
+The following safeguards are now in place:
+
+1. **CI Job**: `vercel-build-check` in `.github/workflows/ci.yml` runs on every PR
+2. **Pre-push Hook**: `vercel-build-check` in `lefthook.yml` validates before pushing
+3. **Local Verification**: Run `pnpm --filter @524/api vercel-build` before deploying
+
+### If Vercel builds still fail
+
+1. Verify the `api/` directory doesn't exist in `packages/api/`
+2. Check that `vercel-handler/` is being used in build scripts
+3. Run `pnpm why drizzle-orm` to check for duplicates
+4. Try `vercel deploy --prebuilt` to skip Vercel's build entirely

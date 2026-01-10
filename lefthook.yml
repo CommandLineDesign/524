@@ -38,4 +38,6 @@ pre-push:
       run: pnpm -w build
     typecheck:
       run: pnpm -w typecheck
+    vercel-build-check:
+      run: pnpm --filter @524/api build:vercel
 

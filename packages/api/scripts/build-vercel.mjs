@@ -17,7 +17,7 @@ async function ensureCleanOutput() {
 
 async function bundleHandler() {
   await build({
-    entryPoints: [path.join(projectRoot, 'api', 'index.ts')],
+    entryPoints: [path.join(projectRoot, 'vercel-handler', 'index.ts')],
     outfile: path.join(FUNCTION_DIR, 'index.mjs'),
     bundle: true,
     platform: 'node',
