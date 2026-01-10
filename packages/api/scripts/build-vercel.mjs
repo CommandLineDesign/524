@@ -17,22 +17,25 @@ async function ensureCleanOutput() {
 
 async function bundleHandler() {
   await build({
-    entryPoints: [path.join(projectRoot, 'api', 'index.ts')],
-    outfile: path.join(FUNCTION_DIR, 'index.mjs'),
+    entryPoints: [path.join(projectRoot, 'vercel-handler', 'index.ts')],
+    outfile: path.join(FUNCTION_DIR, 'index.cjs'),
     bundle: true,
     platform: 'node',
     target: 'node20',
-    format: 'esm',
+    // Use CommonJS to avoid ESM/CJS interop issues with Express and other CommonJS packages
+    format: 'cjs',
     sourcemap: true,
     tsconfig: path.join(projectRoot, 'tsconfig.json'),
     external: ['pg-native'],
+    // Ensure we can handle dynamic requires
+    mainFields: ['main', 'module'],
   });
 }
 
 async function writeFunctionConfig() {
   const config = {
     runtime: 'nodejs20.x',
-    handler: 'index.mjs',
+    handler: 'index.cjs',
   };
 
   await writeFile(path.join(FUNCTION_DIR, '.vc-config.json'), JSON.stringify(config, null, 2));

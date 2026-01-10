@@ -8,7 +8,8 @@
     "dev": "NODE_OPTIONS='--max-old-space-size=4096' tsx watch src/index.ts",
     "build": "pnpm --filter @524/shared build && pnpm --filter @524/database build && pnpm --filter @524/notifications build && tsc --project tsconfig.json",
     "build:vercel": "node scripts/build-vercel.mjs",
-    "vercel-build": "cd ../.. && pnpm --filter @524/shared build && pnpm --filter @524/database build && pnpm --filter @524/notifications build && pnpm --filter @524/api build && pnpm --filter @524/api build:vercel",
+    "verify:vercel": "node scripts/verify-vercel-bundle.mjs",
+    "vercel-build": "cd ../.. && pnpm --filter @524/shared build && pnpm --filter @524/database build && pnpm --filter @524/notifications build && pnpm --filter @524/api build && pnpm --filter @524/api build:vercel && pnpm --filter @524/api verify:vercel",
     "start": "node dist/index.js",
     "lint": "biome lint .",
     "lint:fix": "biome lint --write .",
@@ -18,9 +19,9 @@
     "test": "tsx --test \"src/**/*.test.ts\""
   },
   "dependencies": {
-    "@524/database": "file:../database",
-    "@524/notifications": "file:../notifications",
-    "@524/shared": "file:../shared",
+    "@524/database": "workspace:*",
+    "@524/notifications": "workspace:*",
+    "@524/shared": "workspace:*",
     "@aws-sdk/client-s3": "^3.947.0",
     "@aws-sdk/s3-request-presigner": "^3.947.0",
     "axios": "^1.6.7",

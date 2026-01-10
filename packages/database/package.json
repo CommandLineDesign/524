@@ -25,7 +25,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@524/shared": "file:../shared",
+    "@524/shared": "workspace:*",
     "@types/bcryptjs": "^3.0.0",
     "@types/pg": "^8.15.6",
     "bcryptjs": "^3.0.3",

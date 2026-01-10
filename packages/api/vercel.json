@@ -1,5 +1,5 @@
 {
   "version": 2,
-  "installCommand": "cd ../.. && pnpm install --frozen-lockfile --prod=false --config.ignore-workspace-root-check=true",
+  "installCommand": "cd ../.. && pnpm install --frozen-lockfile --prod=false --no-optional",
   "buildCommand": "pnpm run vercel-build"
 }
