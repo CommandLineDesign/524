@@ -4,6 +4,8 @@ import { config as loadEnv } from 'dotenv';
 import { z } from 'zod';
 
 // Load env with fallbacks so running from repo root or packages/api works.
+// In serverless environments (like Vercel), environment variables are injected
+// directly and .env file loading is skipped.
 const candidateEnvFiles = [
   process.env.ENV_FILE, // explicit override
   path.resolve(process.cwd(), '.env'), // current working directory
@@ -11,10 +13,14 @@ const candidateEnvFiles = [
   path.resolve(process.cwd(), '..', '..', '.env'), // repo root when CWD is packages/api
 ].filter(Boolean) as string[];
 
-for (const envPath of candidateEnvFiles) {
-  if (fs.existsSync(envPath)) {
-    loadEnv({ path: envPath });
-    break;
+// Only attempt to load .env files if we're not in a serverless environment
+// Vercel and other platforms inject env vars directly
+if (process.env.VERCEL !== '1') {
+  for (const envPath of candidateEnvFiles) {
+    if (fs.existsSync(envPath)) {
+      loadEnv({ path: envPath });
+      break;
+    }
   }
 }
 
