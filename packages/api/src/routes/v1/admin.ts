@@ -1,4 +1,4 @@
-import { type Router as ExpressRouter, Router } from 'express';
+import { type Router as IRouter, Router } from 'express';
 
 import { AdminArtistController } from '../../controllers/adminArtistController.js';
 import { AdminBookingController } from '../../controllers/adminBookingController.js';
@@ -15,7 +15,7 @@ import { validateUUIDParam } from '../../utils/validation.js';
 const conversationService = new ConversationService();
 const messageService = new MessageService();
 
-const router: ExpressRouter = Router();
+const router = Router();
 
 router.get('/pending-artists', requireAdmin(), AdminArtistController.listPendingArtists);
 router.get('/pending-artists/:artistId', requireAdmin(), AdminArtistController.getPendingArtist);
@@ -214,4 +214,4 @@ router.get('/conversations/:id/messages', requireAdmin(), async (req: AuthReques
   }
 });
 
-export const adminRouter: ExpressRouter = router;
+export const adminRouter: IRouter = router;

@@ -1,8 +1,8 @@
-import { type Router as ExpressRouter, Router } from 'express';
+import { type Router as IRouter, Router } from 'express';
 
 import { getCacheStats } from '../services/geocodeCache.js';
 
-const router: ExpressRouter = Router();
+const router = Router();
 
 router.get('/', (_req, res) => {
   res.json({
@@ -15,4 +15,4 @@ router.get('/', (_req, res) => {
   });
 });
 
-export const healthRouter: ExpressRouter = router;
+export const healthRouter: IRouter = router;

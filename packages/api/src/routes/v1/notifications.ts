@@ -1,9 +1,9 @@
-import { type Router as ExpressRouter, Router } from 'express';
+import { type Router as IRouter, Router } from 'express';
 
 import { NotificationController } from '../../controllers/notificationController.js';
 import { requireAuth } from '../../middleware/auth.js';
 
-const router: ExpressRouter = Router();
+const router = Router();
 
 // Notification preferences
 router.get('/preferences', requireAuth(), NotificationController.getPreferences);
@@ -15,4 +15,4 @@ router.get('/unread-count', requireAuth(), NotificationController.getUnreadCount
 router.post('/:id/read', requireAuth(), NotificationController.markAsRead);
 router.post('/read-all', requireAuth(), NotificationController.markAllAsRead);
 
-export const notificationRouter: ExpressRouter = router;
+export const notificationRouter: IRouter = router;

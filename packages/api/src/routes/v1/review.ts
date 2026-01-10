@@ -1,10 +1,10 @@
-import { type Router as ExpressRouter, NextFunction, Request, Response, Router } from 'express';
+import { type Router as IRouter, NextFunction, Request, Response, Router } from 'express';
 
 import { ReviewController } from '../../controllers/reviewController.js';
 import { requireAuth } from '../../middleware/auth.js';
 import { validateUUIDParam } from '../../utils/validation.js';
 
-const router: ExpressRouter = Router();
+const router = Router();
 
 /**
  * Validation middleware for reviewId parameter
@@ -40,4 +40,4 @@ router.get(
   ReviewController.getReviewById
 );
 
-export const reviewRouter: ExpressRouter = router;
+export const reviewRouter: IRouter = router;

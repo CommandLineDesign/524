@@ -1,4 +1,4 @@
-import { type Router as ExpressRouter, Router } from 'express';
+import { type Router as IRouter, Router } from 'express';
 
 import { adminRouter } from './admin.js';
 import { artistRouter } from './artist.js';
@@ -12,7 +12,7 @@ import { onboardingRouter } from './onboarding.js';
 import { reviewRouter } from './review.js';
 import { uploadRouter } from './upload.js';
 
-const router: ExpressRouter = Router();
+const router = Router();
 
 router.use('/auth', authRouter);
 router.use('/bookings', bookingRouter);
@@ -26,4 +26,4 @@ router.use('/uploads', uploadRouter);
 router.use('/notifications', notificationRouter);
 router.use('/', messagingRouter);
 
-export const v1Router: ExpressRouter = router;
+export const v1Router: IRouter = router;

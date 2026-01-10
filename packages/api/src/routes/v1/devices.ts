@@ -1,10 +1,10 @@
-import { type Router as ExpressRouter, Router } from 'express';
+import { type Router as IRouter, Router } from 'express';
 
 import { DeviceController } from '../../controllers/deviceController.js';
 import { requireAuth } from '../../middleware/auth.js';
 import { createDeviceRateLimiter } from '../../middleware/rateLimiter.js';
 
-const router: ExpressRouter = Router();
+const router = Router();
 const deviceRateLimiter = createDeviceRateLimiter();
 
 // Register device token (requires authentication)
@@ -21,4 +21,4 @@ router.post(
   DeviceController.unregisterAllDevices
 );
 
-export const deviceRouter: ExpressRouter = router;
+export const deviceRouter: IRouter = router;
