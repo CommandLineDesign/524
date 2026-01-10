@@ -15,7 +15,7 @@
     "test": "echo \"(web) tests not implemented yet\""
   },
   "dependencies": {
-    "@524/shared": "file:../shared",
+    "@524/shared": "workspace:*",
     "@babel/runtime": "^7.23.0",
     "@emotion/react": "^11.11.0",
     "@emotion/styled": "^11.11.0",

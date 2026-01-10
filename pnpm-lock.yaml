@@ -27,13 +27,13 @@ importers:
   packages/api:
     dependencies:
       '@524/database':
-        specifier: file:../database
+        specifier: workspace:*
         version: link:../database
       '@524/notifications':
-        specifier: file:../notifications
+        specifier: workspace:*
         version: link:../notifications
       '@524/shared':
-        specifier: file:../shared
+        specifier: workspace:*
         version: link:../shared
       '@aws-sdk/client-s3':
         specifier: ^3.947.0
@@ -142,7 +142,7 @@ importers:
   packages/database:
     dependencies:
       '@524/shared':
-        specifier: file:../shared
+        specifier: workspace:*
         version: link:../shared
       '@types/bcryptjs':
         specifier: ^3.0.0
@@ -176,7 +176,7 @@ importers:
   packages/mobile:
     dependencies:
       '@524/shared':
-        specifier: file:../shared
+        specifier: workspace:*
         version: link:../shared
       '@expo/metro-runtime':
         specifier: ~6.1.2
@@ -322,7 +322,7 @@ importers:
   packages/web:
     dependencies:
       '@524/shared':
-        specifier: file:../shared
+        specifier: workspace:*
         version: link:../shared
       '@babel/runtime':
         specifier: ^7.23.0
