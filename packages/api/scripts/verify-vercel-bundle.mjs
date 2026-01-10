@@ -24,6 +24,28 @@ const bundlePath = path.join(
   'index.cjs'
 );
 
+// Set mock environment variables BEFORE importing the bundle
+// This prevents Zod validation errors during CI where real env vars aren't available
+// The bundle will be properly configured with real env vars when deployed to Vercel
+function setMockEnvForVerification() {
+  const mockEnv = {
+    NODE_ENV: 'production',
+    DATABASE_URL: 'postgresql://mock:mock@localhost:5432/mock',
+    VERCEL: '1', // Skip .env file loading
+    // S3 credentials required by uploadService.ts at module load time
+    S3_ACCESS_KEY: 'mock-access-key',
+    S3_SECRET_KEY: 'mock-secret-key',
+    S3_BUCKET: 'mock-bucket',
+    S3_REGION: 'us-east-1',
+  };
+
+  for (const [key, value] of Object.entries(mockEnv)) {
+    if (!process.env[key]) {
+      process.env[key] = value;
+    }
+  }
+}
+
 async function verify() {
   console.log('🔍 Verifying Vercel bundle...\n');
 
@@ -35,6 +57,9 @@ async function verify() {
   }
 
   console.log('✓ Bundle exists at:', bundlePath);
+
+  // Set mock env vars before importing (required for Zod validation in the bundle)
+  setMockEnvForVerification();
 
   // Try to import the bundle - this catches most runtime errors
   console.log('\n📦 Attempting to import bundle...');
