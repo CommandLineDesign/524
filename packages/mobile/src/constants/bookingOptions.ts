@@ -80,6 +80,32 @@ export const celebrityInputStrings = {
 } as const;
 
 // =============================================================================
+// IDOL INPUT SCREENS (Dropdown Selection Flow)
+// =============================================================================
+
+/** Default fallback idol when no selection is made (should not occur in normal flow) */
+export const DEFAULT_IDOL = '아이유';
+
+export const idolInputStrings = {
+  step1: {
+    label: '한 번이라도 비슷하다고 들어본 연예인',
+    placeholder: '이름',
+  },
+  step2: {
+    label: '비슷한 이미지의 연예인',
+    placeholder: '이름',
+  },
+  step3: {
+    label: '내가 예쁘다고 생각하는 연예인',
+    placeholder: '이름',
+  },
+  result: {
+    prefix: '나는 오늘',
+    continueButton: '예약 시작하기',
+  },
+} as const;
+
+// =============================================================================
 // SERVICE SELECTION SCREEN
 // =============================================================================
 
