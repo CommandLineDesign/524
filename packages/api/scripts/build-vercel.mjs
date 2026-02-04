@@ -1,7 +1,15 @@
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { build } from 'esbuild';
+
+// Use esbuild-wasm in CI environments where native binaries aren't available
+// (Vercel installs with --no-optional which skips platform-specific esbuild binaries)
+let build;
+try {
+  ({ build } = await import('esbuild'));
+} catch {
+  ({ build } = await import('esbuild-wasm'));
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

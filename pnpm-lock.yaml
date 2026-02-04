@@ -132,6 +132,9 @@ importers:
       esbuild:
         specifier: ^0.24.2
         version: 0.24.2
+      esbuild-wasm:
+        specifier: ^0.27.2
+        version: 0.27.2
       pino-pretty:
         specifier: ^11.1.0
         version: 11.3.0
@@ -4013,6 +4016,11 @@ packages:
     engines: {node: '>=12'}
     cpu: [x64]
     os: [sunos]
+
+  esbuild-wasm@0.27.2:
+    resolution: {integrity: sha512-eUTnl8eh+v8UZIZh4MrMOKDAc8Lm7+NqP3pyuTORGFY1s/o9WoiJgKnwXy+te2J3hX7iRbFSHEyig7GsPeeJyw==}
+    engines: {node: '>=18'}
+    hasBin: true
 
   esbuild-windows-32@0.14.47:
     resolution: {integrity: sha512-H0fWsLTp2WBfKLBgwYT4OTfFly4Im/8B5f3ojDv1Kx//kiubVY0IQunP2Koc/fr/0wI7hj3IiBDbSrmKlrNgLQ==}
@@ -11121,6 +11129,8 @@ snapshots:
 
   esbuild-sunos-64@0.14.47:
     optional: true
+
+  esbuild-wasm@0.27.2: {}
 
   esbuild-windows-32@0.14.47:
     optional: true
