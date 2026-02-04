@@ -1,7 +1,13 @@
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { build } from 'esbuild';
+
+// Use esbuild-wasm in CI/Vercel environments where native binaries aren't available
+// (Vercel installs with --no-optional which skips platform-specific esbuild binaries)
+// The import succeeds but build() fails, so we must check env vars directly
+const isCI = process.env.CI === 'true' || process.env.CI === '1' || process.env.VERCEL === '1';
+const esbuildModule = isCI ? await import('esbuild-wasm') : await import('esbuild');
+const { build } = esbuildModule;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -26,7 +32,8 @@ async function bundleHandler() {
     format: 'cjs',
     sourcemap: true,
     tsconfig: path.join(projectRoot, 'tsconfig.json'),
-    external: ['pg-native'],
+    // Exclude platform-specific optional dependencies that pg conditionally requires
+    external: ['pg-native', 'pg-cloudflare'],
     // Ensure we can handle dynamic requires
     mainFields: ['main', 'module'],
   });

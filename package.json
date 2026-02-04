@@ -20,7 +20,7 @@
     "dev:api:direct": "pnpm --filter @524/api dev",
     "dev:web": "pnpm --filter @524/web dev",
     "dev:mobile": "pnpm --filter @524/mobile start",
-    "prepare": "lefthook install"
+    "prepare": "[ -n \"$CI\" ] || lefthook install"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",

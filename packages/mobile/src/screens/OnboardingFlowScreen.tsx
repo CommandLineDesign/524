@@ -4,6 +4,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useEffect, useMemo } from 'react';
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 
+import { DEFAULT_IDOL } from '../constants/bookingOptions';
 import type { RootStackParamList } from '../navigation/AppNavigator';
 import {
   useCompleteOnboarding,
@@ -13,7 +14,17 @@ import {
 import { useAuthStore } from '../store/authStore';
 import { useBookingFlowStore } from '../store/bookingFlowStore';
 import { colors, spacing } from '../theme';
-import { CelebrityInputScreen, CelebrityResultScreen } from './booking/entry';
+import {
+  CelebrityInputScreen,
+  CelebrityResultScreen,
+  IdolConfirmationScreen,
+  IdolQuestionScreen,
+} from './booking/entry';
+
+// Feature flag to control onboarding input type.
+// Evaluated at module load time (app startup) - env changes require app restart.
+// This is intentional for performance (avoids re-evaluation on every render).
+const useIdolDropdown = process.env.EXPO_PUBLIC_ONBOARDING_INPUT_TYPE === 'idol_dropdown';
 
 type StepRendererProps = {
   onSubmit: (payload: OnboardingResponseInput) => Promise<void>;
@@ -110,7 +121,7 @@ function CelebrityResultStepRenderer({ onSubmit }: StepRendererProps) {
       celebrities.lookalike ||
       celebrities.similarImage ||
       celebrities.admire ||
-      '아이유'; // Default fallback when no input provided
+      DEFAULT_IDOL; // Default fallback when no input provided
 
     await onSubmit({
       step: 'celebrity_result',
@@ -128,12 +139,107 @@ function CelebrityResultStepRenderer({ onSubmit }: StepRendererProps) {
   );
 }
 
-const STEP_RENDERERS: Partial<Record<OnboardingStepKey, React.FC<StepRendererProps>>> = {
+// =============================================================================
+// IDOL DROPDOWN STEP RENDERERS (for idol_dropdown flow)
+// =============================================================================
+
+function IdolLookalikeStepRenderer({ onSubmit }: StepRendererProps) {
+  const handleContinue = async () => {
+    const { celebrities } = useBookingFlowStore.getState();
+    await onSubmit({
+      step: 'celebrity_lookalike',
+      celebrityName: celebrities.lookalike,
+    });
+  };
+
+  return (
+    <View style={{ flex: 1 }}>
+      <IdolQuestionScreen step={1} onContinue={handleContinue} />
+    </View>
+  );
+}
+
+function IdolSimilarImageStepRenderer({ onSubmit }: StepRendererProps) {
+  const handleContinue = async () => {
+    const { celebrities } = useBookingFlowStore.getState();
+    await onSubmit({
+      step: 'celebrity_similar_image',
+      celebrityName: celebrities.similarImage,
+    });
+  };
+
+  return (
+    <View style={{ flex: 1 }}>
+      <IdolQuestionScreen step={2} onContinue={handleContinue} />
+    </View>
+  );
+}
+
+function IdolAdmireStepRenderer({ onSubmit }: StepRendererProps) {
+  const handleContinue = async () => {
+    const { celebrities } = useBookingFlowStore.getState();
+    await onSubmit({
+      step: 'celebrity_admire',
+      celebrityName: celebrities.admire,
+    });
+  };
+
+  return (
+    <View style={{ flex: 1 }}>
+      <IdolQuestionScreen step={3} onContinue={handleContinue} />
+    </View>
+  );
+}
+
+function IdolResultStepRenderer({ onSubmit }: StepRendererProps) {
+  const handleContinue = async () => {
+    const { resultCelebrity, celebrities } = useBookingFlowStore.getState();
+
+    const derivedCelebrity =
+      resultCelebrity ||
+      celebrities.lookalike ||
+      celebrities.similarImage ||
+      celebrities.admire ||
+      DEFAULT_IDOL;
+
+    await onSubmit({
+      step: 'celebrity_result',
+      resultCelebrity: derivedCelebrity,
+      lookalike: celebrities.lookalike,
+      similarImage: celebrities.similarImage,
+      admire: celebrities.admire,
+    });
+  };
+
+  return (
+    <View style={{ flex: 1 }}>
+      <IdolConfirmationScreen onContinue={handleContinue} />
+    </View>
+  );
+}
+
+// =============================================================================
+// STEP RENDERERS CONFIGURATION
+// =============================================================================
+
+// Celebrity text input renderers (original flow)
+const CELEBRITY_TEXT_RENDERERS: Partial<Record<OnboardingStepKey, React.FC<StepRendererProps>>> = {
   celebrity_lookalike: CelebrityLookalikeStepRenderer,
   celebrity_similar_image: CelebritySimilarImageStepRenderer,
   celebrity_admire: CelebrityAdmireStepRenderer,
   celebrity_result: CelebrityResultStepRenderer,
 };
+
+// Idol dropdown renderers (new flow)
+const IDOL_DROPDOWN_RENDERERS: Partial<Record<OnboardingStepKey, React.FC<StepRendererProps>>> = {
+  celebrity_lookalike: IdolLookalikeStepRenderer,
+  celebrity_similar_image: IdolSimilarImageStepRenderer,
+  celebrity_admire: IdolAdmireStepRenderer,
+  celebrity_result: IdolResultStepRenderer,
+};
+
+// Select renderers based on feature flag
+const STEP_RENDERERS = useIdolDropdown ? IDOL_DROPDOWN_RENDERERS : CELEBRITY_TEXT_RENDERERS;
 
 export function OnboardingFlowScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
