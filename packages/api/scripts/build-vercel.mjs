@@ -32,7 +32,8 @@ async function bundleHandler() {
     format: 'cjs',
     sourcemap: true,
     tsconfig: path.join(projectRoot, 'tsconfig.json'),
-    external: ['pg-native'],
+    // Exclude platform-specific optional dependencies that pg conditionally requires
+    external: ['pg-native', 'pg-cloudflare'],
     // Ensure we can handle dynamic requires
     mainFields: ['main', 'module'],
   });
