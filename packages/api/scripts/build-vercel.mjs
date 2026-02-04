@@ -2,14 +2,12 @@ import { mkdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-// Use esbuild-wasm in CI environments where native binaries aren't available
+// Use esbuild-wasm in CI/Vercel environments where native binaries aren't available
 // (Vercel installs with --no-optional which skips platform-specific esbuild binaries)
-let build;
-try {
-  ({ build } = await import('esbuild'));
-} catch {
-  ({ build } = await import('esbuild-wasm'));
-}
+// The import succeeds but build() fails, so we must check env vars directly
+const isCI = process.env.CI === 'true' || process.env.CI === '1' || process.env.VERCEL === '1';
+const esbuildModule = isCI ? await import('esbuild-wasm') : await import('esbuild');
+const { build } = esbuildModule;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
