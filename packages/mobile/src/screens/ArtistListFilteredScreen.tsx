@@ -92,12 +92,19 @@ export function ArtistListFilteredScreen() {
 
   const handleArtistPress = useCallback(
     (artistId: string) => {
+      // Extract time slot in HH:MM format from the ISO datetime string
+      const dateObj = new Date(dateTime);
+      const hours = dateObj.getHours().toString().padStart(2, '0');
+      const minutes = dateObj.getMinutes().toString().padStart(2, '0');
+      const timeSlot = `${hours}:${minutes}`;
+
       navigation.navigate('ArtistDetail', {
         artistId,
         fromHomeScreen: true,
         preselectedLocation: locationAddress,
         preselectedCoordinates: { lat: latitude, lng: longitude },
         preselectedDate: dateTime,
+        preselectedTimeSlot: timeSlot,
         preselectedServiceType: serviceType,
       });
     },

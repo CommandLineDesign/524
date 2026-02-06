@@ -244,12 +244,15 @@ export const useBookingFlowStore = create<BookingFlowStore>((set, get) => ({
     // Each path starts at a different step
     // celebrity: locationInput -> serviceSelection -> ...
     // direct: serviceSelection -> ...
-    // homeEntry: serviceSelection -> ... (with pre-populated data via initializeFromHome)
+    // homeEntry: occasionSelection (with pre-populated data via initializeFromHome)
     let initialStep: BookingStepKey;
     if (path === 'celebrity') {
       initialStep = 'locationInput';
+    } else if (path === 'homeEntry') {
+      // homeEntry starts at occasionSelection since location, service, date, time, and artist are pre-selected
+      initialStep = 'occasionSelection';
     } else {
-      // Both 'direct' and 'homeEntry' start at serviceSelection
+      // 'direct' starts at serviceSelection
       initialStep = 'serviceSelection';
     }
     set({
