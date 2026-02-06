@@ -23,7 +23,8 @@ export function LocationInputScreen({
   onExit,
   showBackButton = false,
 }: LocationInputScreenProps) {
-  const { location, locationCoordinates, setLocation } = useBookingFlowStore();
+  const { location, locationCoordinates, locationDetail, setLocation, setLocationDetail } =
+    useBookingFlowStore();
 
   // Build location object for LocationPicker
   const currentLocation: LocationData = useMemo(() => {
@@ -32,14 +33,16 @@ export function LocationInputScreen({
         latitude: locationCoordinates.lat,
         longitude: locationCoordinates.lng,
         address: location ?? '',
+        detailAddress: locationDetail ?? '',
       };
     }
     return {
       latitude: 0,
       longitude: 0,
       address: '',
+      detailAddress: '',
     };
-  }, [location, locationCoordinates]);
+  }, [location, locationCoordinates, locationDetail]);
 
   // Handle real-time location changes
   const handleLocationChange = useCallback(
@@ -50,6 +53,14 @@ export function LocationInputScreen({
       });
     },
     [setLocation]
+  );
+
+  // Handle detail address changes
+  const handleDetailAddressChange = useCallback(
+    (detail: string) => {
+      setLocationDetail(detail || null);
+    },
+    [setLocationDetail]
   );
 
   // Check if we have a valid location to enable continue button
@@ -73,6 +84,8 @@ export function LocationInputScreen({
           location={currentLocation}
           onLocationChange={handleLocationChange}
           showRadiusSelector={false}
+          detailAddress={locationDetail ?? ''}
+          onDetailAddressChange={handleDetailAddressChange}
           testID="location-picker"
         />
       </View>

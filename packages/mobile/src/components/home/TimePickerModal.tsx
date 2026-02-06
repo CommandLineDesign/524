@@ -1,15 +1,8 @@
-import React, { useCallback, useMemo, useState } from 'react';
-import {
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { borderRadius, colors, spacing } from '../../theme';
+import { borderRadius, colors, spacing, typography } from '../../theme';
 import { CalendarPicker } from '../booking/CalendarPicker';
 import { TimeSlotGrid } from '../booking/TimeSlotGrid';
 
@@ -32,11 +25,13 @@ export function TimePickerModal({
   const [tempDate, setTempDate] = useState<string | null>(initialDate);
   const [tempTimeSlot, setTempTimeSlot] = useState<string | null>(initialTimeSlot);
 
-  // Reset temp values when modal opens
-  const handleModalShow = useCallback(() => {
-    setTempDate(initialDate);
-    setTempTimeSlot(initialTimeSlot);
-  }, [initialDate, initialTimeSlot]);
+  // Reset temp values when modal opens (useEffect for cross-platform support)
+  useEffect(() => {
+    if (visible) {
+      setTempDate(initialDate);
+      setTempTimeSlot(initialTimeSlot);
+    }
+  }, [visible, initialDate, initialTimeSlot]);
 
   const handleDateSelect = useCallback((date: string) => {
     setTempDate(date);
@@ -76,139 +71,113 @@ export function TimePickerModal({
   const canConfirm = tempDate !== null && tempTimeSlot !== null;
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={handleClose}
-      onShow={handleModalShow}
-    >
-      <Pressable style={styles.overlay} onPress={handleClose}>
-        <Pressable style={styles.container} onPress={(e) => e.stopPropagation()}>
-          {/* Handle bar */}
-          <View style={styles.handleBar} />
+    <Modal visible={visible} animationType="slide" onRequestClose={handleClose}>
+      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity
+            onPress={handleClose}
+            style={styles.closeButton}
+            accessibilityLabel="닫기"
+            accessibilityRole="button"
+          >
+            <Text style={styles.closeButtonText}>✕</Text>
+          </TouchableOpacity>
+          <Text style={styles.title}>날짜 및 시간 선택</Text>
+          <View style={styles.headerSpacer} />
+        </View>
 
-          {/* Header */}
-          <View style={styles.header}>
-            <TouchableOpacity
-              onPress={handleClose}
-              style={styles.closeButton}
-              accessibilityLabel="취소"
-              accessibilityRole="button"
-            >
-              <Text style={styles.closeButtonText}>취소</Text>
-            </TouchableOpacity>
-
-            <Text style={styles.title}>날짜 및 시간 선택</Text>
-
-            <TouchableOpacity
-              onPress={handleConfirm}
-              style={[styles.confirmButton, !canConfirm && styles.confirmButtonDisabled]}
-              disabled={!canConfirm}
-              accessibilityLabel="확인"
-              accessibilityRole="button"
-            >
-              <Text
-                style={[styles.confirmButtonText, !canConfirm && styles.confirmButtonTextDisabled]}
-              >
-                확인
-              </Text>
-            </TouchableOpacity>
+        {/* Content */}
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Calendar */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>날짜</Text>
+            <CalendarPicker
+              selectedDate={tempDate}
+              onSelectDate={handleDateSelect}
+              minDate={minDate}
+              maxDate={maxDate}
+            />
           </View>
 
-          {/* Content */}
-          <ScrollView
-            style={styles.scrollView}
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-          >
-            {/* Calendar */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>날짜</Text>
-              <CalendarPicker
-                selectedDate={tempDate}
-                onSelectDate={handleDateSelect}
-                minDate={minDate}
-                maxDate={maxDate}
-              />
-            </View>
+          {/* Time slots */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>시간</Text>
+            <TimeSlotGrid selectedSlot={tempTimeSlot} onSelectSlot={handleTimeSelect} />
+          </View>
+        </ScrollView>
 
-            {/* Time slots */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>시간</Text>
-              <TimeSlotGrid selectedSlot={tempTimeSlot} onSelectSlot={handleTimeSelect} />
-            </View>
-          </ScrollView>
-        </Pressable>
-      </Pressable>
+        {/* Footer Buttons */}
+        <View style={styles.footer}>
+          <TouchableOpacity
+            onPress={handleClose}
+            style={styles.cancelButton}
+            accessibilityLabel="취소"
+            accessibilityRole="button"
+          >
+            <Text style={styles.cancelButtonText}>취소</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={handleConfirm}
+            style={[styles.confirmButton, !canConfirm && styles.confirmButtonDisabled]}
+            disabled={!canConfirm}
+            accessibilityLabel="확인"
+            accessibilityRole="button"
+          >
+            <Text
+              style={[styles.confirmButtonText, !canConfirm && styles.confirmButtonTextDisabled]}
+            >
+              확인
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
   container: {
+    flex: 1,
     backgroundColor: colors.background,
-    borderTopLeftRadius: borderRadius.xl,
-    borderTopRightRadius: borderRadius.xl,
-    maxHeight: '90%',
-  },
-  handleBar: {
-    width: 36,
-    height: 4,
-    backgroundColor: colors.border,
-    borderRadius: 2,
-    alignSelf: 'center',
-    marginTop: spacing.sm,
-    marginBottom: spacing.sm,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
+  },
+  closeButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  closeButtonText: {
+    fontSize: 20,
+    color: colors.text,
   },
   title: {
     fontSize: 18,
     fontWeight: '600',
     color: colors.text,
   },
-  closeButton: {
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.sm,
-  },
-  closeButtonText: {
-    fontSize: 16,
-    color: colors.muted,
-  },
-  confirmButton: {
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.sm,
-  },
-  confirmButtonDisabled: {
-    opacity: 0.5,
-  },
-  confirmButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.primary,
-  },
-  confirmButtonTextDisabled: {
-    color: colors.muted,
+  headerSpacer: {
+    width: 40,
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
     padding: spacing.lg,
-    paddingBottom: spacing.xxl,
+    paddingBottom: spacing.md,
   },
   section: {
     marginBottom: spacing.lg,
@@ -218,5 +187,47 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.text,
     marginBottom: spacing.md,
+  },
+  footer: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  cancelButton: {
+    flex: 1,
+    height: 52,
+    borderRadius: borderRadius.pill,
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cancelButtonText: {
+    fontSize: typography.sizes.md,
+    fontWeight: '600',
+    color: colors.primary,
+  },
+  confirmButton: {
+    flex: 1,
+    height: 52,
+    borderRadius: borderRadius.pill,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  confirmButtonDisabled: {
+    backgroundColor: colors.muted,
+  },
+  confirmButtonText: {
+    fontSize: typography.sizes.md,
+    fontWeight: '600',
+    color: colors.background,
+  },
+  confirmButtonTextDisabled: {
+    color: colors.background,
   },
 });

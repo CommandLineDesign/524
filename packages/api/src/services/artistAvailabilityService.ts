@@ -1,5 +1,5 @@
 import { bookings } from '@524/database';
-import { and, eq, gte, lte, or } from 'drizzle-orm';
+import { and, eq, gte, inArray, lte, or } from 'drizzle-orm';
 
 import { db } from '../db/client.js';
 import { createLogger } from '../utils/logger.js';
@@ -90,6 +90,8 @@ export class ArtistAvailabilityService {
       .from(bookings)
       .where(
         and(
+          // Filter to only the artists we care about
+          inArray(bookings.artistId, artistIds),
           // Only check confirmed or pending bookings
           or(eq(bookings.status, 'confirmed'), eq(bookings.status, 'pending')),
           // Check for time overlap
@@ -100,9 +102,7 @@ export class ArtistAvailabilityService {
 
     // Create a set of artist IDs with conflicts
     const artistsWithConflicts = new Set(
-      conflictingBookings
-        .map((b) => b.artistId)
-        .filter((id): id is string => artistIds.includes(id))
+      conflictingBookings.map((b) => b.artistId).filter((id): id is string => id !== null)
     );
 
     // Build the result map

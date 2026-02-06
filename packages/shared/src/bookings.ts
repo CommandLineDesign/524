@@ -5,6 +5,7 @@ export interface ServiceLocation {
   latitude: number;
   longitude: number;
   addressLine: string;
+  detailAddress?: string;
 }
 
 export interface BookedService {

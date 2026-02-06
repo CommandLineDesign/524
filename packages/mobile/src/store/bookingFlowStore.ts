@@ -21,8 +21,10 @@ export interface HomeEntryParams {
   artistId: string;
   location: string;
   locationCoordinates: { lat: number; lng: number };
+  locationDetail?: string;
   selectedDate: string;
   selectedTimeSlot: string;
+  serviceType: 'hair' | 'makeup' | 'combo';
 }
 
 export interface CelebrityData {
@@ -49,6 +51,7 @@ export interface BookingFlowState {
   // Location (celebrity flow entry)
   location: string | null;
   locationCoordinates: { lat: number; lng: number } | null;
+  locationDetail: string | null;
 
   // Celebrity data
   celebrities: CelebrityData;
@@ -92,6 +95,7 @@ export interface BookingFlowActions {
 
   // Location actions
   setLocation: (address: string, coordinates?: { lat: number; lng: number }) => void;
+  setLocationDetail: (detail: string | null) => void;
 
   // Celebrity actions
   setCelebrityLookalike: (name: string | null) => void;
@@ -159,6 +163,7 @@ const initialState: BookingFlowState = {
   // Location
   location: null,
   locationCoordinates: null,
+  locationDetail: null,
 
   // Celebrity data
   celebrities: { ...initialCelebrities },
@@ -304,6 +309,10 @@ export const useBookingFlowStore = create<BookingFlowStore>((set, get) => ({
       location: address,
       locationCoordinates: coordinates ?? null,
     });
+  },
+
+  setLocationDetail: (detail) => {
+    set({ locationDetail: detail });
   },
 
   // ===========================================================================
@@ -457,18 +466,20 @@ export const useBookingFlowStore = create<BookingFlowStore>((set, get) => ({
 
   initializeFromHome: (params) => {
     // Initialize the store with pre-selected values from home screen
-    // This starts the flow at serviceSelection with artist, location, and time already set
+    // This starts the flow at occasionSelection with artist, location, time, and service already set
     set({
       ...initialState,
       celebrities: { ...initialCelebrities },
       entryPath: 'homeEntry',
-      currentStep: 'serviceSelection',
+      currentStep: 'occasionSelection',
       stepHistory: [],
       selectedArtistId: params.artistId,
       location: params.location,
       locationCoordinates: params.locationCoordinates,
+      locationDetail: params.locationDetail ?? null,
       selectedDate: params.selectedDate,
       selectedTimeSlot: params.selectedTimeSlot,
+      serviceType: params.serviceType,
     });
   },
 
@@ -513,9 +524,8 @@ export const useBookingFlowStore = create<BookingFlowStore>((set, get) => ({
       'bookingComplete',
     ];
 
-    // Home entry flow skips location/schedule/artist selection since those are pre-set
+    // Home entry flow skips location/service/schedule/artist selection since those are pre-set
     const homeEntrySteps: BookingStepKey[] = [
-      'serviceSelection',
       'occasionSelection',
       'treatmentSelection',
       'styleSelection',
@@ -607,6 +617,7 @@ export const useBookingFlowStore = create<BookingFlowStore>((set, get) => ({
             latitude: state.locationCoordinates.lat,
             longitude: state.locationCoordinates.lng,
             addressLine: location || DEV_DEFAULT_LOCATION.addressLine,
+            detailAddress: state.locationDetail || undefined,
           }
         : DEV_DEFAULT_LOCATION,
       notes: customerNotes || undefined,

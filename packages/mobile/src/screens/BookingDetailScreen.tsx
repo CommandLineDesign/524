@@ -111,6 +111,9 @@ export function BookingDetailScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>이용 장소</Text>
           <Text style={styles.primaryText}>{data.location?.addressLine ?? '주소 정보 없음'}</Text>
+          {data.location?.detailAddress && (
+            <Text style={styles.secondaryText}>{data.location.detailAddress}</Text>
+          )}
         </View>
 
         <View style={styles.section}>

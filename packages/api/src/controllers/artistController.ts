@@ -176,8 +176,8 @@ export const ArtistController = {
         radiusKm: radiusKm ? Number.parseFloat(radiusKm as string) : undefined,
       });
 
-      // Cache for 1 minute to reduce load for repeated requests
-      res.set('Cache-Control', 'public, max-age=60, s-maxage=60');
+      // Cache for 1 minute (private since results are personalized by location/time)
+      res.set('Cache-Control', 'private, max-age=60');
       res.json(results);
     } catch (error) {
       logger.error({ error }, 'Failed to search filtered artists');

@@ -5,6 +5,7 @@ import {
   Pressable,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -12,7 +13,7 @@ import {
 import { useCurrentLocation } from '../../hooks/useCurrentLocation';
 import { useDebounce } from '../../hooks/useDebounce';
 import { reverseGeocodeLocation } from '../../services/kakaoService';
-import { borderRadius, colors, spacing } from '../../theme';
+import { borderRadius, colors, spacing, typography } from '../../theme';
 import type { KeywordSearchResult, MapAddressPickerResult } from '../../types/kakao';
 import { AddressSearchBar } from './AddressSearchBar';
 import { InteractiveKakaoMap, type MapCenter } from './InteractiveKakaoMap/index';
@@ -23,6 +24,7 @@ export interface MapAddressPickerProps {
     latitude: number;
     longitude: number;
     address?: string;
+    detailAddress?: string;
   };
   /** Callback when user confirms the selected location */
   onLocationConfirm: (result: MapAddressPickerResult) => void;
@@ -38,6 +40,8 @@ export interface MapAddressPickerProps {
   radiusKm?: number;
   /** Height of the map section (if not provided, map fills available space) */
   mapHeight?: number;
+  /** Placeholder for detail address input */
+  detailPlaceholder?: string;
   /** Test ID for testing */
   testID?: string;
 }
@@ -59,6 +63,7 @@ export function MapAddressPicker({
   showRadiusOverlay = false,
   radiusKm,
   mapHeight,
+  detailPlaceholder = '동/호수 입력 (예: 101동 1403호)',
   testID,
 }: MapAddressPickerProps) {
   // Location state - mapCenter is the visual center of the map
@@ -95,6 +100,9 @@ export function MapAddressPicker({
     }
     return null;
   });
+
+  // Detail address state
+  const [detailAddress, setDetailAddress] = useState(initialLocation?.detailAddress ?? '');
 
   // Loading states
   const [isReverseGeocoding, setIsReverseGeocoding] = useState(false);
@@ -248,8 +256,9 @@ export function MapAddressPicker({
       longitude: selectedLocation.longitude,
       address: currentAddress.address,
       roadAddress: currentAddress.roadAddress,
+      detailAddress: detailAddress || undefined,
     });
-  }, [selectedLocation, currentAddress, onLocationConfirm]);
+  }, [selectedLocation, currentAddress, detailAddress, onLocationConfirm]);
 
   // Handle pin move mode toggle
   const handleTogglePinMoveMode = useCallback(() => {
@@ -353,6 +362,21 @@ export function MapAddressPicker({
             <Text style={styles.addressPlaceholder}>지도에서 위치를 선택해주세요</Text>
           )}
         </View>
+
+        {/* Detail Address Input */}
+        {currentAddress && (
+          <View style={styles.detailInputContainer}>
+            <Text style={styles.detailLabel}>상세 주소</Text>
+            <TextInput
+              style={styles.detailInput}
+              placeholder={detailPlaceholder}
+              placeholderTextColor={colors.textSecondary}
+              value={detailAddress}
+              onChangeText={setDetailAddress}
+              testID={testID ? `${testID}-detail-input` : undefined}
+            />
+          </View>
+        )}
 
         {/* Confirm Button */}
         <TouchableOpacity
@@ -543,6 +567,24 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textSecondary,
     textAlign: 'center',
+  },
+  detailInputContainer: {
+    gap: spacing.md,
+  },
+  detailLabel: {
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.regular,
+    color: colors.text,
+  },
+  detailInput: {
+    height: spacing.inputHeight,
+    borderWidth: 1,
+    borderColor: colors.borderDark,
+    borderRadius: borderRadius.md,
+    paddingHorizontal: spacing.md,
+    fontSize: typography.sizes.md,
+    color: colors.text,
+    backgroundColor: colors.background,
   },
   confirmButton: {
     backgroundColor: colors.primary,

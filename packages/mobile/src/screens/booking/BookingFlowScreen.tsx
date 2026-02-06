@@ -1,4 +1,5 @@
 import { useNavigation } from '@react-navigation/native';
+import type { RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect } from 'react';
 import { BackHandler } from 'react-native';
@@ -19,12 +20,14 @@ import { LocationInputScreen, ServiceSelectionScreen } from './entry';
 import { StyleSelectionScreen, TreatmentSelectionScreen } from './treatment';
 
 type BookingFlowNavigationProp = NativeStackNavigationProp<RootStackParamList, 'BookingFlow'>;
+type BookingFlowRouteProp = RouteProp<RootStackParamList, 'BookingFlow'>;
 
 interface BookingFlowScreenProps {
-  entryPath?: EntryPath;
+  route: BookingFlowRouteProp;
 }
 
-export function BookingFlowScreen({ entryPath: initialEntryPath }: BookingFlowScreenProps) {
+export function BookingFlowScreen({ route }: BookingFlowScreenProps) {
+  const initialEntryPath = route.params?.entryPath;
   const navigation = useNavigation<BookingFlowNavigationProp>();
   const {
     entryPath,
@@ -36,6 +39,8 @@ export function BookingFlowScreen({ entryPath: initialEntryPath }: BookingFlowSc
     reset,
     completeFlow,
     createdBookingId,
+    selectedArtistId,
+    locationCoordinates,
   } = useBookingFlowStore();
 
   // Initialize the flow on mount
@@ -43,17 +48,26 @@ export function BookingFlowScreen({ entryPath: initialEntryPath }: BookingFlowSc
     const pathToUse = initialEntryPath ?? 'celebrity';
 
     // For homeEntry, the store is already initialized via initializeFromHome
-    // Don't reset - just ensure the entry path is set
+    // which atomically sets entryPath, currentStep, and all pre-populated data
     if (pathToUse === 'homeEntry') {
-      setEntryPath(pathToUse);
-      // Set initial step to serviceSelection since location/time/artist are pre-selected
-      setStep('serviceSelection');
+      // Guard: verify required data was pre-populated via initializeFromHome
+      // If missing, fall back to regular celebrity flow to avoid broken state
+      if (!selectedArtistId || !locationCoordinates) {
+        console.warn(
+          'homeEntry missing required data (artistId or coordinates), falling back to celebrity flow'
+        );
+        reset();
+        setEntryPath('celebrity');
+        return;
+      }
+      // No additional state updates needed - initializeFromHome already set
+      // entryPath to 'homeEntry' and currentStep to 'occasionSelection' atomically
     } else {
       // For other entry paths, reset the store and start fresh
       reset();
       setEntryPath(pathToUse);
     }
-  }, [initialEntryPath, reset, setEntryPath, setStep]);
+  }, [initialEntryPath, reset, setEntryPath, selectedArtistId, locationCoordinates]);
 
   // Handle hardware back button
   useEffect(() => {
@@ -292,10 +306,9 @@ function getDirectFlowSteps(): BookingStepKey[] {
   ];
 }
 
-// Home entry flow - location, time, and artist are pre-selected from home screen
+// Home entry flow - location, time, artist, and service are pre-selected from home screen
 function getHomeEntryFlowSteps(): BookingStepKey[] {
   return [
-    'serviceSelection',
     'occasionSelection',
     'treatmentSelection',
     'styleSelection',

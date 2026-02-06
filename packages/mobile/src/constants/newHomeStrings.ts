@@ -13,6 +13,7 @@ export const newHomeStrings = {
     hairAndMakeup: '내 주변 헤어 메이크업',
     hair: '내 주변 헤어',
     makeup: '내 주변 메이크업',
+    showAll: '전체 보기',
     empty: {
       noArtists: '아티스트를 찾을 수 없습니다',
       selectLocation: '위치를 선택해주세요',

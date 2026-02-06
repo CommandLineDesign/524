@@ -24,7 +24,6 @@ import type { RootStackParamList } from '../navigation/AppNavigator';
 import { useCustomerBookings } from '../query/bookings';
 import { reverseGeocodeLocation } from '../services/kakaoService';
 import { useAuthStore } from '../store/authStore';
-import { borderRadius } from '../theme/borderRadius';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 
@@ -75,6 +74,7 @@ export function HomeScreen() {
   const [locationModalVisible, setLocationModalVisible] = useState(false);
   const [timeModalVisible, setTimeModalVisible] = useState(false);
   const [isLocationLoading, setIsLocationLoading] = useState(true);
+  const [locationError, setLocationError] = useState<string | null>(null);
 
   // Location state
   const [selectedLocation, setSelectedLocation] = useState<{
@@ -108,7 +108,8 @@ export function HomeScreen() {
           });
         }
       } catch {
-        // If GPS fails, leave location unset - user can select manually
+        // If GPS fails, show error and let user select manually
+        setLocationError('위치를 가져올 수 없습니다. 수동으로 선택해주세요.');
       } finally {
         setIsLocationLoading(false);
       }
@@ -157,21 +158,34 @@ export function HomeScreen() {
     navigation.navigate('NotificationInbox');
   };
 
-  const handleBookService = () => {
-    navigation.navigate('BookingFlow', { entryPath: 'celebrity' });
-  };
-
   const handleBookingPress = () => {
     if (nextBooking) {
       navigation.navigate('BookingDetail', { bookingId: nextBooking.id });
     }
   };
 
+  const handleShowAll = useCallback(
+    (serviceType: 'hair' | 'makeup' | 'combo') => {
+      if (!selectedLocation.coordinates || !searchDateTime) {
+        return;
+      }
+      navigation.navigate('ArtistListFiltered', {
+        serviceType,
+        latitude: selectedLocation.coordinates.lat,
+        longitude: selectedLocation.coordinates.lng,
+        dateTime: searchDateTime,
+        locationAddress: selectedLocation.address ?? undefined,
+      });
+    },
+    [navigation, selectedLocation, searchDateTime]
+  );
+
   const handleLocationSelect = useCallback((location: LocationDataWithAddress) => {
     setSelectedLocation({
       coordinates: { lat: location.latitude, lng: location.longitude },
       address: location.address,
     });
+    setLocationError(null); // Clear any previous error
   }, []);
 
   const handleTimeSelect = useCallback((date: string, timeSlot: string) => {
@@ -179,8 +193,8 @@ export function HomeScreen() {
   }, []);
 
   const handleArtistPress = useCallback(
-    (artistId: string) => {
-      // Navigate to artist detail with booking context
+    (artistId: string, serviceType: 'hair' | 'makeup' | 'combo') => {
+      // Navigate to artist detail with booking context including service type
       navigation.navigate('ArtistDetail', {
         artistId,
         fromHomeScreen: true,
@@ -188,6 +202,7 @@ export function HomeScreen() {
         preselectedCoordinates: selectedLocation.coordinates ?? undefined,
         preselectedDate: selectedDateTime.date,
         preselectedTimeSlot: selectedDateTime.timeSlot,
+        preselectedServiceType: serviceType,
       });
     },
     [navigation, selectedLocation, selectedDateTime]
@@ -264,15 +279,6 @@ export function HomeScreen() {
 
         {/* Content - new lower section */}
         <View style={styles.content}>
-          <TouchableOpacity
-            style={styles.bookButton}
-            onPress={handleBookService}
-            accessibilityRole="button"
-            accessibilityLabel={homeStrings.buttons.bookServiceLabel}
-          >
-            <Text style={styles.bookButtonText}>{homeStrings.buttons.bookService}</Text>
-          </TouchableOpacity>
-
           {/* Location and Time Selectors */}
           <LocationSelectorButton
             location={selectedLocation.coordinates}
@@ -280,6 +286,7 @@ export function HomeScreen() {
             onPress={() => setLocationModalVisible(true)}
             isLoading={isLocationLoading}
           />
+          {locationError && <Text style={styles.locationErrorText}>{locationError}</Text>}
 
           <TimeSelectorButton
             date={selectedDateTime.date}
@@ -292,7 +299,9 @@ export function HomeScreen() {
             title={newHomeStrings.carousels.hairAndMakeup}
             artists={comboArtists.data}
             isLoading={comboArtists.isLoading}
-            onArtistPress={handleArtistPress}
+            error={comboArtists.error}
+            onArtistPress={(artistId) => handleArtistPress(artistId, 'combo')}
+            onShowAll={() => handleShowAll('combo')}
             emptyMessage={emptyMessage}
           />
 
@@ -300,7 +309,9 @@ export function HomeScreen() {
             title={newHomeStrings.carousels.hair}
             artists={hairArtists.data}
             isLoading={hairArtists.isLoading}
-            onArtistPress={handleArtistPress}
+            error={hairArtists.error}
+            onArtistPress={(artistId) => handleArtistPress(artistId, 'hair')}
+            onShowAll={() => handleShowAll('hair')}
             emptyMessage={emptyMessage}
           />
 
@@ -308,7 +319,9 @@ export function HomeScreen() {
             title={newHomeStrings.carousels.makeup}
             artists={makeupArtists.data}
             isLoading={makeupArtists.isLoading}
-            onArtistPress={handleArtistPress}
+            error={makeupArtists.error}
+            onArtistPress={(artistId) => handleArtistPress(artistId, 'makeup')}
+            onShowAll={() => handleShowAll('makeup')}
             emptyMessage={emptyMessage}
           />
         </View>
@@ -407,17 +420,11 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: spacing.lg,
   },
-  bookButton: {
-    backgroundColor: colors.primary,
-    paddingVertical: spacing.md,
-    borderRadius: borderRadius.pill,
-    alignItems: 'center',
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.lg,
-  },
-  bookButtonText: {
-    color: colors.background,
-    fontSize: 16,
-    fontWeight: '600',
+  locationErrorText: {
+    color: colors.error,
+    fontSize: 13,
+    textAlign: 'center',
+    marginTop: spacing.xs,
+    paddingHorizontal: spacing.lg,
   },
 });

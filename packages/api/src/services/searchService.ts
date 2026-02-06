@@ -1,7 +1,7 @@
 import type { ArtistSearchFilters, ArtistSearchResult } from '@524/shared/artists';
 
 import { artistProfiles, users } from '@524/database';
-import { eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { db } from '../db/client.js';
 import { createLogger } from '../utils/logger.js';
 import { ArtistAvailabilityService } from './artistAvailabilityService.js';
@@ -64,9 +64,20 @@ export class SearchService {
   async searchArtistsFiltered(filters: FilteredArtistSearchFilters): Promise<ArtistSearchResult[]> {
     const { serviceType, latitude, longitude, dateTime, radiusKm = 25 } = filters;
 
-    logger.info({ filters }, 'Executing filtered artist search');
+    logger.debug({ filters }, 'Executing filtered artist search');
 
-    // Fetch all verified artists with location data
+    // Build service type filter condition (pushed to SQL for efficiency)
+    const serviceTypeCondition =
+      serviceType === 'combo'
+        ? // For combo, artist must have both hair AND makeup
+          and(
+            sql`${artistProfiles.specialties}::jsonb ? 'hair'`,
+            sql`${artistProfiles.specialties}::jsonb ? 'makeup'`
+          )
+        : // For single service type, check if array contains the value
+          sql`${artistProfiles.specialties}::jsonb ? ${serviceType}`;
+
+    // Fetch verified artists filtered by service type at DB level
     const rows = await db
       .select({
         id: artistProfiles.id,
@@ -83,31 +94,29 @@ export class SearchService {
       })
       .from(artistProfiles)
       .innerJoin(users, eq(artistProfiles.userId, users.id))
-      .where(eq(artistProfiles.verificationStatus, 'verified'))
-      .limit(100); // Fetch more since we'll filter down
-
-    // Filter by service type
-    const serviceTypeFiltered = rows.filter((row) => {
-      const specialties = (row.specialties as string[] | null) ?? [];
-      if (serviceType === 'combo') {
-        return specialties.includes('hair') && specialties.includes('makeup');
-      }
-      return specialties.includes(serviceType);
-    });
+      .where(and(eq(artistProfiles.verificationStatus, 'verified'), serviceTypeCondition))
+      .limit(100); // Fetch more since we'll filter by location
 
     // Filter by location - check if user is within artist's service area
-    const locationFiltered = serviceTypeFiltered.filter((row) => {
-      const location = row.primaryLocation as { latitude: number; longitude: number } | null;
-      if (!location || !location.latitude || !location.longitude) {
+    const locationFiltered = rows.filter((row) => {
+      const location = row.primaryLocation;
+      // Runtime validation for JSON column - ensure it's a valid coordinate object
+      if (
+        !location ||
+        typeof location !== 'object' ||
+        typeof (location as Record<string, unknown>).latitude !== 'number' ||
+        typeof (location as Record<string, unknown>).longitude !== 'number'
+      ) {
         return false;
       }
+      const validLocation = location as { latitude: number; longitude: number };
 
       const artistServiceRadius = row.serviceRadiusKm ? Number(row.serviceRadiusKm) : 10;
       const distance = calculateDistanceKm(
         latitude,
         longitude,
-        location.latitude,
-        location.longitude
+        validLocation.latitude,
+        validLocation.longitude
       );
 
       // User must be within artist's service radius AND within search radius
@@ -126,18 +135,27 @@ export class SearchService {
       dateTime
     );
 
-    // Filter by availability and map to results
+    // Filter by availability, sort by rating, and map to results
     const results = locationFiltered
       .filter((row) => availabilityMap.get(row.userId) === true)
       .map((row) => this.mapRowToResult(row))
+      .sort((a, b) => {
+        // Artists with reviews come first
+        const aHasReviews = a.reviewCount > 0;
+        const bHasReviews = b.reviewCount > 0;
+        if (aHasReviews !== bHasReviews) {
+          return bHasReviews ? 1 : -1;
+        }
+        // Then sort by rating (descending)
+        return b.averageRating - a.averageRating;
+      })
       .slice(0, 20); // Limit final results
 
     logger.info(
       {
-        totalFetched: rows.length,
-        afterServiceType: serviceTypeFiltered.length,
-        afterLocation: locationFiltered.length,
-        afterAvailability: results.length,
+        afterServiceTypeFilter: rows.length,
+        afterLocationFilter: locationFiltered.length,
+        afterAvailabilityFilter: results.length,
       },
       'Filtered artist search complete'
     );

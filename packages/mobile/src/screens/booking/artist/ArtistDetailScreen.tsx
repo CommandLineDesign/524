@@ -32,6 +32,7 @@ interface ArtistDetailScreenProps {
       preselectedCoordinates?: { lat: number; lng: number };
       preselectedDate?: string;
       preselectedTimeSlot?: string;
+      preselectedServiceType?: 'hair' | 'makeup' | 'combo';
     };
   };
   navigation: {
@@ -50,6 +51,7 @@ export function ArtistDetailScreen({ route }: ArtistDetailScreenProps) {
     preselectedCoordinates,
     preselectedDate,
     preselectedTimeSlot,
+    preselectedServiceType,
   } = route.params;
 
   const navigation = useNavigation<NavigationProp>();
@@ -67,19 +69,25 @@ export function ArtistDetailScreen({ route }: ArtistDetailScreenProps) {
   });
 
   const handleBookWithArtist = useCallback(() => {
-    if (!preselectedCoordinates || !preselectedDate || !preselectedTimeSlot) {
+    if (
+      !preselectedCoordinates ||
+      !preselectedDate ||
+      !preselectedTimeSlot ||
+      !preselectedServiceType
+    ) {
       // Fallback: navigate to regular booking flow if data is missing
       navigation.navigate('BookingFlow', { entryPath: 'celebrity' });
       return;
     }
 
-    // Initialize the booking flow store with pre-selected data
+    // Initialize the booking flow store with pre-selected data including service type
     initializeFromHome({
       artistId,
       location: preselectedLocation || '',
       locationCoordinates: preselectedCoordinates,
       selectedDate: preselectedDate,
       selectedTimeSlot: preselectedTimeSlot,
+      serviceType: preselectedServiceType,
     });
 
     // Navigate to booking flow - the store is already initialized
@@ -90,6 +98,7 @@ export function ArtistDetailScreen({ route }: ArtistDetailScreenProps) {
     preselectedCoordinates,
     preselectedDate,
     preselectedTimeSlot,
+    preselectedServiceType,
     navigation,
     initializeFromHome,
   ]);
