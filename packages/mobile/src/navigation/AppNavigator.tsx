@@ -115,7 +115,15 @@ export type RootStackParamList = {
   ReviewConfirmation: { bookingId: string };
   MyReviews: undefined;
   ArtistProfile: { artistId: string };
-  ArtistDetail: { artistId: string };
+  ArtistDetail: {
+    artistId: string;
+    // New params from home screen for pre-populated booking flow
+    fromHomeScreen?: boolean;
+    preselectedLocation?: string;
+    preselectedCoordinates?: { lat: number; lng: number };
+    preselectedDate?: string;
+    preselectedTimeSlot?: string;
+  };
   ArtistOnboarding: undefined;
   ArtistPending: undefined;
   ArtistBookingsList: undefined;

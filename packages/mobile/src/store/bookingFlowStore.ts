@@ -15,7 +15,15 @@ import type {
 // TYPES
 // =============================================================================
 
-export type EntryPath = 'celebrity' | 'direct';
+export type EntryPath = 'celebrity' | 'direct' | 'homeEntry';
+
+export interface HomeEntryParams {
+  artistId: string;
+  location: string;
+  locationCoordinates: { lat: number; lng: number };
+  selectedDate: string;
+  selectedTimeSlot: string;
+}
 
 export interface CelebrityData {
   lookalike: string | null; // Step 1: 비슷하다고 들어본
@@ -117,6 +125,9 @@ export interface BookingFlowActions {
 
   // Checkout actions
   setCustomerNotes: (notes: string) => void;
+
+  // Home entry action
+  initializeFromHome: (params: HomeEntryParams) => void;
 
   // Computed getters
   getTotalAmount: () => number;
@@ -225,8 +236,17 @@ export const useBookingFlowStore = create<BookingFlowStore>((set, get) => ({
   // ===========================================================================
 
   setEntryPath: (path) => {
-    // Both paths now start at locationInput or serviceSelection
-    const initialStep: BookingStepKey = path === 'celebrity' ? 'locationInput' : 'serviceSelection';
+    // Each path starts at a different step
+    // celebrity: locationInput -> serviceSelection -> ...
+    // direct: serviceSelection -> ...
+    // homeEntry: serviceSelection -> ... (with pre-populated data via initializeFromHome)
+    let initialStep: BookingStepKey;
+    if (path === 'celebrity') {
+      initialStep = 'locationInput';
+    } else {
+      // Both 'direct' and 'homeEntry' start at serviceSelection
+      initialStep = 'serviceSelection';
+    }
     set({
       entryPath: path,
       currentStep: initialStep,
@@ -432,6 +452,27 @@ export const useBookingFlowStore = create<BookingFlowStore>((set, get) => ({
   },
 
   // ===========================================================================
+  // Home Entry Action
+  // ===========================================================================
+
+  initializeFromHome: (params) => {
+    // Initialize the store with pre-selected values from home screen
+    // This starts the flow at serviceSelection with artist, location, and time already set
+    set({
+      ...initialState,
+      celebrities: { ...initialCelebrities },
+      entryPath: 'homeEntry',
+      currentStep: 'serviceSelection',
+      stepHistory: [],
+      selectedArtistId: params.artistId,
+      location: params.location,
+      locationCoordinates: params.locationCoordinates,
+      selectedDate: params.selectedDate,
+      selectedTimeSlot: params.selectedTimeSlot,
+    });
+  },
+
+  // ===========================================================================
   // Computed Getters
   // ===========================================================================
 
@@ -472,7 +513,25 @@ export const useBookingFlowStore = create<BookingFlowStore>((set, get) => ({
       'bookingComplete',
     ];
 
-    const steps = entryPath === 'celebrity' ? celebritySteps : directSteps;
+    // Home entry flow skips location/schedule/artist selection since those are pre-set
+    const homeEntrySteps: BookingStepKey[] = [
+      'serviceSelection',
+      'occasionSelection',
+      'treatmentSelection',
+      'styleSelection',
+      'paymentConfirmation',
+      'bookingComplete',
+    ];
+
+    let steps: BookingStepKey[];
+    if (entryPath === 'celebrity') {
+      steps = celebritySteps;
+    } else if (entryPath === 'homeEntry') {
+      steps = homeEntrySteps;
+    } else {
+      steps = directSteps;
+    }
+
     const currentIndex = steps.indexOf(currentStep);
 
     if (currentIndex === -1) return 0;

@@ -7,7 +7,7 @@ import {
   ArtistRepository,
   type PendingArtistQuery,
 } from '../repositories/artistRepository.js';
-import { SearchService } from './searchService.js';
+import { type FilteredArtistSearchFilters, SearchService } from './searchService.js';
 
 export class ArtistService {
   constructor(
@@ -40,6 +40,10 @@ export class ArtistService {
 
   searchArtists(filters: ArtistSearchFilters): Promise<ArtistSearchResult[]> {
     return this.searchService.searchArtists(filters);
+  }
+
+  searchArtistsFiltered(filters: FilteredArtistSearchFilters): Promise<ArtistSearchResult[]> {
+    return this.searchService.searchArtistsFiltered(filters);
   }
 
   getPendingArtists(query: PendingArtistQuery) {

@@ -38,6 +38,9 @@ function validateArtistId(req: Request, res: Response, next: NextFunction) {
 router.get('/me/profile', requireArtist(), ArtistController.getMyProfile);
 router.patch('/me/profile', requireArtist(), ArtistController.updateMyProfile);
 
+// Filtered search must come before /:artistId to avoid matching 'search' as artistId
+router.get('/search/filtered', ArtistController.searchArtistsFiltered);
+
 router.get('/:artistId/reviews/stats', validateArtistId, ArtistController.getArtistReviewStats);
 router.get('/:artistId/reviews', validateArtistId, ArtistController.getArtistReviews);
 router.get('/:artistId', validateArtistId, ArtistController.getArtistProfile);

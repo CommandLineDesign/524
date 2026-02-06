@@ -639,6 +639,34 @@ export async function searchArtists(params: ArtistSearchParams = {}) {
   });
 }
 
+export interface FilteredArtistSearchParams {
+  serviceType: 'hair' | 'makeup' | 'combo';
+  latitude: number;
+  longitude: number;
+  dateTime: string; // ISO datetime string
+  radiusKm?: number;
+}
+
+/**
+ * Search artists filtered by location and availability
+ * Used by home screen carousels to show nearby available artists
+ */
+export async function searchArtistsFiltered(params: FilteredArtistSearchParams) {
+  const query = new URLSearchParams();
+  query.append('serviceType', params.serviceType);
+  query.append('lat', params.latitude.toString());
+  query.append('lng', params.longitude.toString());
+  query.append('dateTime', params.dateTime);
+
+  if (params.radiusKm !== undefined) {
+    query.append('radiusKm', params.radiusKm.toString());
+  }
+
+  return request<ArtistSearchResult[]>(`/api/v1/artists/search/filtered?${query.toString()}`, {
+    method: 'GET',
+  });
+}
+
 export async function getArtistProfile(): Promise<ArtistProfile> {
   return request('/api/v1/artists/me/profile', { method: 'GET' });
 }
