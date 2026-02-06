@@ -194,18 +194,20 @@ export function HomeScreen() {
 
   const handleArtistPress = useCallback(
     (artistId: string, serviceType: 'hair' | 'makeup' | 'combo') => {
+      if (!searchDateTime) return;
       // Navigate to artist detail with booking context including service type
+      // Use searchDateTime (built from date + timeSlot) to ensure correct time is passed
       navigation.navigate('ArtistDetail', {
         artistId,
         fromHomeScreen: true,
         preselectedLocation: selectedLocation.address ?? undefined,
         preselectedCoordinates: selectedLocation.coordinates ?? undefined,
-        preselectedDate: selectedDateTime.date,
+        preselectedDate: searchDateTime,
         preselectedTimeSlot: selectedDateTime.timeSlot,
         preselectedServiceType: serviceType,
       });
     },
-    [navigation, selectedLocation, selectedDateTime]
+    [navigation, selectedLocation, selectedDateTime.timeSlot, searchDateTime]
   );
 
   // Empty message based on location state

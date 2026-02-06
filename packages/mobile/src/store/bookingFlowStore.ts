@@ -563,6 +563,7 @@ export const useBookingFlowStore = create<BookingFlowStore>((set, get) => ({
       serviceType,
       occasion,
       selectedDate,
+      selectedTimeSlot,
       selectedTreatments,
       location,
       customerNotes,
@@ -598,8 +599,14 @@ export const useBookingFlowStore = create<BookingFlowStore>((set, get) => ({
       price: treatment.price,
     }));
 
-    // Calculate end time
+    // Build correct start time by combining selectedDate with selectedTimeSlot
+    // This ensures the booking uses the user's current time selection, not a stale time
+    // embedded in the date string from when it was originally set
     const startTime = new Date(selectedDate);
+    if (selectedTimeSlot) {
+      const [hours, minutes] = selectedTimeSlot.split(':').map(Number);
+      startTime.setHours(hours, minutes, 0, 0);
+    }
     const endTime = new Date(startTime.getTime() + estimatedDuration * 60 * 1000);
 
     return {
@@ -608,7 +615,7 @@ export const useBookingFlowStore = create<BookingFlowStore>((set, get) => ({
       serviceType: validServiceType,
       occasion,
       scheduledDate: selectedDate,
-      scheduledStartTime: selectedDate,
+      scheduledStartTime: startTime.toISOString(),
       scheduledEndTime: endTime.toISOString(),
       totalAmount,
       services,
