@@ -15,7 +15,17 @@ import type {
 // TYPES
 // =============================================================================
 
-export type EntryPath = 'celebrity' | 'direct';
+export type EntryPath = 'celebrity' | 'direct' | 'homeEntry';
+
+export interface HomeEntryParams {
+  artistId: string;
+  location: string;
+  locationCoordinates: { lat: number; lng: number };
+  locationDetail?: string;
+  selectedDate: string;
+  selectedTimeSlot: string;
+  serviceType: 'hair' | 'makeup' | 'combo';
+}
 
 export interface CelebrityData {
   lookalike: string | null; // Step 1: 비슷하다고 들어본
@@ -41,6 +51,7 @@ export interface BookingFlowState {
   // Location (celebrity flow entry)
   location: string | null;
   locationCoordinates: { lat: number; lng: number } | null;
+  locationDetail: string | null;
 
   // Celebrity data
   celebrities: CelebrityData;
@@ -84,6 +95,7 @@ export interface BookingFlowActions {
 
   // Location actions
   setLocation: (address: string, coordinates?: { lat: number; lng: number }) => void;
+  setLocationDetail: (detail: string | null) => void;
 
   // Celebrity actions
   setCelebrityLookalike: (name: string | null) => void;
@@ -118,6 +130,9 @@ export interface BookingFlowActions {
   // Checkout actions
   setCustomerNotes: (notes: string) => void;
 
+  // Home entry action
+  initializeFromHome: (params: HomeEntryParams) => void;
+
   // Computed getters
   getTotalAmount: () => number;
   getEstimatedDuration: () => number;
@@ -148,6 +163,7 @@ const initialState: BookingFlowState = {
   // Location
   location: null,
   locationCoordinates: null,
+  locationDetail: null,
 
   // Celebrity data
   celebrities: { ...initialCelebrities },
@@ -225,8 +241,20 @@ export const useBookingFlowStore = create<BookingFlowStore>((set, get) => ({
   // ===========================================================================
 
   setEntryPath: (path) => {
-    // Both paths now start at locationInput or serviceSelection
-    const initialStep: BookingStepKey = path === 'celebrity' ? 'locationInput' : 'serviceSelection';
+    // Each path starts at a different step
+    // celebrity: locationInput -> serviceSelection -> ...
+    // direct: serviceSelection -> ...
+    // homeEntry: occasionSelection (with pre-populated data via initializeFromHome)
+    let initialStep: BookingStepKey;
+    if (path === 'celebrity') {
+      initialStep = 'locationInput';
+    } else if (path === 'homeEntry') {
+      // homeEntry starts at occasionSelection since location, service, date, time, and artist are pre-selected
+      initialStep = 'occasionSelection';
+    } else {
+      // 'direct' starts at serviceSelection
+      initialStep = 'serviceSelection';
+    }
     set({
       entryPath: path,
       currentStep: initialStep,
@@ -284,6 +312,10 @@ export const useBookingFlowStore = create<BookingFlowStore>((set, get) => ({
       location: address,
       locationCoordinates: coordinates ?? null,
     });
+  },
+
+  setLocationDetail: (detail) => {
+    set({ locationDetail: detail });
   },
 
   // ===========================================================================
@@ -432,6 +464,29 @@ export const useBookingFlowStore = create<BookingFlowStore>((set, get) => ({
   },
 
   // ===========================================================================
+  // Home Entry Action
+  // ===========================================================================
+
+  initializeFromHome: (params) => {
+    // Initialize the store with pre-selected values from home screen
+    // This starts the flow at occasionSelection with artist, location, time, and service already set
+    set({
+      ...initialState,
+      celebrities: { ...initialCelebrities },
+      entryPath: 'homeEntry',
+      currentStep: 'occasionSelection',
+      stepHistory: [],
+      selectedArtistId: params.artistId,
+      location: params.location,
+      locationCoordinates: params.locationCoordinates,
+      locationDetail: params.locationDetail ?? null,
+      selectedDate: params.selectedDate,
+      selectedTimeSlot: params.selectedTimeSlot,
+      serviceType: params.serviceType,
+    });
+  },
+
+  // ===========================================================================
   // Computed Getters
   // ===========================================================================
 
@@ -472,7 +527,24 @@ export const useBookingFlowStore = create<BookingFlowStore>((set, get) => ({
       'bookingComplete',
     ];
 
-    const steps = entryPath === 'celebrity' ? celebritySteps : directSteps;
+    // Home entry flow skips location/service/schedule/artist selection since those are pre-set
+    const homeEntrySteps: BookingStepKey[] = [
+      'occasionSelection',
+      'treatmentSelection',
+      'styleSelection',
+      'paymentConfirmation',
+      'bookingComplete',
+    ];
+
+    let steps: BookingStepKey[];
+    if (entryPath === 'celebrity') {
+      steps = celebritySteps;
+    } else if (entryPath === 'homeEntry') {
+      steps = homeEntrySteps;
+    } else {
+      steps = directSteps;
+    }
+
     const currentIndex = steps.indexOf(currentStep);
 
     if (currentIndex === -1) return 0;
@@ -491,6 +563,7 @@ export const useBookingFlowStore = create<BookingFlowStore>((set, get) => ({
       serviceType,
       occasion,
       selectedDate,
+      selectedTimeSlot,
       selectedTreatments,
       location,
       customerNotes,
@@ -526,8 +599,14 @@ export const useBookingFlowStore = create<BookingFlowStore>((set, get) => ({
       price: treatment.price,
     }));
 
-    // Calculate end time
+    // Build correct start time by combining selectedDate with selectedTimeSlot
+    // This ensures the booking uses the user's current time selection, not a stale time
+    // embedded in the date string from when it was originally set
     const startTime = new Date(selectedDate);
+    if (selectedTimeSlot) {
+      const [hours, minutes] = selectedTimeSlot.split(':').map(Number);
+      startTime.setHours(hours, minutes, 0, 0);
+    }
     const endTime = new Date(startTime.getTime() + estimatedDuration * 60 * 1000);
 
     return {
@@ -536,7 +615,7 @@ export const useBookingFlowStore = create<BookingFlowStore>((set, get) => ({
       serviceType: validServiceType,
       occasion,
       scheduledDate: selectedDate,
-      scheduledStartTime: selectedDate,
+      scheduledStartTime: startTime.toISOString(),
       scheduledEndTime: endTime.toISOString(),
       totalAmount,
       services,
@@ -548,6 +627,7 @@ export const useBookingFlowStore = create<BookingFlowStore>((set, get) => ({
             latitude: state.locationCoordinates.lat,
             longitude: state.locationCoordinates.lng,
             addressLine: location || DEV_DEFAULT_LOCATION.addressLine,
+            detailAddress: state.locationDetail || undefined,
           }
         : DEV_DEFAULT_LOCATION,
       notes: customerNotes || undefined,

@@ -8,6 +8,7 @@ import { useArtistProfile } from '../query/artist';
 import { useOnboardingState } from '../query/onboarding';
 import { ArtistBookingDetailScreen } from '../screens/ArtistBookingDetailScreen';
 import { ArtistBookingsListScreen } from '../screens/ArtistBookingsListScreen';
+import { ArtistListFilteredScreen } from '../screens/ArtistListFilteredScreen';
 import { ArtistOnboardingFlowScreen } from '../screens/ArtistOnboardingFlowScreen';
 import { ArtistPendingScreen } from '../screens/ArtistPendingScreen';
 import { ArtistProfileScreen } from '../screens/ArtistProfileScreen';
@@ -115,7 +116,23 @@ export type RootStackParamList = {
   ReviewConfirmation: { bookingId: string };
   MyReviews: undefined;
   ArtistProfile: { artistId: string };
-  ArtistDetail: { artistId: string };
+  ArtistDetail: {
+    artistId: string;
+    // New params from home screen for pre-populated booking flow
+    fromHomeScreen?: boolean;
+    preselectedLocation?: string;
+    preselectedCoordinates?: { lat: number; lng: number };
+    preselectedDate?: string;
+    preselectedTimeSlot?: string;
+    preselectedServiceType?: 'hair' | 'makeup' | 'combo';
+  };
+  ArtistListFiltered: {
+    serviceType: 'hair' | 'makeup' | 'combo';
+    latitude: number;
+    longitude: number;
+    dateTime: string;
+    locationAddress?: string;
+  };
   ArtistOnboarding: undefined;
   ArtistPending: undefined;
   ArtistBookingsList: undefined;
@@ -333,6 +350,11 @@ export function AppNavigator() {
                   name="ArtistDetail"
                   component={ArtistDetailScreen}
                   options={{ title: '아티스트 정보' }}
+                />
+                <Stack.Screen
+                  name="ArtistListFiltered"
+                  component={ArtistListFilteredScreen}
+                  options={{ title: '아티스트 목록' }}
                 />
                 <Stack.Screen
                   name="ChatsList"

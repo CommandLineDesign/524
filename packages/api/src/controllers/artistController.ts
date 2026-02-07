@@ -128,6 +128,64 @@ export const ArtistController = {
   },
 
   /**
+   * GET /api/v1/artists/search/filtered
+   * Search artists filtered by service type, location, and availability
+   * Used by home screen carousels to show nearby available artists
+   */
+  async searchArtistsFiltered(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { serviceType, lat, lng, dateTime, radiusKm } = req.query;
+
+      // Validate required parameters
+      if (!serviceType || !lat || !lng || !dateTime) {
+        res.status(400).json({
+          error: 'Missing required parameters: serviceType, lat, lng, dateTime',
+        });
+        return;
+      }
+
+      // Validate serviceType
+      const validServiceTypes = ['hair', 'makeup', 'combo'];
+      if (!validServiceTypes.includes(serviceType as string)) {
+        res.status(400).json({
+          error: `Invalid serviceType. Must be one of: ${validServiceTypes.join(', ')}`,
+        });
+        return;
+      }
+
+      // Parse and validate coordinates
+      const latitude = Number.parseFloat(lat as string);
+      const longitude = Number.parseFloat(lng as string);
+      if (Number.isNaN(latitude) || Number.isNaN(longitude)) {
+        res.status(400).json({ error: 'Invalid coordinates: lat and lng must be numbers' });
+        return;
+      }
+
+      // Validate dateTime is a valid ISO string
+      const parsedDateTime = new Date(dateTime as string);
+      if (Number.isNaN(parsedDateTime.getTime())) {
+        res.status(400).json({ error: 'Invalid dateTime: must be a valid ISO date string' });
+        return;
+      }
+
+      const results = await artistService.searchArtistsFiltered({
+        serviceType: serviceType as 'hair' | 'makeup' | 'combo',
+        latitude,
+        longitude,
+        dateTime: dateTime as string,
+        radiusKm: radiusKm ? Number.parseFloat(radiusKm as string) : undefined,
+      });
+
+      // Cache for 1 minute (private since results are personalized by location/time)
+      res.set('Cache-Control', 'private, max-age=60');
+      res.json(results);
+    } catch (error) {
+      logger.error({ error }, 'Failed to search filtered artists');
+      next(error);
+    }
+  },
+
+  /**
    * GET /api/v1/artists/:artistId/reviews
    * Get reviews for a specific artist (public endpoint)
    */

@@ -1,11 +1,18 @@
 import { type LocationData, type LocationDataWithAddress } from '@524/shared';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  ActivityIndicator,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
 import { useCurrentLocation } from '../../hooks/useCurrentLocation';
 import { useDebounce } from '../../hooks/useDebounce';
 import { reverseGeocodeLocation } from '../../services/kakaoService';
-import { borderRadius, colors, spacing } from '../../theme';
+import { borderRadius, colors, spacing, typography } from '../../theme';
 import type { KeywordSearchResult } from '../../types/kakao';
 import { AddressSearchBar } from './AddressSearchBar';
 import { InteractiveKakaoMap, type MapCenter } from './InteractiveKakaoMap/index';
@@ -36,6 +43,12 @@ export interface LocationPickerProps {
   searchPlaceholder?: string;
   /** Custom radius options (default: 5, 10, 15, 25 km) */
   radiusOptions?: RadiusOption[];
+  /** Current detail address (unit/apt number) */
+  detailAddress?: string;
+  /** Callback when detail address changes */
+  onDetailAddressChange?: (detail: string) => void;
+  /** Placeholder for detail address input */
+  detailPlaceholder?: string;
   /** Test ID */
   testID?: string;
 }
@@ -63,6 +76,9 @@ export function LocationPicker({
   onRadiusChange,
   searchPlaceholder = '주소 또는 장소 검색',
   radiusOptions = DEFAULT_RADIUS_OPTIONS,
+  detailAddress = '',
+  onDetailAddressChange,
+  detailPlaceholder = '동/호수 입력 (예: 101동 1403호)',
   testID,
 }: LocationPickerProps) {
   const hasValidCoordinates = location.latitude !== 0 && location.longitude !== 0;
@@ -373,6 +389,21 @@ export function LocationPicker({
           )}
         </View>
 
+        {/* Detail Address Input - shown when address is selected */}
+        {currentAddress && onDetailAddressChange && (
+          <View style={styles.detailInputContainer}>
+            <Text style={styles.detailLabel}>상세 주소</Text>
+            <TextInput
+              style={styles.detailInput}
+              placeholder={detailPlaceholder}
+              placeholderTextColor={colors.textSecondary}
+              value={detailAddress}
+              onChangeText={onDetailAddressChange}
+              testID={testID ? `${testID}-detail-input` : undefined}
+            />
+          </View>
+        )}
+
         {/* Radius Selection - only shown when showRadiusSelector is true */}
         {showRadiusSelector && (
           <View style={styles.radiusSection}>
@@ -573,6 +604,24 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textSecondary,
     textAlign: 'center',
+  },
+  detailInputContainer: {
+    gap: spacing.md,
+  },
+  detailLabel: {
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.regular,
+    color: colors.text,
+  },
+  detailInput: {
+    height: spacing.inputHeight,
+    borderWidth: 1,
+    borderColor: colors.borderDark,
+    borderRadius: borderRadius.md,
+    paddingHorizontal: spacing.md,
+    fontSize: typography.sizes.md,
+    color: colors.text,
+    backgroundColor: colors.background,
   },
   radiusSection: {
     gap: spacing.sm,

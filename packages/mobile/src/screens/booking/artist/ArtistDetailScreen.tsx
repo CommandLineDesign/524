@@ -1,5 +1,7 @@
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useQuery } from '@tanstack/react-query';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   SafeAreaView,
@@ -15,12 +17,22 @@ import {
   ArtistProfileTab,
   ArtistReviewsTab,
 } from '../../../components/booking';
-import { colors } from '../../../theme';
+import { newHomeStrings } from '../../../constants/newHomeStrings';
+import type { RootStackParamList } from '../../../navigation/AppNavigator';
+import { useBookingFlowStore } from '../../../store/bookingFlowStore';
+import { borderRadius, colors, spacing } from '../../../theme';
 
 interface ArtistDetailScreenProps {
   route: {
     params: {
       artistId: string;
+      // New params from home screen
+      fromHomeScreen?: boolean;
+      preselectedLocation?: string;
+      preselectedCoordinates?: { lat: number; lng: number };
+      preselectedDate?: string;
+      preselectedTimeSlot?: string;
+      preselectedServiceType?: 'hair' | 'makeup' | 'combo';
     };
   };
   navigation: {
@@ -29,10 +41,22 @@ interface ArtistDetailScreenProps {
 }
 
 type TabType = 'profile' | 'reviews';
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
-export function ArtistDetailScreen({ route, navigation }: ArtistDetailScreenProps) {
-  const { artistId } = route.params;
+export function ArtistDetailScreen({ route }: ArtistDetailScreenProps) {
+  const {
+    artistId,
+    fromHomeScreen,
+    preselectedLocation,
+    preselectedCoordinates,
+    preselectedDate,
+    preselectedTimeSlot,
+    preselectedServiceType,
+  } = route.params;
+
+  const navigation = useNavigation<NavigationProp>();
   const [activeTab, setActiveTab] = useState<TabType>('profile');
+  const initializeFromHome = useBookingFlowStore((state) => state.initializeFromHome);
 
   const {
     data: artist,
@@ -43,6 +67,41 @@ export function ArtistDetailScreen({ route, navigation }: ArtistDetailScreenProp
     queryKey: ['artist', artistId],
     queryFn: () => getArtistById(artistId),
   });
+
+  const handleBookWithArtist = useCallback(() => {
+    if (
+      !preselectedCoordinates ||
+      !preselectedDate ||
+      !preselectedTimeSlot ||
+      !preselectedServiceType
+    ) {
+      // Fallback: navigate to regular booking flow if data is missing
+      navigation.navigate('BookingFlow', { entryPath: 'celebrity' });
+      return;
+    }
+
+    // Initialize the booking flow store with pre-selected data including service type
+    initializeFromHome({
+      artistId,
+      location: preselectedLocation || '',
+      locationCoordinates: preselectedCoordinates,
+      selectedDate: preselectedDate,
+      selectedTimeSlot: preselectedTimeSlot,
+      serviceType: preselectedServiceType,
+    });
+
+    // Navigate to booking flow - the store is already initialized
+    navigation.navigate('BookingFlow', { entryPath: 'homeEntry' });
+  }, [
+    artistId,
+    preselectedLocation,
+    preselectedCoordinates,
+    preselectedDate,
+    preselectedTimeSlot,
+    preselectedServiceType,
+    navigation,
+    initializeFromHome,
+  ]);
 
   if (isLoading) {
     return (
@@ -127,6 +186,20 @@ export function ArtistDetailScreen({ route, navigation }: ArtistDetailScreenProp
           <ArtistReviewsTab artistId={artistId} />
         )}
       </View>
+
+      {/* Book Button - only show when coming from home screen */}
+      {fromHomeScreen && (
+        <View style={styles.bookButtonContainer}>
+          <TouchableOpacity
+            style={styles.bookButton}
+            onPress={handleBookWithArtist}
+            accessibilityRole="button"
+            accessibilityLabel={newHomeStrings.artistDetail.bookButton}
+          >
+            <Text style={styles.bookButtonText}>{newHomeStrings.artistDetail.bookButton}</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -210,5 +283,23 @@ const styles = StyleSheet.create({
   },
   tabContent: {
     flex: 1,
+  },
+  bookButtonContainer: {
+    padding: spacing.lg,
+    paddingBottom: spacing.xl,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    backgroundColor: colors.background,
+  },
+  bookButton: {
+    backgroundColor: colors.primary,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.pill,
+    alignItems: 'center',
+  },
+  bookButtonText: {
+    color: colors.background,
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

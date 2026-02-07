@@ -71,6 +71,8 @@ export interface MapAddressPickerResult {
   roadAddress?: string;
   /** Jibun (lot-number) address if available */
   jibunAddress?: string;
+  /** Detail address (unit/apt number, e.g., "101동 1403호") */
+  detailAddress?: string;
 }
 
 /**
@@ -84,6 +86,8 @@ export interface LocationData {
   longitude: number;
   /** Address string (optional for input) */
   address?: string;
+  /** Detail address (unit/apt number, e.g., "101동 1403호") */
+  detailAddress?: string;
 }
 
 /**
@@ -97,4 +101,6 @@ export interface LocationDataWithAddress {
   longitude: number;
   /** Address string (always present) */
   address: string;
+  /** Detail address (unit/apt number, e.g., "101동 1403호") */
+  detailAddress?: string;
 }

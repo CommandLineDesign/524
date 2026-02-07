@@ -1,19 +1,29 @@
+import type { LocationDataWithAddress } from '@524/shared';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { MenuButton } from '../components/MenuButton';
 import { NavigationMenu } from '../components/NavigationMenu';
-import { Carousel } from '../components/common/Carousel';
+import {
+  ArtistCarousel,
+  LocationPickerModal,
+  LocationSelectorButton,
+  TimePickerModal,
+  TimeSelectorButton,
+} from '../components/home';
 import { homeStrings } from '../constants/homeStrings';
+import { newHomeStrings } from '../constants/newHomeStrings';
+import { useCurrentLocation } from '../hooks/useCurrentLocation';
+import { useHomeArtistSearch } from '../hooks/useHomeArtistSearch';
 import { useUnreadNotificationCount } from '../hooks/useNotifications';
 import type { RootStackParamList } from '../navigation/AppNavigator';
 import { useCustomerBookings } from '../query/bookings';
+import { reverseGeocodeLocation } from '../services/kakaoService';
 import { useAuthStore } from '../store/authStore';
-import { borderRadius } from '../theme/borderRadius';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 
@@ -29,14 +39,97 @@ function getDaysUntil(dateString: string): number {
   return diffDays;
 }
 
+/**
+ * Get tomorrow's date at 7pm as the default time
+ */
+function getDefaultDateTime(): { date: string; timeSlot: string } {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setHours(19, 0, 0, 0);
+  return {
+    date: tomorrow.toISOString(),
+    timeSlot: '19:00',
+  };
+}
+
+/**
+ * Build ISO datetime string from date and time slot
+ */
+function buildDateTime(date: string, timeSlot: string): string {
+  const dateObj = new Date(date);
+  const [hours, minutes] = timeSlot.split(':').map(Number);
+  dateObj.setHours(hours, minutes, 0, 0);
+  return dateObj.toISOString();
+}
+
 export function HomeScreen() {
   const navigation = useNavigation<HomeNavigationProp>();
   const { user } = useAuthStore();
   const { data: bookings } = useCustomerBookings();
   const { data: unreadCount = 0 } = useUnreadNotificationCount();
+  const { getCurrentLocation } = useCurrentLocation();
+
+  // UI state
   const [menuVisible, setMenuVisible] = useState(false);
+  const [locationModalVisible, setLocationModalVisible] = useState(false);
+  const [timeModalVisible, setTimeModalVisible] = useState(false);
+  const [isLocationLoading, setIsLocationLoading] = useState(true);
+  const [locationError, setLocationError] = useState<string | null>(null);
+
+  // Location state
+  const [selectedLocation, setSelectedLocation] = useState<{
+    coordinates: { lat: number; lng: number } | null;
+    address: string | null;
+  }>({
+    coordinates: null,
+    address: null,
+  });
+
+  // Time state - default to tomorrow at 7pm
+  const [selectedDateTime, setSelectedDateTime] = useState(() => getDefaultDateTime());
 
   const userName = user?.name || 'Guest';
+
+  // Initialize location on mount
+  useEffect(() => {
+    const initLocation = async () => {
+      setIsLocationLoading(true);
+      try {
+        const gpsLocation = await getCurrentLocation();
+        if (gpsLocation) {
+          // Reverse geocode to get address
+          const result = await reverseGeocodeLocation(gpsLocation.latitude, gpsLocation.longitude);
+          setSelectedLocation({
+            coordinates: { lat: gpsLocation.latitude, lng: gpsLocation.longitude },
+            address:
+              result?.roadAddress ||
+              result?.address ||
+              newHomeStrings.selectors.location.currentLocation,
+          });
+        }
+      } catch {
+        // If GPS fails, show error and let user select manually
+        setLocationError('위치를 가져올 수 없습니다. 수동으로 선택해주세요.');
+      } finally {
+        setIsLocationLoading(false);
+      }
+    };
+
+    initLocation();
+  }, [getCurrentLocation]);
+
+  // Compute the datetime for API calls
+  const searchDateTime = useMemo(() => {
+    if (!selectedDateTime.date || !selectedDateTime.timeSlot) return null;
+    return buildDateTime(selectedDateTime.date, selectedDateTime.timeSlot);
+  }, [selectedDateTime.date, selectedDateTime.timeSlot]);
+
+  // Fetch filtered artists
+  const { comboArtists, hairArtists, makeupArtists } = useHomeArtistSearch({
+    latitude: selectedLocation.coordinates?.lat ?? null,
+    longitude: selectedLocation.coordinates?.lng ?? null,
+    dateTime: searchDateTime,
+  });
 
   const nextBooking = useMemo(() => {
     if (!bookings || bookings.length === 0) return null;
@@ -65,23 +158,67 @@ export function HomeScreen() {
     navigation.navigate('NotificationInbox');
   };
 
-  const handleBookService = () => {
-    // Navigate to the new multi-step booking flow with celebrity entry path.
-    // This starts with location input → celebrity questions → service selection.
-    // Note: The 'direct' entry path exists but its use case is TBD - it skips
-    // location/celebrity screens and goes straight to service selection.
-    navigation.navigate('BookingFlow', { entryPath: 'celebrity' });
-  };
-
   const handleBookingPress = () => {
     if (nextBooking) {
       navigation.navigate('BookingDetail', { bookingId: nextBooking.id });
     }
   };
 
+  const handleShowAll = useCallback(
+    (serviceType: 'hair' | 'makeup' | 'combo') => {
+      if (!selectedLocation.coordinates || !searchDateTime) {
+        return;
+      }
+      navigation.navigate('ArtistListFiltered', {
+        serviceType,
+        latitude: selectedLocation.coordinates.lat,
+        longitude: selectedLocation.coordinates.lng,
+        dateTime: searchDateTime,
+        locationAddress: selectedLocation.address ?? undefined,
+      });
+    },
+    [navigation, selectedLocation, searchDateTime]
+  );
+
+  const handleLocationSelect = useCallback((location: LocationDataWithAddress) => {
+    setSelectedLocation({
+      coordinates: { lat: location.latitude, lng: location.longitude },
+      address: location.address,
+    });
+    setLocationError(null); // Clear any previous error
+  }, []);
+
+  const handleTimeSelect = useCallback((date: string, timeSlot: string) => {
+    setSelectedDateTime({ date, timeSlot });
+  }, []);
+
+  const handleArtistPress = useCallback(
+    (artistId: string, serviceType: 'hair' | 'makeup' | 'combo') => {
+      if (!searchDateTime) return;
+      // Navigate to artist detail with booking context including service type
+      // Use searchDateTime (built from date + timeSlot) to ensure correct time is passed
+      navigation.navigate('ArtistDetail', {
+        artistId,
+        fromHomeScreen: true,
+        preselectedLocation: selectedLocation.address ?? undefined,
+        preselectedCoordinates: selectedLocation.coordinates ?? undefined,
+        preselectedDate: searchDateTime,
+        preselectedTimeSlot: selectedDateTime.timeSlot,
+        preselectedServiceType: serviceType,
+      });
+    },
+    [navigation, selectedLocation, selectedDateTime.timeSlot, searchDateTime]
+  );
+
+  // Empty message based on location state
+  const emptyMessage = selectedLocation.coordinates
+    ? newHomeStrings.carousels.empty.noArtists
+    : newHomeStrings.carousels.empty.selectLocation;
+
   return (
     <SafeAreaView style={styles.container} edges={['left', 'right']}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        {/* Header - unchanged */}
         <View style={styles.header}>
           <View style={styles.headerTop}>
             <MenuButton onPress={() => setMenuVisible(true)} />
@@ -142,55 +279,81 @@ export function HomeScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* Content - new lower section */}
         <View style={styles.content}>
-          <TouchableOpacity
-            style={styles.bookButton}
-            onPress={handleBookService}
-            accessibilityRole="button"
-            accessibilityLabel={homeStrings.buttons.bookServiceLabel}
-          >
-            <Text style={styles.bookButtonText}>{homeStrings.buttons.bookService}</Text>
-          </TouchableOpacity>
+          {/* Location and Time Selectors */}
+          <LocationSelectorButton
+            location={selectedLocation.coordinates}
+            address={selectedLocation.address}
+            onPress={() => setLocationModalVisible(true)}
+            isLoading={isLocationLoading}
+          />
+          {locationError && <Text style={styles.locationErrorText}>{locationError}</Text>}
 
-          {/* 
-            NOTE: Intentional placeholder UI for initial release.
-            Future enhancement: Connect to booking history API to display actual user bookings.
-            The Carousel component is designed to handle both empty and populated states.
-          */}
-          <Carousel
-            title={homeStrings.carousels.myBookings}
-            data={[]}
-            emptyLabels={['2월 10일', '1월 2일', '12월 13일']}
-            placeholderCount={3}
+          <TimeSelectorButton
+            date={selectedDateTime.date}
+            timeSlot={selectedDateTime.timeSlot}
+            onPress={() => setTimeModalVisible(true)}
           />
 
-          {/* 
-            NOTE: Intentional placeholder UI for initial release.
-            Future enhancement: Connect to reviews API to display top-rated local reviews.
-            The Carousel component is designed to handle both empty and populated states.
-          */}
-          <Carousel
-            title={homeStrings.carousels.bestReviews}
-            data={[]}
-            emptyLabels={['헤어1', '메이크업1', '헤메1']}
-            placeholderCount={3}
+          {/* Artist Carousels */}
+          <ArtistCarousel
+            title={newHomeStrings.carousels.hairAndMakeup}
+            artists={comboArtists.data}
+            isLoading={comboArtists.isLoading}
+            error={comboArtists.error}
+            onArtistPress={(artistId) => handleArtistPress(artistId, 'combo')}
+            onShowAll={() => handleShowAll('combo')}
+            emptyMessage={emptyMessage}
           />
 
-          {/* 
-            NOTE: Intentional placeholder UI for initial release.
-            Future enhancement: Connect to artists API to display top-rated local artists.
-            The Carousel component is designed to handle both empty and populated states.
-          */}
-          <Carousel
-            title={homeStrings.carousels.bestArtists}
-            data={[]}
-            emptyLabels={['아티스트1', '아티스트2', '아티스트3']}
-            placeholderCount={3}
+          <ArtistCarousel
+            title={newHomeStrings.carousels.hair}
+            artists={hairArtists.data}
+            isLoading={hairArtists.isLoading}
+            error={hairArtists.error}
+            onArtistPress={(artistId) => handleArtistPress(artistId, 'hair')}
+            onShowAll={() => handleShowAll('hair')}
+            emptyMessage={emptyMessage}
+          />
+
+          <ArtistCarousel
+            title={newHomeStrings.carousels.makeup}
+            artists={makeupArtists.data}
+            isLoading={makeupArtists.isLoading}
+            error={makeupArtists.error}
+            onArtistPress={(artistId) => handleArtistPress(artistId, 'makeup')}
+            onShowAll={() => handleShowAll('makeup')}
+            emptyMessage={emptyMessage}
           />
         </View>
       </ScrollView>
 
       <NavigationMenu visible={menuVisible} onClose={() => setMenuVisible(false)} />
+
+      {/* Modals */}
+      <LocationPickerModal
+        visible={locationModalVisible}
+        onClose={() => setLocationModalVisible(false)}
+        initialLocation={
+          selectedLocation.coordinates
+            ? {
+                latitude: selectedLocation.coordinates.lat,
+                longitude: selectedLocation.coordinates.lng,
+                address: selectedLocation.address ?? undefined,
+              }
+            : null
+        }
+        onLocationSelect={handleLocationSelect}
+      />
+
+      <TimePickerModal
+        visible={timeModalVisible}
+        onClose={() => setTimeModalVisible(false)}
+        initialDate={selectedDateTime.date}
+        initialTimeSlot={selectedDateTime.timeSlot}
+        onTimeSelect={handleTimeSelect}
+      />
     </SafeAreaView>
   );
 }
@@ -259,17 +422,11 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: spacing.lg,
   },
-  bookButton: {
-    backgroundColor: colors.primary,
-    paddingVertical: spacing.md,
-    borderRadius: borderRadius.pill,
-    alignItems: 'center',
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.xl,
-  },
-  bookButtonText: {
-    color: colors.background,
-    fontSize: 16,
-    fontWeight: '600',
+  locationErrorText: {
+    color: colors.error,
+    fontSize: 13,
+    textAlign: 'center',
+    marginTop: spacing.xs,
+    paddingHorizontal: spacing.lg,
   },
 });
