@@ -1,17 +1,40 @@
+import type {
+  ArtistLocation,
+  ArtistProfile,
+  ArtistServiceOffering,
+  PortfolioImage,
+} from '@524/shared';
 import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
-import { colors, spacing } from '../../theme';
+import { borderRadius, colors, spacing } from '../../theme';
+import { formStyles } from '../../theme/formStyles';
+import { PortfolioImageGrid, ServiceEditor } from '../artist';
+import { LocationPicker } from '../location';
 
 export interface ArtistProfileTabProps {
   /** Artist bio/description */
   bio?: string;
   /** List of specialties */
   specialties?: string[];
-  /** List of services offered */
-  services?: string[];
+  /** List of services offered (can be string[] for backward compatibility or full objects) */
+  services?: string[] | ArtistServiceOffering[];
   /** Price range [min, max] */
   priceRange?: [number, number];
+  /** Portfolio images */
+  portfolioImages?: PortfolioImage[];
+  /** Primary location */
+  primaryLocation?: ArtistLocation;
+  /** Service radius in km */
+  serviceRadiusKm?: number;
+  /** Stage name */
+  stageName?: string;
+  /** Whether the component is in edit mode */
+  isEditing?: boolean;
+  /** Draft data for editing */
+  editDraft?: Partial<ArtistProfile>;
+  /** Callback when edit draft changes */
+  onEditChange?: (draft: Partial<ArtistProfile>) => void;
   /** Test ID */
   testID?: string;
 }
@@ -21,13 +44,58 @@ export function ArtistProfileTab({
   specialties,
   services,
   priceRange,
+  portfolioImages,
+  primaryLocation,
+  serviceRadiusKm,
+  stageName,
+  isEditing = false,
+  editDraft,
+  onEditChange,
   testID,
 }: ArtistProfileTabProps) {
   const hasContent =
     bio ||
     (specialties && specialties.length > 0) ||
     (services && services.length > 0) ||
-    priceRange;
+    priceRange ||
+    (portfolioImages && portfolioImages.length > 0) ||
+    isEditing;
+
+  // Type guard for string array services (backward compatibility)
+  const isStringArray = (arr: string[] | ArtistServiceOffering[]): arr is string[] =>
+    arr.length > 0 && typeof arr[0] === 'string';
+
+  // Convert services to full objects for editing
+  const getEditableServices = (): ArtistServiceOffering[] => {
+    const svcs = isEditing && editDraft?.services ? editDraft.services : services;
+    if (!svcs || svcs.length === 0) return [];
+    if (isStringArray(svcs)) {
+      return svcs.map((name) => ({ name, price: 0 }));
+    }
+    return svcs;
+  };
+
+  // Helper to get display value from editDraft (when editing) or props
+  const getDisplayValue = <K extends keyof ArtistProfile>(
+    field: K,
+    propValue: ArtistProfile[K] | undefined
+  ): ArtistProfile[K] | undefined => {
+    if (isEditing && editDraft?.[field] !== undefined) {
+      return editDraft[field] as ArtistProfile[K];
+    }
+    return propValue;
+  };
+
+  // Get display values (either from editDraft in edit mode, or from props)
+  const displayServices = getDisplayValue(
+    'services',
+    services as ArtistServiceOffering[] | undefined
+  );
+  const displayPortfolioImages = getDisplayValue('portfolioImages', portfolioImages);
+  const displayStageName = getDisplayValue('stageName', stageName);
+  const displayBio = getDisplayValue('bio', bio);
+  const displayLocation = getDisplayValue('primaryLocation', primaryLocation);
+  const displayRadius = getDisplayValue('serviceRadiusKm', serviceRadiusKm);
 
   if (!hasContent) {
     return (
@@ -39,15 +107,43 @@ export function ArtistProfileTab({
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content} testID={testID}>
-      {/* Bio Section */}
-      {bio && (
+      {/* Stage Name Section - Edit mode only */}
+      {isEditing && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>소개</Text>
-          <Text style={styles.bioText}>{bio}</Text>
+          <Text style={styles.sectionTitle}>스튜디오 이름</Text>
+          <TextInput
+            value={displayStageName ?? ''}
+            onChangeText={(text) => onEditChange?.({ ...editDraft, stageName: text })}
+            placeholder="Your stage or studio name"
+            placeholderTextColor={colors.muted}
+            style={formStyles.input}
+            accessibilityLabel="Stage name"
+          />
         </View>
       )}
 
-      {/* Specialties Section */}
+      {/* Bio Section */}
+      {(bio || isEditing) && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>소개</Text>
+          {isEditing ? (
+            <TextInput
+              value={displayBio ?? ''}
+              onChangeText={(text) => onEditChange?.({ ...editDraft, bio: text })}
+              placeholder="Tell clients about yourself"
+              placeholderTextColor={colors.muted}
+              multiline
+              numberOfLines={4}
+              style={[formStyles.input, styles.bioInput]}
+              accessibilityLabel="Bio"
+            />
+          ) : (
+            <Text style={styles.bioText}>{bio}</Text>
+          )}
+        </View>
+      )}
+
+      {/* Specialties Section - View only, not editable here */}
       {specialties && specialties.length > 0 && (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>전문 분야</Text>
@@ -62,17 +158,67 @@ export function ArtistProfileTab({
       )}
 
       {/* Services Section */}
-      {services && services.length > 0 && (
+      {((displayServices && displayServices.length > 0) || isEditing) && (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>제공 서비스</Text>
-          <View style={styles.servicesList}>
-            {services.map((service) => (
-              <View key={service} style={styles.serviceItem}>
-                <Text style={styles.serviceBullet}>•</Text>
-                <Text style={styles.serviceText}>{service}</Text>
-              </View>
-            ))}
-          </View>
+          {isEditing ? (
+            <ServiceEditor
+              services={getEditableServices()}
+              onChange={(newServices) => onEditChange?.({ ...editDraft, services: newServices })}
+            />
+          ) : (
+            <View style={styles.servicesList}>
+              {displayServices?.map((service, index) => {
+                const serviceName = typeof service === 'string' ? service : service.name;
+                const servicePrice = typeof service === 'string' ? null : service.price;
+                return (
+                  // biome-ignore lint/suspicious/noArrayIndexKey: Display-only list with stable order
+                  <View key={`${serviceName}-${index}`} style={styles.serviceItem}>
+                    <Text style={styles.serviceBullet}>•</Text>
+                    <Text style={styles.serviceText}>
+                      {serviceName}
+                      {servicePrice != null && servicePrice > 0 && (
+                        <Text style={styles.servicePrice}>
+                          {' '}
+                          - {servicePrice.toLocaleString()}원
+                        </Text>
+                      )}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
+          )}
+        </View>
+      )}
+
+      {/* Location Section - Edit mode only */}
+      {isEditing && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>서비스 위치</Text>
+          <LocationPicker
+            location={displayLocation ?? { latitude: 0, longitude: 0, address: '' }}
+            onLocationChange={(location) =>
+              onEditChange?.({ ...editDraft, primaryLocation: location })
+            }
+            showRadiusSelector={true}
+            radiusKm={displayRadius ?? 0}
+            onRadiusChange={(radiusKm) =>
+              onEditChange?.({ ...editDraft, serviceRadiusKm: radiusKm })
+            }
+          />
+        </View>
+      )}
+
+      {/* Portfolio Section */}
+      {((displayPortfolioImages && displayPortfolioImages.length > 0) || isEditing) && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>포트폴리오</Text>
+          <PortfolioImageGrid
+            images={displayPortfolioImages ?? []}
+            isEditing={isEditing}
+            onImagesChange={(images) => onEditChange?.({ ...editDraft, portfolioImages: images })}
+          />
         </View>
       )}
 
@@ -97,6 +243,7 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 24,
     paddingVertical: 16,
+    paddingBottom: 100,
   },
   emptyContainer: {
     flex: 1,
@@ -123,6 +270,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#19191b',
     lineHeight: 20,
+  },
+  bioInput: {
+    minHeight: 100,
+    textAlignVertical: 'top',
+    paddingTop: spacing.md,
   },
   tagsContainer: {
     flexDirection: 'row',
@@ -158,6 +310,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#19191b',
     lineHeight: 20,
+  },
+  servicePrice: {
+    fontWeight: '500',
+    color: colors.muted,
   },
   priceText: {
     fontSize: 14,

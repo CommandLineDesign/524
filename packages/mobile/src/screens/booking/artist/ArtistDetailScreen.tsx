@@ -1,9 +1,11 @@
+import type { ArtistProfile } from '@524/shared';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   SafeAreaView,
   StyleSheet,
   Text,
@@ -19,6 +21,8 @@ import {
 } from '../../../components/booking';
 import { newHomeStrings } from '../../../constants/newHomeStrings';
 import type { RootStackParamList } from '../../../navigation/AppNavigator';
+import { useArtistProfile, useUpdateArtistProfile } from '../../../query/artist';
+import { useAuthStore } from '../../../store/authStore';
 import { useBookingFlowStore } from '../../../store/bookingFlowStore';
 import { borderRadius, colors, spacing } from '../../../theme';
 
@@ -55,8 +59,15 @@ export function ArtistDetailScreen({ route }: ArtistDetailScreenProps) {
   } = route.params;
 
   const navigation = useNavigation<NavigationProp>();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<TabType>('profile');
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editDraft, setEditDraft] = useState<Partial<ArtistProfile> | null>(null);
   const initializeFromHome = useBookingFlowStore((state) => state.initializeFromHome);
+
+  // Get current user to detect if viewing own profile
+  const currentUserId = useAuthStore((state) => state.user?.id);
+  const { data: myProfile } = useArtistProfile(currentUserId, !!currentUserId);
 
   const {
     data: artist,
@@ -67,6 +78,12 @@ export function ArtistDetailScreen({ route }: ArtistDetailScreenProps) {
     queryKey: ['artist', artistId],
     queryFn: () => getArtistById(artistId),
   });
+
+  // Check if viewing own profile
+  const isOwnProfile = myProfile?.id === artistId;
+
+  // Mutation for updating profile
+  const { mutateAsync: updateProfile, isPending: isSaving } = useUpdateArtistProfile(currentUserId);
 
   const handleBookWithArtist = useCallback(() => {
     if (
@@ -103,6 +120,56 @@ export function ArtistDetailScreen({ route }: ArtistDetailScreenProps) {
     initializeFromHome,
   ]);
 
+  const handleEditPress = useCallback(() => {
+    if (!artist) return;
+    setEditDraft({
+      stageName: artist.stageName,
+      bio: artist.bio,
+      services: artist.services,
+      primaryLocation: artist.primaryLocation,
+      serviceRadiusKm: artist.serviceRadiusKm,
+      portfolioImages: artist.portfolioImages,
+    });
+    setIsEditMode(true);
+  }, [artist]);
+
+  const handleSave = useCallback(async () => {
+    if (!editDraft) return;
+
+    // Validate required fields
+    const missingFields: string[] = [];
+    if (!editDraft.stageName?.trim()) {
+      missingFields.push('Studio Name');
+    }
+    if (!editDraft.bio?.trim()) {
+      missingFields.push('Bio');
+    }
+
+    if (missingFields.length > 0) {
+      Alert.alert(
+        'Required fields missing',
+        `Please fill in the following fields: ${missingFields.join(', ')}`
+      );
+      return;
+    }
+
+    try {
+      await updateProfile(editDraft);
+      // Invalidate the artist query to refetch fresh data
+      queryClient.invalidateQueries({ queryKey: ['artist', artistId] });
+      setIsEditMode(false);
+      setEditDraft(null);
+      Alert.alert('Saved', 'Your profile has been updated.');
+    } catch {
+      Alert.alert('Save failed', 'Could not save your profile. Please try again.');
+    }
+  }, [editDraft, updateProfile, queryClient, artistId]);
+
+  const handleCancel = useCallback(() => {
+    setIsEditMode(false);
+    setEditDraft(null);
+  }, []);
+
   if (isLoading) {
     return (
       <SafeAreaView style={styles.container}>
@@ -135,6 +202,37 @@ export function ArtistDetailScreen({ route }: ArtistDetailScreenProps) {
       {/* Header Section */}
       <View style={styles.headerSection}>
         <Text style={styles.title}>아티스트 정보</Text>
+        {isOwnProfile && !isEditMode && (
+          <TouchableOpacity
+            style={styles.editButton}
+            onPress={handleEditPress}
+            accessibilityRole="button"
+            accessibilityLabel="Edit profile"
+          >
+            <Text style={styles.editButtonText}>Edit</Text>
+          </TouchableOpacity>
+        )}
+        {isEditMode && (
+          <View style={styles.editActions}>
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={handleCancel}
+              accessibilityRole="button"
+              accessibilityLabel="Cancel editing"
+            >
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.saveButton, isSaving && styles.buttonDisabled]}
+              onPress={handleSave}
+              disabled={isSaving}
+              accessibilityRole="button"
+              accessibilityLabel="Save changes"
+            >
+              <Text style={styles.saveButtonText}>{isSaving ? 'Saving...' : 'Save'}</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
 
       {/* Artist Header */}
@@ -180,7 +278,14 @@ export function ArtistDetailScreen({ route }: ArtistDetailScreenProps) {
           <ArtistProfileTab
             bio={artist.bio}
             specialties={artist.specialties?.map((s) => (typeof s === 'string' ? s : String(s)))}
-            services={artist.services?.map((s) => s.name)}
+            services={artist.services}
+            portfolioImages={artist.portfolioImages}
+            primaryLocation={artist.primaryLocation}
+            serviceRadiusKm={artist.serviceRadiusKm}
+            stageName={artist.stageName}
+            isEditing={isEditMode}
+            editDraft={editDraft ?? undefined}
+            onEditChange={setEditDraft}
           />
         ) : (
           <ArtistReviewsTab artistId={artistId} />
@@ -245,14 +350,58 @@ const styles = StyleSheet.create({
     color: colors.background,
   },
   headerSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 24,
     paddingVertical: 16,
-    alignItems: 'center',
   },
   title: {
     fontSize: 18,
     fontWeight: '700',
     color: colors.text,
+  },
+  editButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: borderRadius.pill,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  editButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.primary,
+  },
+  editActions: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  cancelButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: borderRadius.pill,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  cancelButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  saveButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: borderRadius.pill,
+    backgroundColor: colors.primary,
+  },
+  saveButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.background,
+  },
+  buttonDisabled: {
+    opacity: 0.5,
   },
   tabBar: {
     flexDirection: 'row',

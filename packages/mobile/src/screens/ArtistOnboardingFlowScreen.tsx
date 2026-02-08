@@ -1,6 +1,6 @@
-import { ArtistProfile } from '@524/shared';
+import { ArtistProfile, PortfolioImage } from '@524/shared';
 import * as ImagePicker from 'expo-image-picker';
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   Alert,
   Image,
@@ -19,13 +19,14 @@ import { ContinueButton } from '../components/booking/ContinueButton';
 import { LocationPicker } from '../components/location';
 import { MultiSelectButtons } from '../components/onboarding/MultiSelectButtons';
 import { OnboardingLayout } from '../components/onboarding/OnboardingLayout';
+import { usePortfolioUpload } from '../hooks/usePortfolioUpload';
 import type { RootStackParamList } from '../navigation/AppNavigator';
 import { useUpdateArtistProfile } from '../query/artist';
 import { useAuthStore } from '../store/authStore';
 import { borderRadius, colors, spacing } from '../theme';
 import { formStyles } from '../theme/formStyles';
 
-type StepKey = 'basic' | 'specialties' | 'service_area' | 'photo';
+type StepKey = 'basic' | 'specialties' | 'service_area' | 'photo' | 'portfolio';
 
 const SPECIALTY_OPTIONS = [
   { id: 'hair', label: 'Hair styling' },
@@ -35,7 +36,7 @@ const SPECIALTY_OPTIONS = [
 type DraftProfile = Pick<
   ArtistProfile,
   'stageName' | 'bio' | 'specialties' | 'yearsExperience' | 'primaryLocation' | 'serviceRadiusKm'
-> & { profileImageUrl?: string };
+> & { profileImageUrl?: string; portfolioImages?: PortfolioImage[] };
 
 const EMPTY_PROFILE: DraftProfile = {
   stageName: '',
@@ -45,6 +46,7 @@ const EMPTY_PROFILE: DraftProfile = {
   primaryLocation: { latitude: 0, longitude: 0, address: '' },
   serviceRadiusKm: 0,
   profileImageUrl: undefined,
+  portfolioImages: [],
 };
 
 function inferContentType(asset: ImagePicker.ImagePickerAsset) {
@@ -67,7 +69,28 @@ export function ArtistOnboardingFlowScreen() {
   const userId = useAuthStore((state) => state.user?.id);
   const { mutateAsync: saveProfile, isPending } = useUpdateArtistProfile(userId);
 
-  const steps: StepKey[] = useMemo(() => ['basic', 'specialties', 'service_area', 'photo'], []);
+  // Use shared portfolio upload hook
+  const handlePortfolioImagesUploaded = useCallback((newImages: PortfolioImage[]) => {
+    setDraft((prev) => ({
+      ...prev,
+      portfolioImages: [...(prev.portfolioImages ?? []), ...newImages],
+    }));
+  }, []);
+
+  const {
+    isUploading: portfolioUploading,
+    uploadProgress: portfolioUploadProgress,
+    pickAndUploadImages: pickPortfolioImages,
+  } = usePortfolioUpload({
+    currentCount: draft.portfolioImages?.length ?? 0,
+    maxImages: 10,
+    onImagesUploaded: handlePortfolioImagesUploaded,
+  });
+
+  const steps: StepKey[] = useMemo(
+    () => ['basic', 'specialties', 'service_area', 'photo', 'portfolio'],
+    []
+  );
   const currentStep = steps[stepIndex];
 
   const goNext = async () => {
@@ -104,6 +127,7 @@ export function ArtistOnboardingFlowScreen() {
         primaryLocation: draft.primaryLocation,
         serviceRadiusKm: draft.serviceRadiusKm,
         profileImageUrl: draft.profileImageUrl,
+        portfolioImages: draft.portfolioImages,
       });
 
       navigation.reset({
@@ -191,11 +215,19 @@ export function ArtistOnboardingFlowScreen() {
     }
   };
 
+  const removePortfolioImage = (index: number) => {
+    updateField({
+      portfolioImages: draft.portfolioImages?.filter((_, i) => i !== index) ?? [],
+    });
+  };
+
+  const isUploading = uploading || portfolioUploading;
+
   const renderFooter = (ctaLabel: string) => (
     <View style={styles.footerRow}>
       <TouchableOpacity
         onPress={goBack}
-        disabled={stepIndex === 0 || isPending || uploading}
+        disabled={stepIndex === 0 || isPending || isUploading}
         style={[styles.backButton, stepIndex === 0 && styles.backButtonDisabled]}
         accessibilityRole="button"
         accessibilityLabel="Back"
@@ -207,9 +239,9 @@ export function ArtistOnboardingFlowScreen() {
       </TouchableOpacity>
       <View style={styles.continueButtonWrapper}>
         <ContinueButton
-          label={isPending || uploading ? 'Saving...' : ctaLabel}
+          label={isPending || isUploading ? 'Saving...' : ctaLabel}
           onPress={goNext}
-          disabled={isPending || uploading}
+          disabled={isPending || isUploading}
         />
       </View>
     </View>
@@ -322,42 +354,103 @@ export function ArtistOnboardingFlowScreen() {
     );
   }
 
+  if (currentStep === 'photo') {
+    return (
+      <OnboardingLayout
+        title="Add a profile photo"
+        subtitle="Upload a photo clients will see on your profile."
+        step={stepIndex + 1}
+        totalSteps={steps.length}
+        showStepText={false}
+        footer={renderFooter('Next')}
+      >
+        <View style={styles.photoSection}>
+          {draft.profileImageUrl ? (
+            <Image
+              source={{ uri: draft.profileImageUrl }}
+              style={styles.profileImage}
+              resizeMode="cover"
+              accessibilityLabel="Profile photo preview"
+            />
+          ) : (
+            <View style={styles.photoPlaceholder}>
+              <Text style={styles.photoPlaceholderText}>No photo selected</Text>
+            </View>
+          )}
+          <TouchableOpacity
+            onPress={pickImage}
+            disabled={uploading || isPending}
+            style={[styles.choosePhotoButton, (uploading || isPending) && styles.buttonDisabled]}
+            accessibilityRole="button"
+            accessibilityLabel="Choose photo"
+            accessibilityHint="Opens image picker"
+          >
+            <Text style={styles.choosePhotoButtonText}>
+              {uploading ? 'Uploading...' : 'Choose photo'}
+            </Text>
+          </TouchableOpacity>
+          <Text style={styles.helperText}>
+            We store your photo securely in S3 using a time-limited upload link.
+          </Text>
+        </View>
+      </OnboardingLayout>
+    );
+  }
+
+  // Portfolio step
   return (
     <OnboardingLayout
-      title="Add a profile photo"
-      subtitle="Upload a photo clients will see on your profile."
+      title="Showcase your work"
+      subtitle="Add photos of your best work to attract clients."
       step={stepIndex + 1}
       totalSteps={steps.length}
       showStepText={false}
       footer={renderFooter('Submit')}
     >
-      <View style={styles.photoSection}>
-        {draft.profileImageUrl ? (
-          <Image
-            source={{ uri: draft.profileImageUrl }}
-            style={styles.profileImage}
-            resizeMode="cover"
-            accessibilityLabel="Profile photo preview"
-          />
-        ) : (
-          <View style={styles.photoPlaceholder}>
-            <Text style={styles.photoPlaceholderText}>No photo selected</Text>
+      <View style={styles.portfolioSection}>
+        {(draft.portfolioImages?.length ?? 0) > 0 && (
+          <View style={styles.portfolioGrid}>
+            {draft.portfolioImages?.map((image, index) => (
+              <View key={image.url} style={styles.portfolioThumbnailContainer}>
+                <Image
+                  source={{ uri: image.url }}
+                  style={styles.portfolioThumbnail}
+                  resizeMode="cover"
+                />
+                <TouchableOpacity
+                  style={styles.removeButton}
+                  onPress={() => removePortfolioImage(index)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Remove photo"
+                >
+                  <Text style={styles.removeButtonText}>×</Text>
+                </TouchableOpacity>
+              </View>
+            ))}
           </View>
         )}
-        <TouchableOpacity
-          onPress={pickImage}
-          disabled={uploading || isPending}
-          style={[styles.choosePhotoButton, (uploading || isPending) && styles.buttonDisabled]}
-          accessibilityRole="button"
-          accessibilityLabel="Choose photo"
-          accessibilityHint="Opens image picker"
-        >
-          <Text style={styles.choosePhotoButtonText}>
-            {uploading ? 'Uploading...' : 'Choose photo'}
-          </Text>
-        </TouchableOpacity>
+
+        {(draft.portfolioImages?.length ?? 0) < 10 && (
+          <TouchableOpacity
+            onPress={pickPortfolioImages}
+            disabled={portfolioUploading || isPending}
+            style={[
+              styles.choosePhotoButton,
+              (portfolioUploading || isPending) && styles.buttonDisabled,
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel="Add portfolio photos"
+          >
+            <Text style={styles.choosePhotoButtonText}>
+              {portfolioUploading
+                ? `Uploading ${portfolioUploadProgress?.current ?? 0}/${portfolioUploadProgress?.total ?? 0}...`
+                : `Add photos (${draft.portfolioImages?.length ?? 0}/10)`}
+            </Text>
+          </TouchableOpacity>
+        )}
+
         <Text style={styles.helperText}>
-          We store your photo securely in S3 using a time-limited upload link.
+          You can skip this step and add portfolio images later.
         </Text>
       </View>
     </OnboardingLayout>
@@ -445,5 +538,40 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textAlign: 'center',
     fontSize: 14,
+  },
+  portfolioSection: {
+    gap: spacing.md,
+    alignItems: 'center',
+  },
+  portfolioGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    justifyContent: 'center',
+  },
+  portfolioThumbnailContainer: {
+    position: 'relative',
+  },
+  portfolioThumbnail: {
+    width: 100,
+    height: 100,
+    borderRadius: borderRadius.md,
+  },
+  removeButton: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  removeButtonText: {
+    color: colors.background,
+    fontSize: 18,
+    fontWeight: '700',
+    lineHeight: 20,
   },
 });
