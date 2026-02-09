@@ -66,8 +66,15 @@ export function ArtistDetailScreen({ route }: ArtistDetailScreenProps) {
   const initializeFromHome = useBookingFlowStore((state) => state.initializeFromHome);
 
   // Get current user to detect if viewing own profile
-  const currentUserId = useAuthStore((state) => state.user?.id);
-  const { data: myProfile } = useArtistProfile(currentUserId, !!currentUserId);
+  const user = useAuthStore((state) => state.user);
+  const currentUserId = user?.id;
+  const isCurrentUserArtist = Boolean(
+    user?.primaryRole === 'artist' || user?.roles?.includes('artist')
+  );
+  const { data: myProfile } = useArtistProfile(
+    currentUserId,
+    Boolean(currentUserId && isCurrentUserArtist)
+  );
 
   const {
     data: artist,
