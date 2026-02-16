@@ -213,9 +213,10 @@ export function AvailabilitySelector({
   const handleSelectWeekdayHours = useCallback(() => {
     const newSlots = new Set(selectedSlots);
 
-    // Monday (0) through Friday (4), 09:00 (index 18) through 16:30 (index 33)
+    // Monday (0) through Friday (4), 09:00 (index 18) through 17:30 (index 35)
+    // Korean work hours: 9 AM - 6 PM
     for (let col = 0; col < 5; col++) {
-      for (let row = 18; row <= 33; row++) {
+      for (let row = 18; row <= 35; row++) {
         const slotKey = cellToSlotKey(weekId, col, row);
         newSlots.add(slotKey);
       }

@@ -234,6 +234,7 @@ export function ArtistProfileTab({
           <Text style={styles.sectionTitle}>포트폴리오</Text>
           <PortfolioImageGrid
             images={displayPortfolioImages ?? []}
+            groupByCategory={true}
             isEditing={isEditing}
             onImagesChange={(images) => onEditChange?.({ ...editDraft, portfolioImages: images })}
           />

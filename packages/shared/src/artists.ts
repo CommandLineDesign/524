@@ -7,7 +7,16 @@ export interface ArtistLocation {
 }
 
 export interface ArtistProfile {
+  /**
+   * Artist profile ID (artistProfiles.id)
+   * Primary identifier for artist profiles in public APIs
+   */
   id: string;
+  /**
+   * User ID (users.id)
+   * References the user account that owns this artist profile
+   * Used for authenticated operations via /api/v1/artists/me/* endpoints
+   */
   userId: string;
   stageName: string;
   bio: string;
@@ -34,6 +43,11 @@ export interface ArtistSearchFilters {
 }
 
 export interface ArtistSearchResult {
+  /**
+   * Artist profile ID (artistProfiles.id)
+   * Use this ID for navigation and public API calls like GET /api/v1/artists/:artistId
+   * NOTE: This is NOT the user ID - it's the artist profile ID
+   */
   id: string;
   stageName: string;
   specialties: string[];
@@ -46,6 +60,7 @@ export interface ArtistSearchResult {
 export interface PortfolioImage {
   url: string;
   caption?: string;
+  serviceCategory?: ServiceType;
 }
 
 export interface ArtistServiceOffering {

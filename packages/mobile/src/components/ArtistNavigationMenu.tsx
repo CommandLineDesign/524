@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Alert, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { RootStackParamList } from '../navigation/AppNavigator';
+import { useArtistProfile } from '../query/artist';
 import { useAuthStore } from '../store/authStore';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -25,11 +26,27 @@ const artistMenuItems: Array<{ label: string; screen: SimpleRoute }> = [
 export function ArtistNavigationMenu({ visible, onClose }: ArtistNavigationMenuProps) {
   const navigation = useNavigation<NavigationProp>();
   const logout = useAuthStore((state) => state.logout);
+  const user = useAuthStore((state) => state.user);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  // Only fetch profile if user is an artist
+  const isCurrentUserArtist = Boolean(
+    user?.primaryRole === 'artist' || user?.roles?.includes('artist')
+  );
+  const { data: myProfile } = useArtistProfile(user?.id, Boolean(user?.id && isCurrentUserArtist));
 
   const handleNavigate = (screen: SimpleRoute) => {
     navigation.navigate(screen);
     onClose();
+  };
+
+  const handleMyProfile = () => {
+    if (myProfile?.id) {
+      navigation.navigate('ArtistDetail', { artistId: myProfile.id });
+      onClose();
+    } else {
+      Alert.alert('프로필을 찾을 수 없습니다', '아티스트 프로필을 불러올 수 없습니다.');
+    }
   };
 
   const handleLogout = async () => {
@@ -72,7 +89,7 @@ export function ArtistNavigationMenu({ visible, onClose }: ArtistNavigationMenuP
 
           <View style={styles.menuSection}>
             <Text style={styles.sectionTitle}>Account</Text>
-            <TouchableOpacity style={styles.menuItem}>
+            <TouchableOpacity style={styles.menuItem} onPress={handleMyProfile}>
               <Text style={styles.menuItemText}>My Profile</Text>
               <Text style={styles.menuItemArrow}>›</Text>
             </TouchableOpacity>

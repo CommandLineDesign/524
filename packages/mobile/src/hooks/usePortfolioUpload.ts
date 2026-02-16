@@ -1,4 +1,4 @@
-import type { PortfolioImage } from '@524/shared';
+import type { PortfolioImage, ServiceType } from '@524/shared';
 import * as ImagePicker from 'expo-image-picker';
 import { useCallback, useState } from 'react';
 import { Alert } from 'react-native';
@@ -20,6 +20,8 @@ export interface UsePortfolioUploadOptions {
   currentCount: number;
   /** Maximum images allowed */
   maxImages?: number;
+  /** Service category to tag uploaded images with */
+  serviceCategory?: ServiceType;
   /** Callback when images are successfully uploaded */
   onImagesUploaded: (newImages: PortfolioImage[]) => void;
 }
@@ -36,6 +38,7 @@ export interface UsePortfolioUploadResult {
 export function usePortfolioUpload({
   currentCount,
   maxImages = 10,
+  serviceCategory,
   onImagesUploaded,
 }: UsePortfolioUploadOptions): UsePortfolioUploadResult {
   const [isUploading, setIsUploading] = useState(false);
@@ -104,7 +107,10 @@ export function usePortfolioUpload({
           }
 
           const publicUrl = presign.publicUrl ?? presign.uploadUrl.split('?')[0];
-          newImages.push({ url: publicUrl });
+          newImages.push({
+            url: publicUrl,
+            serviceCategory,
+          });
         } catch {
           failedCount++;
         }
@@ -132,7 +138,7 @@ export function usePortfolioUpload({
       setIsUploading(false);
       setUploadProgress(null);
     }
-  }, [currentCount, maxImages, onImagesUploaded]);
+  }, [currentCount, maxImages, serviceCategory, onImagesUploaded]);
 
   return {
     isUploading,

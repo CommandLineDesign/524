@@ -44,6 +44,7 @@ const artistProfileUpdateSchema = z
         z.object({
           url: z.string().url(),
           caption: z.string().trim().optional(),
+          serviceCategory: z.enum(['hair', 'makeup', 'combo']).optional(),
         })
       )
       .optional(),
@@ -60,11 +61,52 @@ const artistProfileUpdateSchema = z
   })
   .strict();
 
+/**
+ * Validates that portfolio has at least one image for each service specialty
+ * Returns error message if validation fails, null if valid
+ */
+function validateCategorizedPortfolio(
+  portfolioImages: Array<{ url: string; caption?: string; serviceCategory?: string }> | undefined,
+  specialties: string[] | undefined
+): string | null {
+  if (!portfolioImages || portfolioImages.length === 0) {
+    return null; // Allow empty portfolios (will be enforced in onboarding)
+  }
+
+  if (!specialties || specialties.length === 0) {
+    return null; // No specialties = no category requirements
+  }
+
+  // Filter out 'combo' as it's not a distinct category
+  const distinctSpecialties = specialties.filter((s) => s !== 'combo');
+
+  if (distinctSpecialties.length === 0) {
+    return null; // Only combo specialty, no specific requirements
+  }
+
+  // For each distinct specialty, ensure at least one image exists
+  for (const specialty of distinctSpecialties) {
+    const hasImage = portfolioImages.some((img) => img.serviceCategory === specialty);
+    if (!hasImage) {
+      return `At least one portfolio image required for ${specialty} service`;
+    }
+  }
+
+  return null;
+}
+
 export const ArtistController = {
   async getArtistProfile(req: Request, res: Response, next: NextFunction) {
     try {
-      const profile = await artistService.getArtistProfile(req.params.artistId);
+      const { artistId } = req.params;
+
+      // Log for debugging ID confusion issues
+      logger.debug({ artistId }, 'Fetching artist profile by ID');
+
+      const profile = await artistService.getArtistProfile(artistId);
       if (!profile) {
+        // Log warning to help identify if wrong ID type is being passed
+        logger.warn({ artistId }, 'Artist profile not found - check if correct ID type used');
         res.status(404).json({ error: 'Artist not found' });
         return;
       }
@@ -104,6 +146,16 @@ export const ArtistController = {
         return;
       }
 
+      // Validate categorized portfolio if updating portfolio or specialties
+      const validationError = validateCategorizedPortfolio(
+        result.data.portfolioImages,
+        result.data.specialties
+      );
+      if (validationError) {
+        res.status(400).json({ error: validationError });
+        return;
+      }
+
       const profile = await artistService.updateMyArtistProfile(req.user.id, result.data);
       res.json(profile);
     } catch (error) {
@@ -116,6 +168,16 @@ export const ArtistController = {
       const result = artistProfileUpdateSchema.safeParse(req.body);
       if (!result.success) {
         res.status(400).json({ error: 'Invalid profile data', details: result.error.flatten() });
+        return;
+      }
+
+      // Validate categorized portfolio if updating portfolio or specialties
+      const validationError = validateCategorizedPortfolio(
+        result.data.portfolioImages,
+        result.data.specialties
+      );
+      if (validationError) {
+        res.status(400).json({ error: validationError });
         return;
       }
 
@@ -205,6 +267,14 @@ export const ArtistController = {
     try {
       const { artistId } = req.params;
 
+      // artistId from URL is artistProfileId, but reviews.artistId references users.id
+      // Need to fetch the artist profile to get the userId
+      const artistProfile = await artistService.getArtistProfile(artistId);
+      if (!artistProfile) {
+        res.status(404).json({ error: 'Artist not found' });
+        return;
+      }
+
       // Parse pagination params
       const { limit, offset } = parsePaginationParams(req.query, { limit: 10, maxLimit: 50 });
 
@@ -212,7 +282,7 @@ export const ArtistController = {
       // Tradeoff: fetches one extra record that's discarded to avoid separate COUNT query
       // Acceptable since review objects are lightweight and this avoids N+1 query problem
       const { reviews: reviewsToReturn, hasMore } =
-        await reviewService.getReviewsForArtistWithPagination(artistId, limit, offset);
+        await reviewService.getReviewsForArtistWithPagination(artistProfile.userId, limit, offset);
 
       // Cache reviews for 1 minute (client) and 5 minutes (CDN) to reduce backend load
       // Add stale-while-revalidate for better consistency between client and CDN caching
@@ -240,7 +310,15 @@ export const ArtistController = {
     try {
       const { artistId } = req.params;
 
-      const stats = await reviewService.getArtistReviewStats(artistId);
+      // artistId from URL is artistProfileId, but reviews.artistId references users.id
+      // Need to fetch the artist profile to get the userId
+      const artistProfile = await artistService.getArtistProfile(artistId);
+      if (!artistProfile) {
+        res.status(404).json({ error: 'Artist not found' });
+        return;
+      }
+
+      const stats = await reviewService.getArtistReviewStats(artistProfile.userId);
 
       // Cache stats for 1 minute (client) and 5 minutes (CDN) to reduce backend load
       // Add stale-while-revalidate for better consistency between client and CDN caching
