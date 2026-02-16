@@ -220,7 +220,7 @@ export class SearchService {
       prices.length > 0 ? [Math.min(...prices), Math.max(...prices)] : defaultRange;
 
     return {
-      id: row.userId, // Return userId so bookings can reference the correct user
+      id: row.id, // Return artist profile ID for public browsing and navigation
       stageName: row.stageName,
       specialties: (row.specialties as string[] | null) ?? [],
       averageRating: row.averageRating ? Number(row.averageRating) : 0,

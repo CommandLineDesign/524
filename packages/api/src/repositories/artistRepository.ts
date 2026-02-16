@@ -249,6 +249,17 @@ const artistProfileSelect = {
 };
 
 export class ArtistRepository {
+  async findById(artistProfileId: string): Promise<ArtistProfile | null> {
+    const [record] = await db
+      .select(artistProfileSelect)
+      .from(artistProfiles)
+      .leftJoin(users, eq(users.id, artistProfiles.userId))
+      .where(eq(artistProfiles.id, artistProfileId))
+      .limit(1);
+
+    return record ? mapRowToProfile(record) : null;
+  }
+
   async findByUserId(userId: string): Promise<ArtistProfile | null> {
     const [record] = await db
       .select(artistProfileSelect)

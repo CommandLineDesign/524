@@ -1,4 +1,4 @@
-import { ArtistProfile, PortfolioImage } from '@524/shared';
+import { ArtistProfile, PortfolioImage, ServiceType } from '@524/shared';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
@@ -15,6 +15,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { presignProfilePhoto, updateArtistAvailability } from '../api/client';
+import { PortfolioCategorySection } from '../components/artist/PortfolioCategorySection';
 import { AvailabilitySelector } from '../components/availability';
 import { ContinueButton } from '../components/booking/ContinueButton';
 import { LocationPicker } from '../components/location';
@@ -26,7 +27,7 @@ import { useUpdateArtistProfile } from '../query/artist';
 import { useAuthStore } from '../store/authStore';
 import { borderRadius, colors, spacing } from '../theme';
 import { formStyles } from '../theme/formStyles';
-import { getCurrentWeekId } from '../utils/weekUtils';
+import { getCurrentWeekId, getPreviousWeekId } from '../utils/weekUtils';
 
 type StepKey = 'basic' | 'specialties' | 'availability' | 'service_area' | 'photo' | 'portfolio';
 
@@ -71,27 +72,19 @@ export function ArtistOnboardingFlowScreen() {
   const userId = useAuthStore((state) => state.user?.id);
   const { mutateAsync: saveProfile, isPending } = useUpdateArtistProfile(userId);
 
-  // Use shared portfolio upload hook
-  const handlePortfolioImagesUploaded = useCallback((newImages: PortfolioImage[]) => {
-    setDraft((prev) => ({
-      ...prev,
-      portfolioImages: [...(prev.portfolioImages ?? []), ...newImages],
-    }));
-  }, []);
-
-  const {
-    isUploading: portfolioUploading,
-    uploadProgress: portfolioUploadProgress,
-    pickAndUploadImages: pickPortfolioImages,
-  } = usePortfolioUpload({
-    currentCount: draft.portfolioImages?.length ?? 0,
-    maxImages: 10,
-    onImagesUploaded: handlePortfolioImagesUploaded,
+  // Portfolio state by category
+  const [portfolioByCategory, setPortfolioByCategory] = useState<
+    Record<ServiceType, PortfolioImage[]>
+  >({
+    hair: [],
+    makeup: [],
+    combo: [],
   });
 
   // Availability state (stored separately since it's saved per-week via API)
+  // Track availability for all weeks the user has configured
   const [availabilityWeekId, setAvailabilityWeekId] = useState(getCurrentWeekId());
-  const [availabilitySlots, setAvailabilitySlots] = useState<Set<string>>(new Set());
+  const [availabilityByWeek, setAvailabilityByWeek] = useState<Map<string, Set<string>>>(new Map());
 
   const steps: StepKey[] = useMemo(
     () => ['basic', 'specialties', 'availability', 'service_area', 'photo', 'portfolio'],
@@ -100,10 +93,29 @@ export function ArtistOnboardingFlowScreen() {
   const currentStep = steps[stepIndex];
 
   const goNext = async () => {
+    // Validate portfolio before proceeding from that step
+    if (currentStep === 'portfolio') {
+      const distinctSpecialties = draft.specialties.filter((s) => s !== 'combo');
+      for (const specialty of distinctSpecialties) {
+        if (portfolioByCategory[specialty as ServiceType]?.length === 0) {
+          Alert.alert(
+            'Portfolio required',
+            `Please add at least one portfolio image for ${specialty} to continue.`
+          );
+          return;
+        }
+      }
+    }
+
     // Save availability when leaving the availability step (if any slots selected)
-    if (currentStep === 'availability' && availabilitySlots.size > 0) {
+    if (currentStep === 'availability') {
+      // Save all weeks that have availability
       try {
-        await updateArtistAvailability(availabilityWeekId, Array.from(availabilitySlots));
+        for (const [weekId, slots] of availabilityByWeek.entries()) {
+          if (slots.size > 0) {
+            await updateArtistAvailability(weekId, Array.from(slots));
+          }
+        }
       } catch (error) {
         console.error('Failed to save availability:', error);
         // Continue anyway - availability is optional
@@ -134,6 +146,13 @@ export function ArtistOnboardingFlowScreen() {
       return;
     }
 
+    // Combine all portfolio images from categories
+    const allPortfolioImages = [
+      ...portfolioByCategory.hair,
+      ...portfolioByCategory.makeup,
+      ...portfolioByCategory.combo,
+    ];
+
     try {
       await saveProfile({
         stageName: draft.stageName.trim(),
@@ -143,7 +162,7 @@ export function ArtistOnboardingFlowScreen() {
         primaryLocation: draft.primaryLocation,
         serviceRadiusKm: draft.serviceRadiusKm,
         profileImageUrl: draft.profileImageUrl,
-        portfolioImages: draft.portfolioImages,
+        portfolioImages: allPortfolioImages,
       });
 
       navigation.reset({
@@ -237,7 +256,38 @@ export function ArtistOnboardingFlowScreen() {
     });
   };
 
-  const isUploading = uploading || portfolioUploading;
+  // Portfolio category handlers
+  const handleCategoryImagesAdded = useCallback(
+    (category: ServiceType, newImages: PortfolioImage[]) => {
+      setPortfolioByCategory((prev) => ({
+        ...prev,
+        [category]: [...prev[category], ...newImages],
+      }));
+    },
+    []
+  );
+
+  const handleCategoryImageRemoved = useCallback((category: ServiceType, index: number) => {
+    setPortfolioByCategory((prev) => ({
+      ...prev,
+      [category]: prev[category].filter((_, i) => i !== index),
+    }));
+  }, []);
+
+  const getCategoryLabel = (category: ServiceType): string => {
+    switch (category) {
+      case 'hair':
+        return 'Hair Styling';
+      case 'makeup':
+        return 'Makeup';
+      case 'combo':
+        return 'Combo';
+      default:
+        return category;
+    }
+  };
+
+  const isUploading = uploading;
 
   const renderFooter = (ctaLabel: string) => (
     <View style={styles.footerRow}>
@@ -349,6 +399,21 @@ export function ArtistOnboardingFlowScreen() {
   }
 
   if (currentStep === 'availability') {
+    // Get current week's slots from the map
+    const currentWeekSlots = availabilityByWeek.get(availabilityWeekId) || new Set<string>();
+
+    // Get previous week's slots for the copy feature
+    const previousWeekId = getPreviousWeekId(availabilityWeekId);
+    const previousWeekSlots = availabilityByWeek.get(previousWeekId);
+
+    const handleAvailabilitySlotsChange = (slots: Set<string>) => {
+      setAvailabilityByWeek((prev) => {
+        const next = new Map(prev);
+        next.set(availabilityWeekId, slots);
+        return next;
+      });
+    };
+
     return (
       <OnboardingLayout
         title="When are you available?"
@@ -361,9 +426,10 @@ export function ArtistOnboardingFlowScreen() {
       >
         <AvailabilitySelector
           weekId={availabilityWeekId}
-          selectedSlots={availabilitySlots}
-          onSlotsChange={setAvailabilitySlots}
+          selectedSlots={currentWeekSlots}
+          onSlotsChange={handleAvailabilitySlotsChange}
           onWeekChange={setAvailabilityWeekId}
+          previousWeekSlots={previousWeekSlots}
           showQuickActions={true}
           showWeekNavigator={true}
           showSummary={true}
@@ -438,61 +504,35 @@ export function ArtistOnboardingFlowScreen() {
   }
 
   // Portfolio step
+  const distinctSpecialties = draft.specialties.filter((s) => s !== 'combo') as ServiceType[];
+
   return (
     <OnboardingLayout
       title="Showcase your work"
-      subtitle="Add photos of your best work to attract clients."
+      subtitle="Add at least one photo for each service you offer."
       step={stepIndex + 1}
       totalSteps={steps.length}
       showStepText={false}
       footer={renderFooter('Submit')}
     >
-      <View style={styles.portfolioSection}>
-        {(draft.portfolioImages?.length ?? 0) > 0 && (
-          <View style={styles.portfolioGrid}>
-            {draft.portfolioImages?.map((image, index) => (
-              <View key={image.url} style={styles.portfolioThumbnailContainer}>
-                <Image
-                  source={{ uri: image.url }}
-                  style={styles.portfolioThumbnail}
-                  resizeMode="cover"
-                />
-                <TouchableOpacity
-                  style={styles.removeButton}
-                  onPress={() => removePortfolioImage(index)}
-                  accessibilityRole="button"
-                  accessibilityLabel="Remove photo"
-                >
-                  <Text style={styles.removeButtonText}>×</Text>
-                </TouchableOpacity>
-              </View>
-            ))}
-          </View>
-        )}
+      <ScrollView contentContainerStyle={styles.portfolioSection}>
+        {distinctSpecialties.map((specialty) => (
+          <PortfolioCategorySection
+            key={specialty}
+            title={getCategoryLabel(specialty)}
+            category={specialty}
+            images={portfolioByCategory[specialty]}
+            onImagesAdded={(images) => handleCategoryImagesAdded(specialty, images)}
+            onImageRemoved={(index) => handleCategoryImageRemoved(specialty, index)}
+            isUploading={isUploading}
+            maxImages={10}
+          />
+        ))}
 
-        {(draft.portfolioImages?.length ?? 0) < 10 && (
-          <TouchableOpacity
-            onPress={pickPortfolioImages}
-            disabled={portfolioUploading || isPending}
-            style={[
-              styles.choosePhotoButton,
-              (portfolioUploading || isPending) && styles.buttonDisabled,
-            ]}
-            accessibilityRole="button"
-            accessibilityLabel="Add portfolio photos"
-          >
-            <Text style={styles.choosePhotoButtonText}>
-              {portfolioUploading
-                ? `Uploading ${portfolioUploadProgress?.current ?? 0}/${portfolioUploadProgress?.total ?? 0}...`
-                : `Add photos (${draft.portfolioImages?.length ?? 0}/10)`}
-            </Text>
-          </TouchableOpacity>
+        {distinctSpecialties.length === 0 && (
+          <Text style={styles.helperText}>Please go back and select your specialties first.</Text>
         )}
-
-        <Text style={styles.helperText}>
-          You can skip this step and add portfolio images later.
-        </Text>
-      </View>
+      </ScrollView>
     </OnboardingLayout>
   );
 }

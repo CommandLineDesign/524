@@ -1,4 +1,4 @@
-import type { PortfolioImage } from '@524/shared';
+import type { PortfolioImage, ServiceType } from '@524/shared';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Image,
@@ -24,6 +24,34 @@ export interface PortfolioImageGridProps {
   isEditing?: boolean;
   onImagesChange?: (images: PortfolioImage[]) => void;
   maxImages?: number;
+  groupByCategory?: boolean;
+}
+
+function getCategoryLabel(category: ServiceType | string): string {
+  switch (category) {
+    case 'hair':
+      return 'Hair Styling';
+    case 'makeup':
+      return 'Makeup';
+    case 'combo':
+      return 'Combo';
+    default:
+      return 'Other';
+  }
+}
+
+function groupImagesByCategory(images: PortfolioImage[]): Record<string, PortfolioImage[]> {
+  const grouped: Record<string, PortfolioImage[]> = {};
+
+  for (const image of images) {
+    const category = image.serviceCategory || 'other';
+    if (!grouped[category]) {
+      grouped[category] = [];
+    }
+    grouped[category].push(image);
+  }
+
+  return grouped;
 }
 
 export function PortfolioImageGrid({
@@ -31,6 +59,7 @@ export function PortfolioImageGrid({
   isEditing = false,
   onImagesChange,
   maxImages = 10,
+  groupByCategory = false,
 }: PortfolioImageGridProps) {
   const { width: screenWidth } = useWindowDimensions();
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
@@ -98,6 +127,130 @@ export function PortfolioImageGrid({
     return null;
   }
 
+  // Render grouped by category
+  if (groupByCategory) {
+    const grouped = groupImagesByCategory(images);
+    const categories = Object.keys(grouped);
+
+    if (categories.length === 0) {
+      return null;
+    }
+
+    return (
+      <View style={styles.container}>
+        {categories.map((category) => (
+          <View key={category} style={styles.categorySection}>
+            <Text style={styles.categoryTitle}>{getCategoryLabel(category)}</Text>
+            <View style={styles.grid}>
+              {grouped[category].map((image, index) => {
+                // Find the global index for image removal
+                const globalIndex = images.findIndex((img) => img.url === image.url);
+                return (
+                  <TouchableOpacity
+                    key={image.url}
+                    style={styles.thumbnailContainer}
+                    onPress={() => handleImagePress(globalIndex)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Portfolio image ${index + 1} in ${category}`}
+                  >
+                    <Image
+                      source={{ uri: image.url }}
+                      style={[styles.thumbnail, { width: thumbnailSize, height: thumbnailSize }]}
+                      resizeMode="cover"
+                    />
+                    {isEditing && (
+                      <TouchableOpacity
+                        style={styles.removeButton}
+                        onPress={() => handleRemove(globalIndex)}
+                        accessibilityRole="button"
+                        accessibilityLabel="Remove photo"
+                      >
+                        <Text style={styles.removeButtonText}>×</Text>
+                      </TouchableOpacity>
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+        ))}
+
+        {isEditing && images.length < maxImages && (
+          <TouchableOpacity
+            style={[styles.addButton, isUploading && styles.buttonDisabled]}
+            onPress={pickAndUploadImages}
+            disabled={isUploading}
+            accessibilityRole="button"
+            accessibilityLabel="Add portfolio photos"
+          >
+            <Text style={styles.addButtonText}>
+              {isUploading
+                ? `Uploading ${uploadProgress?.current ?? 0}/${uploadProgress?.total ?? 0}...`
+                : `+ Add photos (${images.length}/${maxImages})`}
+            </Text>
+          </TouchableOpacity>
+        )}
+
+        {/* Full-screen image modal */}
+        <Modal
+          visible={selectedImageIndex !== null}
+          transparent
+          animationType="fade"
+          onRequestClose={closeModal}
+        >
+          <View style={styles.modalContainer}>
+            <TouchableOpacity style={styles.closeButton} onPress={closeModal}>
+              <Text style={styles.closeButtonText}>×</Text>
+            </TouchableOpacity>
+
+            {selectedImageIndex !== null && (
+              <ScrollView
+                ref={scrollViewRef}
+                horizontal
+                pagingEnabled
+                showsHorizontalScrollIndicator={false}
+                style={styles.imageScroll}
+              >
+                {images.map((image) => (
+                  <View key={image.url} style={[styles.fullImageContainer, { width: screenWidth }]}>
+                    <Image
+                      source={{ uri: image.url }}
+                      style={[styles.fullImage, { width: screenWidth, height: screenWidth }]}
+                      resizeMode="contain"
+                    />
+                    {image.caption && <Text style={styles.caption}>{image.caption}</Text>}
+                  </View>
+                ))}
+              </ScrollView>
+            )}
+
+            {/* Navigation arrows */}
+            {selectedImageIndex !== null && selectedImageIndex > 0 && (
+              <TouchableOpacity style={styles.navButtonLeft} onPress={goToPreviousImage}>
+                <Text style={styles.navButtonText}>‹</Text>
+              </TouchableOpacity>
+            )}
+            {selectedImageIndex !== null && selectedImageIndex < images.length - 1 && (
+              <TouchableOpacity style={styles.navButtonRight} onPress={goToNextImage}>
+                <Text style={styles.navButtonText}>›</Text>
+              </TouchableOpacity>
+            )}
+
+            {/* Image counter */}
+            {selectedImageIndex !== null && (
+              <View style={styles.counterContainer}>
+                <Text style={styles.counterText}>
+                  {selectedImageIndex + 1} / {images.length}
+                </Text>
+              </View>
+            )}
+          </View>
+        </Modal>
+      </View>
+    );
+  }
+
+  // Default ungrouped view
   return (
     <View style={styles.container}>
       <View style={styles.grid}>
@@ -206,6 +359,15 @@ export function PortfolioImageGrid({
 const styles = StyleSheet.create({
   container: {
     gap: spacing.md,
+  },
+  categorySection: {
+    marginBottom: spacing.lg,
+  },
+  categoryTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: spacing.md,
   },
   grid: {
     flexDirection: 'row',

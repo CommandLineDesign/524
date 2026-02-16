@@ -171,7 +171,17 @@ export class ArtistAvailabilityService {
     const artistsWithScheduledSlot = new Set<string>();
     for (const record of availabilityRecords) {
       const slots = (record.slots as string[]) || [];
-      if (slots.includes(requestedSlot)) {
+
+      // Normalize slots to UTC for timezone-agnostic comparison
+      const normalizedSlots = slots.map((slot) => {
+        try {
+          return new Date(slot).toISOString();
+        } catch {
+          return slot; // Keep original if parsing fails
+        }
+      });
+
+      if (normalizedSlots.includes(requestedSlot)) {
         // Find the user ID for this artist profile
         const userId = artistProfileRows.find((a) => a.profileId === record.artistId)?.userId;
         if (userId) {
