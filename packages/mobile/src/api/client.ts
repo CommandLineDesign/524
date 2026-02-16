@@ -675,6 +675,16 @@ export async function getArtistById(artistId: string): Promise<ArtistProfile> {
   return request(`/api/v1/artists/${artistId}`, { method: 'GET' });
 }
 
+export async function checkArtistAvailability(
+  artistId: string,
+  dateTime: string
+): Promise<{ isAvailable: boolean }> {
+  const query = new URLSearchParams({ dateTime });
+  return request(`/api/v1/artists/${artistId}/check-availability?${query.toString()}`, {
+    method: 'GET',
+  });
+}
+
 export async function updateArtistProfile(payload: Partial<ArtistProfile>) {
   return request('/api/v1/artists/me/profile', {
     method: 'PATCH',
@@ -815,6 +825,40 @@ export async function markAllNotificationsAsRead(): Promise<{
   markedCount: number;
 }> {
   return request('/api/v1/notifications/read-all', { method: 'POST' });
+}
+
+// Artist Availability API
+export interface AvailabilityData {
+  weekId: string;
+  slots: string[];
+  updatedAt: string | null;
+}
+
+export interface AvailabilityResponse {
+  data: AvailabilityData;
+}
+
+/**
+ * Get the authenticated artist's availability for a specific week
+ * @param weekId - ISO week ID (e.g., "2026-W07")
+ */
+export async function getArtistAvailability(weekId: string): Promise<AvailabilityResponse> {
+  return request(`/api/v1/artists/me/availability/${weekId}`, { method: 'GET' });
+}
+
+/**
+ * Update the authenticated artist's availability for a specific week
+ * @param weekId - ISO week ID (e.g., "2026-W07")
+ * @param slots - Array of ISO datetime strings representing selected time slots
+ */
+export async function updateArtistAvailability(
+  weekId: string,
+  slots: string[]
+): Promise<AvailabilityResponse> {
+  return request(`/api/v1/artists/me/availability/${weekId}`, {
+    method: 'PUT',
+    body: JSON.stringify({ slots }),
+  });
 }
 
 // Axios-like API client for compatibility

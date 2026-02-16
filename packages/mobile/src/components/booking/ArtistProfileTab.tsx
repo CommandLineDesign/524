@@ -5,7 +5,7 @@ import type {
   PortfolioImage,
 } from '@524/shared';
 import React from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 import { borderRadius, colors, spacing } from '../../theme';
 import { formStyles } from '../../theme/formStyles';
@@ -35,6 +35,8 @@ export interface ArtistProfileTabProps {
   editDraft?: Partial<ArtistProfile>;
   /** Callback when edit draft changes */
   onEditChange?: (draft: Partial<ArtistProfile>) => void;
+  /** Callback to open availability modal (edit mode only) */
+  onOpenAvailabilityModal?: () => void;
   /** Test ID */
   testID?: string;
 }
@@ -51,6 +53,7 @@ export function ArtistProfileTab({
   isEditing = false,
   editDraft,
   onEditChange,
+  onOpenAvailabilityModal,
   testID,
 }: ArtistProfileTabProps) {
   const hasContent =
@@ -210,6 +213,21 @@ export function ArtistProfileTab({
         </View>
       )}
 
+      {/* Availability Section - Edit mode only */}
+      {isEditing && onOpenAvailabilityModal && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>근무 가능 시간</Text>
+          <TouchableOpacity
+            style={styles.availabilityButton}
+            onPress={onOpenAvailabilityModal}
+            accessibilityRole="button"
+            accessibilityLabel="Set availability"
+          >
+            <Text style={styles.availabilityButtonText}>근무 시간 설정</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
       {/* Portfolio Section */}
       {((displayPortfolioImages && displayPortfolioImages.length > 0) || isEditing) && (
         <View style={styles.section}>
@@ -319,5 +337,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#19191b',
     fontWeight: '500',
+  },
+  availabilityButton: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    borderRadius: borderRadius.pill,
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+  },
+  availabilityButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.primary,
   },
 });

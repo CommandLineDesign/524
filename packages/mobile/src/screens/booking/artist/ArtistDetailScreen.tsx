@@ -13,7 +13,8 @@ import {
   View,
 } from 'react-native';
 
-import { getArtistById } from '../../../api/client';
+import { checkArtistAvailability, getArtistById } from '../../../api/client';
+import { AvailabilityModal } from '../../../components/availability';
 import {
   ArtistDetailHeader,
   ArtistProfileTab,
@@ -63,6 +64,7 @@ export function ArtistDetailScreen({ route }: ArtistDetailScreenProps) {
   const [activeTab, setActiveTab] = useState<TabType>('profile');
   const [isEditMode, setIsEditMode] = useState(false);
   const [editDraft, setEditDraft] = useState<Partial<ArtistProfile> | null>(null);
+  const [availabilityModalVisible, setAvailabilityModalVisible] = useState(false);
   const initializeFromHome = useBookingFlowStore((state) => state.initializeFromHome);
 
   // Get current user to detect if viewing own profile
@@ -85,6 +87,18 @@ export function ArtistDetailScreen({ route }: ArtistDetailScreenProps) {
     queryKey: ['artist', artistId],
     queryFn: () => getArtistById(artistId),
   });
+
+  // Check availability if coming from home screen with preselected date
+  const { data: availabilityData } = useQuery({
+    queryKey: ['artistAvailability', artistId, preselectedDate],
+    queryFn: () => {
+      if (!preselectedDate) throw new Error('preselectedDate is required');
+      return checkArtistAvailability(artistId, preselectedDate);
+    },
+    enabled: Boolean(fromHomeScreen && preselectedDate),
+  });
+
+  const isTimeSlotAvailable = availabilityData?.isAvailable ?? true;
 
   // Check if viewing own profile
   const isOwnProfile = myProfile?.id === artistId;
@@ -175,6 +189,10 @@ export function ArtistDetailScreen({ route }: ArtistDetailScreenProps) {
   const handleCancel = useCallback(() => {
     setIsEditMode(false);
     setEditDraft(null);
+  }, []);
+
+  const handleOpenAvailabilityModal = useCallback(() => {
+    setAvailabilityModalVisible(true);
   }, []);
 
   if (isLoading) {
@@ -293,25 +311,40 @@ export function ArtistDetailScreen({ route }: ArtistDetailScreenProps) {
             isEditing={isEditMode}
             editDraft={editDraft ?? undefined}
             onEditChange={setEditDraft}
+            onOpenAvailabilityModal={handleOpenAvailabilityModal}
           />
         ) : (
           <ArtistReviewsTab artistId={artistId} />
         )}
       </View>
 
-      {/* Book Button - only show when coming from home screen */}
+      {/* Book Button or Unavailable Message - only show when coming from home screen */}
       {fromHomeScreen && (
         <View style={styles.bookButtonContainer}>
-          <TouchableOpacity
-            style={styles.bookButton}
-            onPress={handleBookWithArtist}
-            accessibilityRole="button"
-            accessibilityLabel={newHomeStrings.artistDetail.bookButton}
-          >
-            <Text style={styles.bookButtonText}>{newHomeStrings.artistDetail.bookButton}</Text>
-          </TouchableOpacity>
+          {isTimeSlotAvailable ? (
+            <TouchableOpacity
+              style={styles.bookButton}
+              onPress={handleBookWithArtist}
+              accessibilityRole="button"
+              accessibilityLabel={newHomeStrings.artistDetail.bookButton}
+            >
+              <Text style={styles.bookButtonText}>{newHomeStrings.artistDetail.bookButton}</Text>
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.unavailableContainer}>
+              <Text style={styles.unavailableText}>
+                이 시간대는 예약이 불가능합니다. 다른 시간을 선택해주세요.
+              </Text>
+            </View>
+          )}
         </View>
       )}
+
+      {/* Availability Modal */}
+      <AvailabilityModal
+        visible={availabilityModalVisible}
+        onClose={() => setAvailabilityModalVisible(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -457,5 +490,19 @@ const styles = StyleSheet.create({
     color: colors.background,
     fontSize: 16,
     fontWeight: '600',
+  },
+  unavailableContainer: {
+    backgroundColor: colors.surfaceAlt,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.pill,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  unavailableText: {
+    color: colors.muted,
+    fontSize: 14,
+    fontWeight: '500',
+    textAlign: 'center',
   },
 });

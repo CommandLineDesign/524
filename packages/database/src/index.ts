@@ -1,4 +1,5 @@
 export * from './schema/addresses.js';
+export * from './schema/artistAvailability.js';
 export * from './schema/artistProfiles.js';
 export * from './schema/auditLogs.js';
 export * from './schema/bookings.js';

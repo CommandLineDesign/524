@@ -38,11 +38,20 @@ function validateArtistId(req: Request, res: Response, next: NextFunction) {
 router.get('/me/profile', requireArtist(), ArtistController.getMyProfile);
 router.patch('/me/profile', requireArtist(), ArtistController.updateMyProfile);
 
+// Artist availability schedule routes
+router.get('/me/availability/:weekId', requireArtist(), ArtistController.getMyAvailability);
+router.put('/me/availability/:weekId', requireArtist(), ArtistController.updateMyAvailability);
+
 // Filtered search must come before /:artistId to avoid matching 'search' as artistId
 router.get('/search/filtered', ArtistController.searchArtistsFiltered);
 
 router.get('/:artistId/reviews/stats', validateArtistId, ArtistController.getArtistReviewStats);
 router.get('/:artistId/reviews', validateArtistId, ArtistController.getArtistReviews);
+router.get(
+  '/:artistId/check-availability',
+  validateArtistId,
+  ArtistController.checkArtistAvailability
+);
 router.get('/:artistId', validateArtistId, ArtistController.getArtistProfile);
 router.patch('/:artistId', validateArtistId, ArtistController.updateArtistProfile);
 router.get('/', ArtistController.searchArtists);

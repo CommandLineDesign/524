@@ -37,7 +37,6 @@ export const artistProfiles = pgTable('artist_profiles', {
   serviceRadiusKm: numeric('service_radius_km', { precision: 5, scale: 2 }).notNull(),
   primaryLocation: jsonb('primary_location').notNull(),
   serviceAreas: jsonb('service_areas'),
-  workingHours: jsonb('working_hours'),
   bufferTimeMinutes: integer('buffer_time_minutes').default(30),
   advanceBookingDays: integer('advance_booking_days').default(14),
   services: jsonb('services'),

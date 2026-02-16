@@ -14,7 +14,8 @@ import {
 
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { presignProfilePhoto } from '../api/client';
+import { presignProfilePhoto, updateArtistAvailability } from '../api/client';
+import { AvailabilitySelector } from '../components/availability';
 import { ContinueButton } from '../components/booking/ContinueButton';
 import { LocationPicker } from '../components/location';
 import { MultiSelectButtons } from '../components/onboarding/MultiSelectButtons';
@@ -25,8 +26,9 @@ import { useUpdateArtistProfile } from '../query/artist';
 import { useAuthStore } from '../store/authStore';
 import { borderRadius, colors, spacing } from '../theme';
 import { formStyles } from '../theme/formStyles';
+import { getCurrentWeekId } from '../utils/weekUtils';
 
-type StepKey = 'basic' | 'specialties' | 'service_area' | 'photo' | 'portfolio';
+type StepKey = 'basic' | 'specialties' | 'availability' | 'service_area' | 'photo' | 'portfolio';
 
 const SPECIALTY_OPTIONS = [
   { id: 'hair', label: 'Hair styling' },
@@ -87,13 +89,27 @@ export function ArtistOnboardingFlowScreen() {
     onImagesUploaded: handlePortfolioImagesUploaded,
   });
 
+  // Availability state (stored separately since it's saved per-week via API)
+  const [availabilityWeekId, setAvailabilityWeekId] = useState(getCurrentWeekId());
+  const [availabilitySlots, setAvailabilitySlots] = useState<Set<string>>(new Set());
+
   const steps: StepKey[] = useMemo(
-    () => ['basic', 'specialties', 'service_area', 'photo', 'portfolio'],
+    () => ['basic', 'specialties', 'availability', 'service_area', 'photo', 'portfolio'],
     []
   );
   const currentStep = steps[stepIndex];
 
   const goNext = async () => {
+    // Save availability when leaving the availability step (if any slots selected)
+    if (currentStep === 'availability' && availabilitySlots.size > 0) {
+      try {
+        await updateArtistAvailability(availabilityWeekId, Array.from(availabilitySlots));
+      } catch (error) {
+        console.error('Failed to save availability:', error);
+        // Continue anyway - availability is optional
+      }
+    }
+
     if (stepIndex < steps.length - 1) {
       setStepIndex((prev) => prev + 1);
       return;
@@ -328,6 +344,30 @@ export function ArtistOnboardingFlowScreen() {
             />
           </View>
         </View>
+      </OnboardingLayout>
+    );
+  }
+
+  if (currentStep === 'availability') {
+    return (
+      <OnboardingLayout
+        title="When are you available?"
+        subtitle="Set your typical working schedule. You can skip this and set it later."
+        step={stepIndex + 1}
+        totalSteps={steps.length}
+        showStepText={false}
+        footer={renderFooter('Next')}
+        fillContent
+      >
+        <AvailabilitySelector
+          weekId={availabilityWeekId}
+          selectedSlots={availabilitySlots}
+          onSlotsChange={setAvailabilitySlots}
+          onWeekChange={setAvailabilityWeekId}
+          showQuickActions={true}
+          showWeekNavigator={true}
+          showSummary={true}
+        />
       </OnboardingLayout>
     );
   }
