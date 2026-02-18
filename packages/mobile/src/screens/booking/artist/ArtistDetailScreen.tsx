@@ -150,6 +150,7 @@ export function ArtistDetailScreen({ route }: ArtistDetailScreenProps) {
       primaryLocation: artist.primaryLocation,
       serviceRadiusKm: artist.serviceRadiusKm,
       portfolioImages: artist.portfolioImages,
+      servicePrices: artist.servicePrices,
     });
     setIsEditMode(true);
   }, [artist]);
@@ -304,6 +305,7 @@ export function ArtistDetailScreen({ route }: ArtistDetailScreenProps) {
             bio={artist.bio}
             specialties={artist.specialties?.map((s) => (typeof s === 'string' ? s : String(s)))}
             services={artist.services}
+            servicePrices={artist.servicePrices}
             portfolioImages={artist.portfolioImages}
             primaryLocation={artist.primaryLocation}
             serviceRadiusKm={artist.serviceRadiusKm}

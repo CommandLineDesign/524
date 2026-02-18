@@ -18,8 +18,8 @@ export const addresses = pgTable('addresses', {
   postalCode: varchar('postal_code', { length: 10 }).notNull(),
   fullAddressKorean: varchar('full_address_korean', { length: 255 }).notNull(),
   location: jsonb('location'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });
 
 export type Address = typeof addresses.$inferSelect;

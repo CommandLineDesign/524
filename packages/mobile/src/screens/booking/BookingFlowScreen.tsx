@@ -61,7 +61,7 @@ export function BookingFlowScreen({ route }: BookingFlowScreenProps) {
         return;
       }
       // No additional state updates needed - initializeFromHome already set
-      // entryPath to 'homeEntry' and currentStep to 'occasionSelection' atomically
+      // entryPath to 'homeEntry' and currentStep to 'treatmentSelection' atomically
     } else {
       // For other entry paths, reset the store and start fresh
       reset();
@@ -165,22 +165,7 @@ export function BookingFlowScreen({ route }: BookingFlowScreenProps) {
         return (
           <ServiceSelectionScreen
             progress={progress}
-            onContinue={() => handleNext('occasionSelection')}
-            onBack={handleBack}
-            onExit={handleExit}
-            showBackButton={showBackButton}
-          />
-        );
-
-      // Common flow screens
-      case 'occasionSelection':
-        return (
-          <OccasionSelectionScreen
-            progress={progress}
-            onContinue={() =>
-              // For homeEntry, skip schedule/artist selection since they're pre-selected
-              handleNext(entryPath === 'homeEntry' ? 'treatmentSelection' : 'scheduleSelection')
-            }
+            onContinue={() => handleNext('scheduleSelection')}
             onBack={handleBack}
             onExit={handleExit}
             showBackButton={showBackButton}
@@ -203,7 +188,7 @@ export function BookingFlowScreen({ route }: BookingFlowScreenProps) {
         return (
           <ArtistListScreen
             progress={progress}
-            onContinue={() => handleNext('treatmentSelection')}
+            onContinue={() => handleNext('styleSelection')}
             onBack={handleBack}
             onExit={handleExit}
             showBackButton={showBackButton}
@@ -215,7 +200,7 @@ export function BookingFlowScreen({ route }: BookingFlowScreenProps) {
         return (
           <ArtistListScreen
             progress={progress}
-            onContinue={() => handleNext('treatmentSelection')}
+            onContinue={() => handleNext('styleSelection')}
             onBack={handleBack}
             onExit={handleExit}
             showBackButton={showBackButton}
@@ -266,7 +251,7 @@ export function BookingFlowScreen({ route }: BookingFlowScreenProps) {
         return (
           <ServiceSelectionScreen
             progress={progress}
-            onContinue={() => handleNext('occasionSelection')}
+            onContinue={() => handleNext('scheduleSelection')}
             onBack={handleBack}
             onExit={handleExit}
             showBackButton={showBackButton}
@@ -283,10 +268,9 @@ function getCelebrityFlowSteps(): BookingStepKey[] {
   return [
     'locationInput',
     'serviceSelection',
-    'occasionSelection',
     'scheduleSelection',
     'artistList',
-    'treatmentSelection',
+    // 'treatmentSelection', // SKIP - using simplified artist pricing model
     'styleSelection',
     'paymentConfirmation',
     'bookingComplete',
@@ -296,10 +280,9 @@ function getCelebrityFlowSteps(): BookingStepKey[] {
 function getDirectFlowSteps(): BookingStepKey[] {
   return [
     'serviceSelection',
-    'occasionSelection',
     'scheduleSelection',
     'artistList',
-    'treatmentSelection',
+    // 'treatmentSelection', // SKIP - using simplified artist pricing model
     'styleSelection',
     'paymentConfirmation',
     'bookingComplete',
@@ -307,10 +290,10 @@ function getDirectFlowSteps(): BookingStepKey[] {
 }
 
 // Home entry flow - location, time, artist, and service are pre-selected from home screen
+// Occasion selection is now handled on the payment confirmation screen
 function getHomeEntryFlowSteps(): BookingStepKey[] {
   return [
-    'occasionSelection',
-    'treatmentSelection',
+    // 'treatmentSelection', // SKIP - using simplified artist pricing model
     'styleSelection',
     'paymentConfirmation',
     'bookingComplete',

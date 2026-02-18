@@ -58,6 +58,13 @@ const artistProfileUpdateSchema = z
       )
       .optional(),
     profileImageUrl: z.string().url().optional(),
+    servicePrices: z
+      .object({
+        hair: z.number().int().min(10000).max(500000).optional(),
+        makeup: z.number().int().min(10000).max(500000).optional(),
+      })
+      .nullable()
+      .optional(),
   })
   .strict();
 
@@ -447,7 +454,18 @@ export const ArtistController = {
         return;
       }
 
-      const isAvailable = await availabilityService.isArtistAvailable(artistId, dateTime);
+      // artistId from URL is the artist profile ID, but isArtistAvailable expects user ID
+      // Get the artist profile to retrieve the user ID
+      const artistProfile = await artistService.getArtistProfile(artistId);
+      if (!artistProfile) {
+        res.status(404).json({ error: 'Artist not found' });
+        return;
+      }
+
+      const isAvailable = await availabilityService.isArtistAvailable(
+        artistProfile.userId,
+        dateTime
+      );
 
       // Cache for 30 seconds since availability can change
       res.set('Cache-Control', 'private, max-age=30');

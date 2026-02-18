@@ -141,6 +141,41 @@
       "when": 1767863150001,
       "tag": "0019_wet_boom_boom",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1767863200000,
+      "tag": "0020_lean_diamondback",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1767863300000,
+      "tag": "0021_careful_dark_phoenix",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1767863400000,
+      "tag": "0022_standardize_timestamps_to_timestamptz",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1767863500000,
+      "tag": "0023_add_artist_pricing",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1767863600000,
+      "tag": "0024_flexible_service_prices",
+      "breakpoints": true
     }
   ]
 }

@@ -24,8 +24,8 @@ export const onboardingResponses = pgTable(
     response: jsonb('response').notNull(),
     version: integer('version').notNull().default(1),
     isCompletedStep: boolean('is_completed_step').notNull().default(false),
-    createdAt: timestamp('created_at').defaultNow().notNull(),
-    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => ({
     userFlowStepUnique: uniqueIndex('onboarding_responses_user_flow_step_uidx').on(

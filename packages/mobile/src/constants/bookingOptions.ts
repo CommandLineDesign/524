@@ -502,6 +502,7 @@ export const paymentStrings = {
     dateTime: '날짜 및 시간',
     services: '선택한 시술',
     location: '장소',
+    occasion: '일정',
     notes: '요청사항',
   },
   notesPlaceholder: '아티스트에게 전달할 요청사항을 입력해주세요',
@@ -555,8 +556,8 @@ export const commonStrings = {
 
 export const flowConfig = {
   // Total steps shown in progress bar for each flow
-  celebrityFlowSteps: 9,
-  directFlowSteps: 8,
+  celebrityFlowSteps: 8,
+  directFlowSteps: 7,
 
   // Max selections
   maxStyleSelections: 3,

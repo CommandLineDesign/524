@@ -3,7 +3,9 @@ import type {
   ArtistProfile,
   ArtistServiceOffering,
   PortfolioImage,
+  ServicePrices,
 } from '@524/shared';
+import { ARTIST_PRICE_PRESETS_KRW } from '@524/shared';
 import React from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
@@ -11,6 +13,7 @@ import { borderRadius, colors, spacing } from '../../theme';
 import { formStyles } from '../../theme/formStyles';
 import { PortfolioImageGrid, ServiceEditor } from '../artist';
 import { LocationPicker } from '../location';
+import { PricingSelector } from '../onboarding/PricingSelector';
 
 export interface ArtistProfileTabProps {
   /** Artist bio/description */
@@ -21,6 +24,8 @@ export interface ArtistProfileTabProps {
   services?: string[] | ArtistServiceOffering[];
   /** Price range [min, max] */
   priceRange?: [number, number];
+  /** Flexible service pricing (hair, makeup, etc.) in KRW */
+  servicePrices?: ServicePrices | null;
   /** Portfolio images */
   portfolioImages?: PortfolioImage[];
   /** Primary location */
@@ -46,6 +51,7 @@ export function ArtistProfileTab({
   specialties,
   services,
   priceRange,
+  servicePrices,
   portfolioImages,
   primaryLocation,
   serviceRadiusKm,
@@ -61,6 +67,8 @@ export function ArtistProfileTab({
     (specialties && specialties.length > 0) ||
     (services && services.length > 0) ||
     priceRange ||
+    servicePrices?.hair ||
+    servicePrices?.makeup ||
     (portfolioImages && portfolioImages.length > 0) ||
     isEditing;
 
@@ -99,6 +107,7 @@ export function ArtistProfileTab({
   const displayBio = getDisplayValue('bio', bio);
   const displayLocation = getDisplayValue('primaryLocation', primaryLocation);
   const displayRadius = getDisplayValue('serviceRadiusKm', serviceRadiusKm);
+  const displayServicePrices = getDisplayValue('servicePrices', servicePrices);
 
   if (!hasContent) {
     return (
@@ -159,6 +168,63 @@ export function ArtistProfileTab({
           </View>
         </View>
       )}
+
+      {/* Pricing Section */}
+      {isEditing ? (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>서비스 가격</Text>
+          <View style={styles.pricingEditContainer}>
+            {(specialties?.includes('hair') || specialties?.includes('combo')) && (
+              <PricingSelector
+                label="헤어"
+                value={displayServicePrices?.hair ?? null}
+                onChange={(price) =>
+                  onEditChange?.({
+                    ...editDraft,
+                    servicePrices: { ...editDraft?.servicePrices, hair: price ?? undefined },
+                  })
+                }
+                presets={ARTIST_PRICE_PRESETS_KRW}
+              />
+            )}
+            {(specialties?.includes('makeup') || specialties?.includes('combo')) && (
+              <PricingSelector
+                label="메이크업"
+                value={displayServicePrices?.makeup ?? null}
+                onChange={(price) =>
+                  onEditChange?.({
+                    ...editDraft,
+                    servicePrices: { ...editDraft?.servicePrices, makeup: price ?? undefined },
+                  })
+                }
+                presets={ARTIST_PRICE_PRESETS_KRW}
+              />
+            )}
+          </View>
+        </View>
+      ) : displayServicePrices?.hair || displayServicePrices?.makeup ? (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>서비스 가격</Text>
+          <View style={styles.pricingList}>
+            {displayServicePrices?.hair && (
+              <View style={styles.pricingRow}>
+                <Text style={styles.pricingLabel}>헤어</Text>
+                <Text style={styles.pricingValue}>
+                  {displayServicePrices.hair.toLocaleString('ko-KR')}원
+                </Text>
+              </View>
+            )}
+            {displayServicePrices?.makeup && (
+              <View style={styles.pricingRow}>
+                <Text style={styles.pricingLabel}>메이크업</Text>
+                <Text style={styles.pricingValue}>
+                  {displayServicePrices.makeup.toLocaleString('ko-KR')}원
+                </Text>
+              </View>
+            )}
+          </View>
+        </View>
+      ) : null}
 
       {/* Services Section */}
       {((displayServices && displayServices.length > 0) || isEditing) && (
@@ -351,5 +417,26 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: colors.primary,
+  },
+  pricingEditContainer: {
+    gap: spacing.lg,
+  },
+  pricingList: {
+    gap: spacing.sm,
+  },
+  pricingRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: spacing.xs,
+  },
+  pricingLabel: {
+    fontSize: 15,
+    color: colors.text,
+  },
+  pricingValue: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.text,
   },
 });

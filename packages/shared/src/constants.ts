@@ -41,5 +41,10 @@ export const BOOKING_SYSTEM_MESSAGES = {
   },
 } as const;
 
+// Artist pricing presets in KRW
+// These are the available price options artists can choose from
+export const ARTIST_PRICE_PRESETS_KRW = [40000, 50000, 80000] as const;
+export type ArtistPricePresetKRW = (typeof ARTIST_PRICE_PRESETS_KRW)[number];
+
 // Re-export defaultLocale from i18n
 export { defaultLocale } from './i18n';

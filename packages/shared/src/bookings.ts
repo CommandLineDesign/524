@@ -19,7 +19,7 @@ export interface CreateBookingPayload {
   customerId: string;
   artistId: string;
   serviceType: ServiceType;
-  occasion: string;
+  occasion: string | null;
   scheduledDate: string;
   scheduledStartTime: string;
   scheduledEndTime: string;

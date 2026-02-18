@@ -12,6 +12,7 @@ import {
 
 import type { Review } from '../../api/client';
 import { colors } from '../../theme/colors';
+import { formatStandardDate } from '../../utils/dateDisplay';
 import { renderStars } from '../../utils/starUtils';
 
 interface ReviewCardProps {
@@ -19,14 +20,6 @@ interface ReviewCardProps {
   onPress?: () => void;
   containerStyle?: StyleProp<ViewStyle>;
   isLast?: boolean;
-}
-
-function formatDate(dateString: string): string {
-  const date = new Date(dateString);
-  const year = date.getFullYear();
-  const month = date.getMonth() + 1;
-  const day = date.getDate();
-  return `${year}.${month.toString().padStart(2, '0')}.${day.toString().padStart(2, '0')}`;
 }
 
 export function ReviewCard({ review, onPress, containerStyle, isLast }: ReviewCardProps) {
@@ -40,7 +33,7 @@ export function ReviewCard({ review, onPress, containerStyle, isLast }: ReviewCa
           <Text style={styles.stars}>{renderStars(review.overallRating)}</Text>
           <Text style={styles.ratingText}>{review.overallRating.toFixed(1)}</Text>
         </View>
-        <Text style={styles.date}>{formatDate(review.createdAt)}</Text>
+        <Text style={styles.date}>{formatStandardDate(review.createdAt)}</Text>
       </View>
 
       <View style={styles.cardBody}>

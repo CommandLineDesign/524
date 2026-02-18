@@ -10,11 +10,17 @@ export class MessageTemplateService {
     const locale = defaultLocale; // Could be made configurable per user in future
 
     // Format date according to locale
-    const dateOptions = {
-      year: 'numeric' as const,
-      month: 'long' as const,
-      day: 'numeric' as const,
-      weekday: 'long' as const,
+    // Note: toLocaleDateString uses server's timezone for conversion.
+    // For Korea-only deployment, this is acceptable since server runs in Asia/Seoul.
+    // All stored timestamps are UTC; they'll be converted to server's local time for display.
+    // TODO: For multi-timezone support, use a timezone library (e.g., date-fns-tz)
+    // to format in the booking's timezone (booking.timezone).
+    const dateOptions: Intl.DateTimeFormatOptions = {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      weekday: 'long',
+      timeZone: 'Asia/Seoul', // Explicit timezone for consistent formatting
     };
     const scheduledDate = new Date(booking.scheduledDate).toLocaleDateString(
       locale === 'ko' ? 'ko-KR' : 'en-US',

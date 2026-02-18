@@ -1,5 +1,7 @@
 import type { BookingStatus } from '@524/shared';
 
+import { formatLocalDate, formatTimeRange, parseISO } from '../../utils/dateDisplay';
+
 export const STATUS_LABELS: Record<BookingStatus, string> = {
   pending: '대기',
   declined: '거절됨',
@@ -14,39 +16,43 @@ export function formatCurrency(amount?: number) {
   return `${amount.toLocaleString('ko-KR')}원`;
 }
 
+/**
+ * Format booking schedule for display.
+ * Converts UTC timestamps to device's local timezone.
+ */
 export function formatSchedule(dateIso?: string, startIso?: string, endIso?: string) {
   if (!dateIso && !startIso) return '일정 미정';
   const start = startIso ?? dateIso;
-  const startDate = start ? new Date(start) : null;
-  const endDate = endIso ? new Date(endIso) : null;
 
-  if (!startDate) return '일정 미정';
+  if (!start) return '일정 미정';
 
-  const y = startDate.getFullYear();
-  const m = String(startDate.getMonth() + 1).padStart(2, '0');
-  const d = String(startDate.getDate()).padStart(2, '0');
-  const startTime = `${String(startDate.getHours()).padStart(2, '0')}:${String(
-    startDate.getMinutes()
-  ).padStart(2, '0')}`;
-  const endTime = endDate
-    ? `${String(endDate.getHours()).padStart(2, '0')}:${String(endDate.getMinutes()).padStart(2, '0')}`
-    : null;
+  try {
+    const dateStr = formatLocalDate(start, 'yyyy.MM.dd');
+    const startTime = formatLocalDate(start, 'HH:mm');
 
-  return endTime ? `${y}.${m}.${d} ${startTime} - ${endTime}` : `${y}.${m}.${d} ${startTime}`;
+    if (endIso) {
+      const endTime = formatLocalDate(endIso, 'HH:mm');
+      return `${dateStr} ${startTime} - ${endTime}`;
+    }
+
+    return `${dateStr} ${startTime}`;
+  } catch {
+    return '일정 미정';
+  }
 }
 
+/**
+ * Format status change timestamp for display.
+ * Converts UTC timestamp to device's local timezone.
+ */
 export function formatStatusTimestamp(iso?: string) {
   if (!iso) return '시간 정보 없음';
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return iso;
 
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  const hh = String(date.getHours()).padStart(2, '0');
-  const mm = String(date.getMinutes()).padStart(2, '0');
-
-  return `${y}.${m}.${d} ${hh}:${mm}`;
+  try {
+    return formatLocalDate(iso, 'yyyy.MM.dd HH:mm');
+  } catch {
+    return iso;
+  }
 }
 
 export function summarizeServices(services: { name: string }[]) {

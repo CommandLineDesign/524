@@ -21,27 +21,9 @@ import {
 } from '../hooks/useNotifications';
 import type { RootStackParamList } from '../navigation/AppNavigator';
 import { colors } from '../theme/colors';
+import { formatRelativeTime } from '../utils/dateDisplay';
 
 type NotificationNavProp = NativeStackNavigationProp<RootStackParamList, 'NotificationInbox'>;
-
-function formatTimeAgo(dateString: string): string {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / (1000 * 60));
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-  if (diffMins < 1) return '방금 전';
-  if (diffMins < 60) return `${diffMins}분 전`;
-  if (diffHours < 24) return `${diffHours}시간 전`;
-  if (diffDays < 7) return `${diffDays}일 전`;
-
-  return date.toLocaleDateString('ko-KR', {
-    month: 'short',
-    day: 'numeric',
-  });
-}
 
 function NotificationItemRow({
   item,
@@ -68,7 +50,7 @@ function NotificationItemRow({
         <Text style={styles.notificationBody} numberOfLines={2}>
           {item.body}
         </Text>
-        <Text style={styles.notificationTime}>{formatTimeAgo(item.createdAt)}</Text>
+        <Text style={styles.notificationTime}>{formatRelativeTime(item.createdAt)}</Text>
       </View>
       <Ionicons name="chevron-forward" size={20} color={colors.subtle} />
     </TouchableOpacity>

@@ -5,6 +5,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { borderRadius } from '../../theme/borderRadius';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
+import { formatKoreanDate, parseISO } from '../../utils/dateDisplay';
 
 export interface TimeSelectorButtonProps {
   date: string | null; // ISO date string
@@ -13,9 +14,10 @@ export interface TimeSelectorButtonProps {
 }
 
 /**
- * Format date and time for display
- * @param dateString - ISO date string
- * @param timeSlot - Time in HH:MM format
+ * Format date and time for display.
+ * Converts UTC date to device's local timezone.
+ * @param dateString - ISO date string (UTC)
+ * @param timeSlot - Time in HH:MM format (local time the user selected)
  * @returns Formatted string like "2월 6일, 오후 7:00"
  */
 function formatDateTime(dateString: string | null, timeSlot: string | null): string {
@@ -23,17 +25,16 @@ function formatDateTime(dateString: string | null, timeSlot: string | null): str
     return '날짜 및 시간 선택';
   }
 
-  const date = new Date(dateString);
-  const month = date.getMonth() + 1;
-  const day = date.getDate();
+  // Format the date portion using the centralized utility
+  const dateDisplay = formatKoreanDate(dateString);
 
-  // Parse time slot
+  // Parse time slot (this is the time the user selected, already in local context)
   const [hours, minutes] = timeSlot.split(':').map(Number);
   const isPM = hours >= 12;
   const displayHours = hours > 12 ? hours - 12 : hours === 0 ? 12 : hours;
   const period = isPM ? '오후' : '오전';
 
-  return `${month}월 ${day}일, ${period} ${displayHours}:${minutes.toString().padStart(2, '0')}`;
+  return `${dateDisplay}, ${period} ${displayHours}:${minutes.toString().padStart(2, '0')}`;
 }
 
 export function TimeSelectorButton({ date, timeSlot, onPress }: TimeSelectorButtonProps) {

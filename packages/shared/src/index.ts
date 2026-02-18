@@ -4,6 +4,7 @@ export * from './artists';
 export * from './admin';
 export * from './bookings';
 export * from './constants';
+export * from './dates';
 export * from './geocoding';
 export * from './i18n';
 export * from './messaging';

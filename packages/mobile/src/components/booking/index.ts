@@ -24,3 +24,5 @@ export { ArtistProfileTab } from './ArtistProfileTab';
 export type { ArtistProfileTabProps } from './ArtistProfileTab';
 export { ArtistReviewsTab } from './ArtistReviewsTab';
 export type { ArtistReviewsTabProps } from './ArtistReviewsTab';
+export { OccasionTypeahead } from './OccasionTypeahead';
+export type { OccasionTypeaheadProps } from './OccasionTypeahead';

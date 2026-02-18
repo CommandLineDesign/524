@@ -23,8 +23,8 @@ export const customerProfiles = pgTable('customer_profiles', {
   completedBookings: integer('completed_bookings').default(0),
   cancelledBookings: integer('cancelled_bookings').default(0),
   averageRatingGiven: integer('average_rating_given'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });
 
 export type CustomerProfile = typeof customerProfiles.$inferSelect;
