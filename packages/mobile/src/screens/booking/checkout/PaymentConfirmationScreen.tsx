@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 
 import { createBooking, getArtistById } from '../../../api/client';
-import { BookingLayout, ContinueButton, OccasionTypeahead } from '../../../components/booking';
+import { BookingLayout, ContinueButton } from '../../../components/booking';
 import { paymentStrings } from '../../../constants/bookingOptions';
 import { useAuthStore } from '../../../store/authStore';
 import { useBookingFlowStore } from '../../../store/bookingFlowStore';
@@ -36,12 +36,12 @@ export function PaymentConfirmationScreen({
     selectedArtistId,
     selectedDate,
     selectedTimeSlot,
-    serviceType,
+    selectedTreatments,
     location,
-    occasion,
-    setOccasion,
     customerNotes,
     setCustomerNotes,
+    totalAmount,
+    estimatedDuration,
     buildBookingPayload,
   } = useBookingFlowStore();
 
@@ -60,26 +60,6 @@ export function PaymentConfirmationScreen({
     enabled: Boolean(selectedArtistId),
   });
 
-  // Build price items from artist's service prices based on selected service type
-  const priceItems = useMemo(() => {
-    if (!artist) return [];
-
-    const items: Array<{ name: string; price: number }> = [];
-
-    if ((serviceType === 'hair' || serviceType === 'combo') && artist.servicePrices?.hair) {
-      items.push({ name: '헤어', price: artist.servicePrices.hair });
-    }
-    if ((serviceType === 'makeup' || serviceType === 'combo') && artist.servicePrices?.makeup) {
-      items.push({ name: '메이크업', price: artist.servicePrices.makeup });
-    }
-
-    return items;
-  }, [artist, serviceType]);
-
-  // Calculate totals from price items
-  const totalAmount = priceItems.reduce((sum, item) => sum + item.price, 0);
-  const estimatedDuration = priceItems.length * 60; // Default 60 min per service
-
   const handleNotesChange = (text: string) => {
     setNotes(text);
     setCustomerNotes(text);
@@ -91,8 +71,7 @@ export function PaymentConfirmationScreen({
       return;
     }
 
-    // Pass artist prices to build the booking payload
-    const payload = buildBookingPayload(user.id, artist?.servicePrices);
+    const payload = buildBookingPayload(user.id);
     if (!payload) {
       Alert.alert(
         '정보가 부족해요',
@@ -182,15 +161,17 @@ export function PaymentConfirmationScreen({
         {/* Services Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{paymentStrings.sections.services}</Text>
-          {priceItems.length > 0 ? (
-            priceItems.map((item, index) => (
-              <View key={`${item.name}-${index}`} style={styles.treatmentRow}>
-                <Text style={styles.treatmentName}>{item.name}</Text>
-                <Text style={styles.treatmentPrice}>{item.price.toLocaleString('ko-KR')}원</Text>
+          {selectedTreatments.length > 0 ? (
+            selectedTreatments.map((treatment) => (
+              <View key={treatment.id} style={styles.treatmentRow}>
+                <Text style={styles.treatmentName}>{treatment.name}</Text>
+                <Text style={styles.treatmentPrice}>
+                  {treatment.price.toLocaleString('ko-KR')}원
+                </Text>
               </View>
             ))
           ) : (
-            <Text style={styles.emptyText}>선택된 서비스가 없습니다</Text>
+            <Text style={styles.emptyText}>선택된 시술이 없습니다</Text>
           )}
         </View>
 
@@ -198,17 +179,6 @@ export function PaymentConfirmationScreen({
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{paymentStrings.sections.location}</Text>
           <Text style={styles.sectionValue}>{location ?? '-'}</Text>
-        </View>
-
-        {/* Occasion Section */}
-        <View style={[styles.section, styles.occasionSection]}>
-          <Text style={styles.sectionTitle}>{paymentStrings.sections.occasion}</Text>
-          <OccasionTypeahead
-            value={occasion}
-            onSelect={setOccasion}
-            placeholder="일정을 선택하거나 입력해주세요"
-            testID="occasion-typeahead"
-          />
         </View>
 
         {/* Notes Section */}
@@ -257,9 +227,6 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
-  },
-  occasionSection: {
-    zIndex: 100,
   },
   sectionTitle: {
     fontSize: 14,
