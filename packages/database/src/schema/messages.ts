@@ -19,9 +19,9 @@ export const messages = pgTable(
     content: text('content'),
     images: jsonb('images'),
     bookingId: uuid('booking_id').references(() => bookings.id),
-    sentAt: timestamp('sent_at').defaultNow().notNull(),
-    readAt: timestamp('read_at'),
-    createdAt: timestamp('created_at').defaultNow().notNull(),
+    sentAt: timestamp('sent_at', { withTimezone: true }).defaultNow().notNull(),
+    readAt: timestamp('read_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => ({
     // Composite index for conversation messages ordered by sent time

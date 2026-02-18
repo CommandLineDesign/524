@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 
 import { artistProfiles, refreshTokens, userRoles, users } from '@524/database';
+import { addUTCDays } from '@524/shared';
 import { env } from '../config/env.js';
 import { db } from '../db/client.js';
 
@@ -365,9 +366,8 @@ export class AuthService {
     // Hash the refresh token for storage (don't store plain tokens)
     const tokenHash = crypto.createHash('sha256').update(refreshToken).digest('hex');
 
-    // Calculate expiration date
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + REFRESH_TOKEN_EXPIRY_DAYS);
+    // Calculate expiration date (UTC-based arithmetic)
+    const expiresAt = addUTCDays(new Date(), REFRESH_TOKEN_EXPIRY_DAYS);
 
     // Store refresh token in database
     await db.insert(refreshTokens).values({

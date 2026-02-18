@@ -1,6 +1,7 @@
 import { and, eq, inArray, lt } from 'drizzle-orm';
 
 import { type DevicePlatform, type DeviceToken, deviceTokens } from '@524/database';
+import { addUTCDays } from '@524/shared';
 
 import { db } from '../db/client.js';
 import { createLogger } from '../utils/logger.js';
@@ -146,8 +147,7 @@ export class DeviceTokenRepository {
    * @returns Number of tokens deactivated
    */
   async deactivateStaleTokens(daysInactive = 30): Promise<number> {
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - daysInactive);
+    const cutoffDate = addUTCDays(new Date(), -daysInactive);
 
     const result = await db
       .update(deviceTokens)
@@ -170,8 +170,7 @@ export class DeviceTokenRepository {
    * @returns Number of tokens deleted
    */
   async deleteStaleTokens(daysInactive = 90): Promise<number> {
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - daysInactive);
+    const cutoffDate = addUTCDays(new Date(), -daysInactive);
 
     const result = await db
       .delete(deviceTokens)

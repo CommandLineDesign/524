@@ -17,12 +17,12 @@ export const conversations = pgTable(
       .references(() => users.id)
       .notNull(),
     status: varchar('status', { length: 20 }).default('active'),
-    lastMessageAt: timestamp('last_message_at').notNull(),
+    lastMessageAt: timestamp('last_message_at', { withTimezone: true }).notNull(),
     unreadCountCustomer: integer('unread_count_customer').default(0),
     unreadCountArtist: integer('unread_count_artist').default(0),
-    archivedAt: timestamp('archived_at'),
-    createdAt: timestamp('created_at').defaultNow().notNull(),
-    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+    archivedAt: timestamp('archived_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => ({
     // Indexes for admin queries and performance optimization

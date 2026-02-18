@@ -1,4 +1,4 @@
-import { addDays, isAfter } from 'date-fns';
+import { addUTCDays, isAfter } from '@524/shared';
 
 import { BookingRepository } from '../repositories/bookingRepository.js';
 import {
@@ -91,7 +91,7 @@ export class ReviewService {
     if (!booking.completedAt) {
       throw new Error('Booking completion date not available');
     }
-    const thirtyDaysAfterCompletion = addDays(new Date(booking.completedAt), 30);
+    const thirtyDaysAfterCompletion = addUTCDays(new Date(booking.completedAt), 30);
     if (isAfter(new Date(), thirtyDaysAfterCompletion)) {
       throw new Error('Review submission window has expired (30 days after completion)');
     }
@@ -176,7 +176,7 @@ export class ReviewService {
     }
 
     // Check 24-hour edit window
-    const twentyFourHoursAfterCreation = addDays(review.createdAt, 1);
+    const twentyFourHoursAfterCreation = addUTCDays(new Date(review.createdAt), 1);
     if (isAfter(new Date(), twentyFourHoursAfterCreation)) {
       throw new Error('Review can only be edited within 24 hours of submission');
     }

@@ -148,7 +148,14 @@ export function getCurrentWeekId(): string {
 }
 
 /**
- * Convert a grid cell (row, column) to an ISO datetime string
+ * Convert a grid cell (row, column) to an ISO datetime string.
+ *
+ * The returned string uses KST timezone (+09:00) because:
+ * 1. The UI displays times in Korean local time for user convenience
+ * 2. The server normalizes all slots to UTC for storage and comparison
+ * 3. This approach allows the same slot to represent "9 AM Korean time"
+ *    regardless of the server's timezone
+ *
  * @param weekId The week ID (e.g., "2026-W07")
  * @param dayIndex Day index (0 = Monday, 6 = Sunday)
  * @param slotIndex Time slot index (0 = 08:00, 1 = 08:30, etc.)

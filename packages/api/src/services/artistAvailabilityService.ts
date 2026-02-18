@@ -1,21 +1,11 @@
 import { artistAvailability, artistProfiles, bookings } from '@524/database';
+import { getUTCWeekId, normalizeToUTC } from '@524/shared';
 import { and, eq, gte, inArray, lte, or } from 'drizzle-orm';
 
 import { db } from '../db/client.js';
 import { createLogger } from '../utils/logger.js';
 
 const logger = createLogger('artist-availability');
-
-/**
- * Get ISO week ID from a date (format: "YYYY-Www")
- */
-function getWeekId(date: Date): string {
-  const year = date.getFullYear();
-  const startOfYear = new Date(year, 0, 1);
-  const days = Math.floor((date.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000));
-  const weekNumber = Math.ceil((days + startOfYear.getDay() + 1) / 7);
-  return `${year}-W${weekNumber.toString().padStart(2, '0')}`;
-}
 
 /**
  * Get artist profile ID from user ID
@@ -61,7 +51,7 @@ export class ArtistAvailabilityService {
       return false;
     }
 
-    const weekId = getWeekId(requestedStart);
+    const weekId = getUTCWeekId(requestedStart);
     const availabilityRecord = await db
       .select({ slots: artistAvailability.slots })
       .from(artistAvailability)
@@ -76,9 +66,12 @@ export class ArtistAvailabilityService {
     }
 
     // Check if the requested start time matches any declared slots
+    // Normalize slots to UTC for timezone-agnostic comparison
+    // (slots may be stored with various timezone offsets like +09:00)
     const slots = (availabilityRecord[0].slots as string[]) || [];
+    const normalizedSlots = slots.map((slot) => normalizeToUTC(slot));
     const requestedSlot = requestedStart.toISOString();
-    const hasScheduledSlot = slots.includes(requestedSlot);
+    const hasScheduledSlot = normalizedSlots.includes(requestedSlot);
 
     if (!hasScheduledSlot) {
       logger.debug({ artistId, requestedSlot }, 'Requested time not in artist schedule');
@@ -154,7 +147,7 @@ export class ArtistAvailabilityService {
     const profileIds = artistProfileRows.map((a) => a.profileId);
 
     // Step 2: Check declared schedules
-    const weekId = getWeekId(requestedStart);
+    const weekId = getUTCWeekId(requestedStart);
     const requestedSlot = requestedStart.toISOString();
 
     const availabilityRecords = await db
@@ -173,13 +166,8 @@ export class ArtistAvailabilityService {
       const slots = (record.slots as string[]) || [];
 
       // Normalize slots to UTC for timezone-agnostic comparison
-      const normalizedSlots = slots.map((slot) => {
-        try {
-          return new Date(slot).toISOString();
-        } catch {
-          return slot; // Keep original if parsing fails
-        }
-      });
+      // (slots may be stored with various timezone offsets like +09:00)
+      const normalizedSlots = slots.map((slot) => normalizeToUTC(slot));
 
       if (normalizedSlots.includes(requestedSlot)) {
         // Find the user ID for this artist profile

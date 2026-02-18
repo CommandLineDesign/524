@@ -31,8 +31,8 @@ export const reviews = pgTable('reviews', {
   reviewImages: jsonb('review_images'),
   artistResponse: text('artist_response'),
   isVisible: boolean('is_visible').default(true),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });
 
 export type Review = typeof reviews.$inferSelect;
@@ -47,7 +47,7 @@ export const reviewImages = pgTable('review_images', {
   mimeType: text('mime_type').notNull(),
   displayOrder: integer('display_order').notNull(),
   publicUrl: text('public_url'),
-  createdAt: timestamp('created_at', { mode: 'string' }).defaultNow().notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 });
 
 export type ReviewImage = typeof reviewImages.$inferSelect;

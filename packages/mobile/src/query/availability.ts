@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { addWeeks, parseISO } from 'date-fns';
 
 import {
   type AvailabilityData,
@@ -69,14 +70,15 @@ export function useCopyPreviousWeekAvailability() {
       const slotDateRegex = /^(\d{4})-(\d{2})-(\d{2})/;
 
       // Transform slots to the new week by adding 7 days
+      // Use date-fns addWeeks for reliable date arithmetic
       const newSlots = previousSlots.map((slot) => {
         const match = slot.match(slotDateRegex);
         if (!match) return slot;
 
-        const date = new Date(slot);
-        date.setDate(date.getDate() + 7);
+        // Parse the date portion and add one week
+        const date = addWeeks(parseISO(slot), 1);
 
-        // Preserve the original time portion and timezone
+        // Preserve the original time portion and timezone offset
         const timePart = slot.substring(10); // "T09:00:00+09:00"
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');

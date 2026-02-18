@@ -1,4 +1,10 @@
-import { ArtistProfile, PortfolioImage, ServiceType } from '@524/shared';
+import {
+  ARTIST_PRICE_PRESETS_KRW,
+  ArtistProfile,
+  PortfolioImage,
+  ServicePrices,
+  ServiceType,
+} from '@524/shared';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
@@ -21,6 +27,7 @@ import { ContinueButton } from '../components/booking/ContinueButton';
 import { LocationPicker } from '../components/location';
 import { MultiSelectButtons } from '../components/onboarding/MultiSelectButtons';
 import { OnboardingLayout } from '../components/onboarding/OnboardingLayout';
+import { PricingSelector } from '../components/onboarding/PricingSelector';
 import { usePortfolioUpload } from '../hooks/usePortfolioUpload';
 import type { RootStackParamList } from '../navigation/AppNavigator';
 import { useUpdateArtistProfile } from '../query/artist';
@@ -29,7 +36,14 @@ import { borderRadius, colors, spacing } from '../theme';
 import { formStyles } from '../theme/formStyles';
 import { getCurrentWeekId, getPreviousWeekId } from '../utils/weekUtils';
 
-type StepKey = 'basic' | 'specialties' | 'availability' | 'service_area' | 'photo' | 'portfolio';
+type StepKey =
+  | 'basic'
+  | 'specialties'
+  | 'pricing'
+  | 'availability'
+  | 'service_area'
+  | 'photo'
+  | 'portfolio';
 
 const SPECIALTY_OPTIONS = [
   { id: 'hair', label: 'Hair styling' },
@@ -39,7 +53,11 @@ const SPECIALTY_OPTIONS = [
 type DraftProfile = Pick<
   ArtistProfile,
   'stageName' | 'bio' | 'specialties' | 'yearsExperience' | 'primaryLocation' | 'serviceRadiusKm'
-> & { profileImageUrl?: string; portfolioImages?: PortfolioImage[] };
+> & {
+  profileImageUrl?: string;
+  portfolioImages?: PortfolioImage[];
+  servicePrices?: ServicePrices | null;
+};
 
 const EMPTY_PROFILE: DraftProfile = {
   stageName: '',
@@ -50,6 +68,7 @@ const EMPTY_PROFILE: DraftProfile = {
   serviceRadiusKm: 0,
   profileImageUrl: undefined,
   portfolioImages: [],
+  servicePrices: null,
 };
 
 function inferContentType(asset: ImagePicker.ImagePickerAsset) {
@@ -87,7 +106,7 @@ export function ArtistOnboardingFlowScreen() {
   const [availabilityByWeek, setAvailabilityByWeek] = useState<Map<string, Set<string>>>(new Map());
 
   const steps: StepKey[] = useMemo(
-    () => ['basic', 'specialties', 'availability', 'service_area', 'photo', 'portfolio'],
+    () => ['basic', 'specialties', 'pricing', 'availability', 'service_area', 'photo', 'portfolio'],
     []
   );
   const currentStep = steps[stepIndex];
@@ -163,6 +182,7 @@ export function ArtistOnboardingFlowScreen() {
         serviceRadiusKm: draft.serviceRadiusKm,
         profileImageUrl: draft.profileImageUrl,
         portfolioImages: allPortfolioImages,
+        servicePrices: draft.servicePrices,
       });
 
       navigation.reset({
@@ -393,6 +413,55 @@ export function ArtistOnboardingFlowScreen() {
               accessibilityLabel="Years of experience"
             />
           </View>
+        </View>
+      </OnboardingLayout>
+    );
+  }
+
+  if (currentStep === 'pricing') {
+    // Show pricing selectors based on selected specialties
+    const showHairPricing =
+      draft.specialties.includes('hair') || draft.specialties.includes('combo');
+    const showMakeupPricing =
+      draft.specialties.includes('makeup') || draft.specialties.includes('combo');
+
+    return (
+      <OnboardingLayout
+        title="Set your prices"
+        subtitle="Choose a price for each service you offer."
+        step={stepIndex + 1}
+        totalSteps={steps.length}
+        showStepText={false}
+        footer={renderFooter('Next')}
+      >
+        <View style={styles.formContent}>
+          {showHairPricing && (
+            <PricingSelector
+              label="헤어 (Hair)"
+              value={draft.servicePrices?.hair ?? null}
+              onChange={(price) =>
+                updateField({
+                  servicePrices: { ...draft.servicePrices, hair: price ?? undefined },
+                })
+              }
+              presets={ARTIST_PRICE_PRESETS_KRW}
+            />
+          )}
+          {showMakeupPricing && (
+            <PricingSelector
+              label="메이크업 (Makeup)"
+              value={draft.servicePrices?.makeup ?? null}
+              onChange={(price) =>
+                updateField({
+                  servicePrices: { ...draft.servicePrices, makeup: price ?? undefined },
+                })
+              }
+              presets={ARTIST_PRICE_PRESETS_KRW}
+            />
+          )}
+          {!showHairPricing && !showMakeupPricing && (
+            <Text style={styles.helperText}>Please go back and select your specialties first.</Text>
+          )}
         </View>
       </OnboardingLayout>
     );

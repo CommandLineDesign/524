@@ -12,7 +12,7 @@ export const auditLogs = pgTable('audit_logs', {
   action: varchar('action', { length: 50 }).notNull(), // 'update', 'create', 'delete'
   changes: jsonb('changes'), // { field: { old: value, new: value } }
   metadata: jsonb('metadata'), // Additional context
-  createdAt: timestamp('created_at').defaultNow().notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 });
 
 export type AuditLog = typeof auditLogs.$inferSelect;

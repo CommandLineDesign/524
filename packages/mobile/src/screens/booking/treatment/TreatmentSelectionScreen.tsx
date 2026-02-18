@@ -1,3 +1,19 @@
+/**
+ * @deprecated TEMPORARILY UNUSED
+ *
+ * This screen has been disabled in favor of a simplified artist pricing model
+ * where artists set fixed prices for hair and makeup services.
+ *
+ * The treatment selection step is skipped in the booking flow:
+ * - Celebrity flow: artistList -> styleSelection (skips treatmentSelection)
+ * - Direct flow: artistList -> styleSelection (skips treatmentSelection)
+ * - Home entry flow: starts at styleSelection (skips treatmentSelection)
+ *
+ * This code is retained for potential future restoration of detailed
+ * treatment/service selection functionality.
+ *
+ * See: BookingFlowScreen.tsx, bookingFlowStore.ts for flow configuration
+ */
 import React from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 

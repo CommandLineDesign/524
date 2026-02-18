@@ -28,6 +28,7 @@ type ArtistProfileRow = {
   services: unknown | null;
   profileImageUrl?: string | null;
   verifiedAt: Date | null;
+  servicePrices: unknown | null;
 };
 type PendingArtistRow = {
   id: string;
@@ -92,6 +93,7 @@ export type ArtistProfileUpdateInput = Partial<
     | 'isAcceptingBookings'
     | 'portfolioImages'
     | 'services'
+    | 'servicePrices'
   >
 > & {
   profileImageUrl?: string;
@@ -151,6 +153,7 @@ function mapRowToProfile(row: ArtistProfileRow): ArtistProfile {
     portfolioImages: (row.portfolioImages as ArtistProfile['portfolioImages']) ?? [],
     services: (row.services as ArtistProfile['services']) ?? [],
     profileImageUrl: row.profileImageUrl ?? undefined,
+    servicePrices: (row.servicePrices as ArtistProfile['servicePrices']) ?? null,
   };
 }
 
@@ -246,6 +249,7 @@ const artistProfileSelect = {
   services: artistProfiles.services,
   profileImageUrl: users.profileImageUrl,
   verifiedAt: artistProfiles.verifiedAt,
+  servicePrices: artistProfiles.servicePrices,
 };
 
 export class ArtistRepository {
@@ -315,6 +319,9 @@ export class ArtistRepository {
     }
     if (updates.services !== undefined) {
       updatePayload.services = updates.services;
+    }
+    if (updates.servicePrices !== undefined) {
+      updatePayload.servicePrices = updates.servicePrices;
     }
 
     const [updated] = await db

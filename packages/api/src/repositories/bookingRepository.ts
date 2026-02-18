@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 
+import { nowUTC } from '@524/shared';
 import { and, desc, eq } from 'drizzle-orm';
 
 import { bookings, reviews, users } from '@524/database';
@@ -79,7 +80,7 @@ export class BookingRepository {
     const platformFee = roundTo(subtotal * 0.15);
     const tax = roundTo((subtotal + platformFee) * 0.1);
     const totalAmount = subtotal + platformFee + tax;
-    const historyEntry = { status: 'pending', timestamp: new Date().toISOString() };
+    const historyEntry = { status: 'pending', timestamp: nowUTC() };
 
     const [record] = await db
       .insert(bookings)
@@ -89,7 +90,7 @@ export class BookingRepository {
         customerId: payload.customerId,
         artistId: payload.artistId,
         serviceType: payload.serviceType,
-        occasion: payload.occasion,
+        occasion: payload.occasion ?? '',
         services: payload.services,
         totalDurationMinutes: payload.services.reduce(
           (sum: number, item: BookedService) => sum + item.durationMinutes,
@@ -98,6 +99,8 @@ export class BookingRepository {
         scheduledDate: new Date(payload.scheduledDate),
         scheduledStartTime: scheduleStart,
         scheduledEndTime: scheduleEnd,
+        // Booking location timezone (for display purposes, not storage format)
+        // All timestamp values are stored in UTC
         timezone: 'Asia/Seoul',
         serviceLocation: payload.location,
         locationType: 'customer_location',

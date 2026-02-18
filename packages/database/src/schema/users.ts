@@ -34,14 +34,14 @@ export const users = pgTable(
     isVerified: boolean('is_verified').default(false),
     isBanned: boolean('is_banned').default(false),
     banReason: text('ban_reason'),
-    bannedAt: timestamp('banned_at'),
+    bannedAt: timestamp('banned_at', { withTimezone: true }),
     bannedBy: uuid('banned_by'),
     tokenVersion: integer('token_version').default(1),
     sessionVersion: integer('session_version').default(1),
     onboardingCompleted: boolean('onboarding_completed').notNull().default(false),
-    deactivatedAt: timestamp('deactivated_at'),
-    createdAt: timestamp('created_at').defaultNow().notNull(),
-    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+    deactivatedAt: timestamp('deactivated_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => ({
     bannedByFk: foreignKey({

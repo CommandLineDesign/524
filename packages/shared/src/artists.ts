@@ -1,5 +1,12 @@
 import type { ServiceType } from './constants';
 
+/** Flexible pricing structure for artist services */
+export interface ServicePrices {
+  hair?: number;
+  makeup?: number;
+  // Future service types can be added here without schema changes
+}
+
 export interface ArtistLocation {
   latitude: number;
   longitude: number;
@@ -34,6 +41,8 @@ export interface ArtistProfile {
   portfolioImages?: PortfolioImage[];
   services?: ArtistServiceOffering[];
   profileImageUrl?: string;
+  /** Flexible service pricing (hair, makeup, etc.) in KRW */
+  servicePrices?: ServicePrices | null;
 }
 
 export interface ArtistSearchFilters {

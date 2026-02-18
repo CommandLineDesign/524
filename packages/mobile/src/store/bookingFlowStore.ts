@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-import type { BookedService, CreateBookingPayload, ServiceType } from '@524/shared';
+import type { BookedService, CreateBookingPayload, ServicePrices, ServiceType } from '@524/shared';
 import { DEV_DEFAULT_LOCATION } from '@524/shared';
 
 import type {
@@ -138,7 +138,10 @@ export interface BookingFlowActions {
   getEstimatedDuration: () => number;
   getProgressPercent: () => number;
   isServiceTypeValid: () => boolean;
-  buildBookingPayload: (customerId: string) => CreateBookingPayload | null;
+  buildBookingPayload: (
+    customerId: string,
+    servicePrices?: ServicePrices | null
+  ) => CreateBookingPayload | null;
 }
 
 export type BookingFlowStore = BookingFlowState & BookingFlowActions;
@@ -204,17 +207,17 @@ const initialState: BookingFlowState = {
 const STEP_FLOW: Record<BookingStepKey, BookingStepKey[]> = {
   // Entry path steps
   locationInput: ['serviceSelection'],
-  serviceSelection: ['occasionSelection'],
+  serviceSelection: ['scheduleSelection'],
 
-  // Common flow
-  occasionSelection: ['scheduleSelection'],
+  // Common flow (occasionSelection removed - now handled on payment confirmation screen)
+  occasionSelection: ['scheduleSelection'], // Kept for backward compatibility
   scheduleSelection: ['artistList'],
 
-  // Artist steps
-  artistList: ['treatmentSelection'],
-  bookmarkedArtists: ['treatmentSelection'],
+  // Artist steps - go directly to styleSelection (treatmentSelection is skipped)
+  artistList: ['styleSelection'],
+  bookmarkedArtists: ['styleSelection'],
 
-  // Treatment steps
+  // Treatment steps - kept for backward compatibility but treatmentSelection is skipped
   treatmentSelection: ['styleSelection'],
   styleSelection: ['paymentConfirmation'],
 
@@ -244,13 +247,15 @@ export const useBookingFlowStore = create<BookingFlowStore>((set, get) => ({
     // Each path starts at a different step
     // celebrity: locationInput -> serviceSelection -> ...
     // direct: serviceSelection -> ...
-    // homeEntry: occasionSelection (with pre-populated data via initializeFromHome)
+    // homeEntry: styleSelection (with pre-populated data via initializeFromHome)
     let initialStep: BookingStepKey;
     if (path === 'celebrity') {
       initialStep = 'locationInput';
     } else if (path === 'homeEntry') {
-      // homeEntry starts at occasionSelection since location, service, date, time, and artist are pre-selected
-      initialStep = 'occasionSelection';
+      // homeEntry starts at styleSelection since location, service, date, time, and artist are pre-selected
+      // treatmentSelection is skipped - using simplified artist pricing model
+      // Occasion selection is handled on the payment confirmation screen
+      initialStep = 'styleSelection';
     } else {
       // 'direct' starts at serviceSelection
       initialStep = 'serviceSelection';
@@ -469,12 +474,14 @@ export const useBookingFlowStore = create<BookingFlowStore>((set, get) => ({
 
   initializeFromHome: (params) => {
     // Initialize the store with pre-selected values from home screen
-    // This starts the flow at occasionSelection with artist, location, time, and service already set
+    // This starts the flow at styleSelection with artist, location, time, and service already set
+    // treatmentSelection is skipped - using simplified artist pricing model
+    // Occasion selection is handled on the payment confirmation screen
     set({
       ...initialState,
       celebrities: { ...initialCelebrities },
       entryPath: 'homeEntry',
-      currentStep: 'occasionSelection',
+      currentStep: 'styleSelection',
       stepHistory: [],
       selectedArtistId: params.artistId,
       location: params.location,
@@ -504,13 +511,14 @@ export const useBookingFlowStore = create<BookingFlowStore>((set, get) => ({
     const { entryPath, currentStep } = get();
 
     // Define step indices for progress calculation
+    // treatmentSelection is skipped - using simplified artist pricing model
+    // Occasion selection is handled on the payment confirmation screen
     const celebritySteps: BookingStepKey[] = [
       'locationInput',
       'serviceSelection',
-      'occasionSelection',
       'scheduleSelection',
       'artistList',
-      'treatmentSelection',
+      // 'treatmentSelection', // SKIP - using simplified artist pricing
       'styleSelection',
       'paymentConfirmation',
       'bookingComplete',
@@ -518,19 +526,19 @@ export const useBookingFlowStore = create<BookingFlowStore>((set, get) => ({
 
     const directSteps: BookingStepKey[] = [
       'serviceSelection',
-      'occasionSelection',
       'scheduleSelection',
       'artistList',
-      'treatmentSelection',
+      // 'treatmentSelection', // SKIP - using simplified artist pricing
       'styleSelection',
       'paymentConfirmation',
       'bookingComplete',
     ];
 
     // Home entry flow skips location/service/schedule/artist selection since those are pre-set
+    // treatmentSelection is skipped - using simplified artist pricing model
+    // Occasion selection is handled on the payment confirmation screen
     const homeEntrySteps: BookingStepKey[] = [
-      'occasionSelection',
-      'treatmentSelection',
+      // 'treatmentSelection', // SKIP - using simplified artist pricing
       'styleSelection',
       'paymentConfirmation',
       'bookingComplete',
@@ -556,7 +564,7 @@ export const useBookingFlowStore = create<BookingFlowStore>((set, get) => ({
     return serviceType !== null;
   },
 
-  buildBookingPayload: (customerId: string) => {
+  buildBookingPayload: (customerId: string, servicePrices?: ServicePrices | null) => {
     const state = get();
     const {
       selectedArtistId,
@@ -567,18 +575,10 @@ export const useBookingFlowStore = create<BookingFlowStore>((set, get) => ({
       selectedTreatments,
       location,
       customerNotes,
-      estimatedDuration,
-      totalAmount,
     } = state;
 
     // Validate required fields
-    if (
-      !selectedArtistId ||
-      !serviceType ||
-      !occasion ||
-      !selectedDate ||
-      selectedTreatments.length === 0
-    ) {
+    if (!selectedArtistId || !serviceType || !selectedDate) {
       return null;
     }
 
@@ -591,13 +591,46 @@ export const useBookingFlowStore = create<BookingFlowStore>((set, get) => ({
         ? serviceType
         : 'combo';
 
-    // Convert SelectedTreatment to BookedService
-    const services: BookedService[] = selectedTreatments.map((treatment) => ({
-      id: treatment.id,
-      name: treatment.name,
-      durationMinutes: treatment.durationMinutes,
-      price: treatment.price,
-    }));
+    // Build services from artist service prices (simplified pricing model)
+    // If service prices provided, use them; otherwise fall back to selectedTreatments
+    let services: BookedService[];
+
+    if (servicePrices) {
+      services = [];
+      if ((serviceType === 'hair' || serviceType === 'combo') && servicePrices.hair) {
+        services.push({
+          id: 'hair',
+          name: '헤어',
+          durationMinutes: 60,
+          price: servicePrices.hair,
+        });
+      }
+      if ((serviceType === 'makeup' || serviceType === 'combo') && servicePrices.makeup) {
+        services.push({
+          id: 'makeup',
+          name: '메이크업',
+          durationMinutes: 60,
+          price: servicePrices.makeup,
+        });
+      }
+    } else {
+      // Fall back to selectedTreatments (legacy behavior)
+      services = selectedTreatments.map((treatment) => ({
+        id: treatment.id,
+        name: treatment.name,
+        durationMinutes: treatment.durationMinutes,
+        price: treatment.price,
+      }));
+    }
+
+    // Require at least one service
+    if (services.length === 0) {
+      return null;
+    }
+
+    // Calculate totals from services
+    const totalAmount = services.reduce((sum, s) => sum + s.price, 0);
+    const estimatedDuration = services.reduce((sum, s) => sum + s.durationMinutes, 0);
 
     // Build correct start time by combining selectedDate with selectedTimeSlot
     // This ensures the booking uses the user's current time selection, not a stale time

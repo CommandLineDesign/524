@@ -1,3 +1,9 @@
+/**
+ * @deprecated This screen is no longer used in the booking flow.
+ * Occasion selection has been moved to PaymentConfirmationScreen as a typeahead.
+ * Kept for potential future use.
+ * See: OccasionTypeahead component in components/booking/
+ */
 import React, { useState } from 'react';
 import { FlatList, StyleSheet, View } from 'react-native';
 

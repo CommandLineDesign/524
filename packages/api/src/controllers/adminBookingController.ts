@@ -1,5 +1,7 @@
 import type { NextFunction, Request, Response } from 'express';
 
+import { addUTCDays, startOfUTCDay, startOfUTCWeek } from '@524/shared';
+
 import {
   type AdminBookingListParams,
   AdminBookingService,
@@ -13,36 +15,20 @@ function parsePage(value: unknown, fallback: number) {
   return Number.isNaN(parsed) ? fallback : Math.max(parsed, 1);
 }
 
-function startOfDay(date: Date) {
-  const copy = new Date(date);
-  copy.setHours(0, 0, 0, 0);
-  return copy;
-}
-
-function addDays(date: Date, days: number) {
-  const copy = new Date(date);
-  copy.setDate(copy.getDate() + days);
-  return copy;
-}
-
 export function resolveDateRange(
   dateRange?: string,
   startDate?: string,
   endDate?: string
 ): { from?: Date; to?: Date } {
   if (dateRange === 'today') {
-    const from = startOfDay(new Date());
-    const to = addDays(from, 1);
+    const from = startOfUTCDay(new Date());
+    const to = addUTCDays(from, 1);
     return { from, to };
   }
 
   if (dateRange === 'this_week') {
-    const now = new Date();
-    const from = startOfDay(now);
-    const day = from.getDay(); // 0 (Sun) - 6 (Sat)
-    const mondayOffset = (day + 6) % 7;
-    from.setDate(from.getDate() - mondayOffset);
-    const to = addDays(from, 7);
+    const from = startOfUTCWeek(new Date());
+    const to = addUTCDays(from, 7);
     return { from, to };
   }
 
@@ -52,14 +38,14 @@ export function resolveDateRange(
   if (startDate) {
     const parsed = new Date(startDate);
     if (!Number.isNaN(parsed.valueOf())) {
-      from = startOfDay(parsed);
+      from = startOfUTCDay(parsed);
     }
   }
 
   if (endDate) {
     const parsed = new Date(endDate);
     if (!Number.isNaN(parsed.valueOf())) {
-      to = addDays(startOfDay(parsed), 1);
+      to = addUTCDays(startOfUTCDay(parsed), 1);
     }
   }
 
