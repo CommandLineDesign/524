@@ -37,7 +37,6 @@ export function BookingFlowScreen({ route }: BookingFlowScreenProps) {
     goBack,
     canGoBack,
     reset,
-    completeFlow,
     createdBookingId,
     selectedArtistId,
     locationCoordinates,
@@ -123,13 +122,6 @@ export function BookingFlowScreen({ route }: BookingFlowScreenProps) {
   // Determine if back button should be shown
   const showBackButton = canGoBack();
 
-  // Handle flow completion
-  const handleComplete = useCallback(() => {
-    // Generate a mock booking ID
-    const bookingId = `BK${Date.now()}`;
-    completeFlow(bookingId);
-  }, [completeFlow]);
-
   // Handle going home after completion
   const handleGoHome = useCallback(() => {
     reset();
@@ -137,10 +129,17 @@ export function BookingFlowScreen({ route }: BookingFlowScreenProps) {
   }, [reset, navigation]);
 
   // Handle viewing booking details
+  // Use navigation.reset() to clear the stack and prevent back navigation to BookingFlow
   const handleViewDetails = useCallback(() => {
     if (createdBookingId) {
       reset();
-      navigation.navigate('BookingDetail', { bookingId: createdBookingId });
+      navigation.reset({
+        index: 1,
+        routes: [
+          { name: 'Home' },
+          { name: 'BookingDetail', params: { bookingId: createdBookingId } },
+        ],
+      });
     }
   }, [createdBookingId, reset, navigation]);
 
@@ -236,7 +235,6 @@ export function BookingFlowScreen({ route }: BookingFlowScreenProps) {
         return (
           <PaymentConfirmationScreen
             progress={progress}
-            onContinue={handleComplete}
             onBack={handleBack}
             onExit={handleExit}
             showBackButton={showBackButton}

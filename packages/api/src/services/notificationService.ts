@@ -76,6 +76,98 @@ export class NotificationService {
     await this.pushService.sendToUser(booking.artistId, { title, body, data });
   }
 
+  async notifyBookingAutoConfirmed(booking: BookingSummary): Promise<void> {
+    logger.info({ bookingId: booking.id }, 'Booking auto-confirmed notification');
+
+    // Notify artist about auto-confirmed booking
+    const artistType = 'booking_auto_confirmed';
+    const artistTitle = '새 예약이 자동 확정되었습니다';
+    const artistBody = '예약 가능 시간에 새 예약이 접수되어 자동으로 확정되었습니다.';
+    const artistData = {
+      type: artistType,
+      bookingId: booking.id,
+    };
+
+    const artistEnabled = await this.preferenceService.isNotificationEnabled(
+      booking.artistId,
+      artistType
+    );
+    if (artistEnabled) {
+      await this.persistNotification({
+        userId: booking.artistId,
+        type: artistType,
+        title: artistTitle,
+        body: artistBody,
+        data: artistData,
+      });
+      await this.pushService.sendToUser(booking.artistId, {
+        title: artistTitle,
+        body: artistBody,
+        data: artistData,
+      });
+    }
+
+    // Notify customer about confirmed booking
+    const customerType = 'booking_confirmed';
+    const customerTitle = '예약이 확정되었습니다';
+    const customerBody = '아티스트의 예약 가능 시간에 예약되어 바로 확정되었습니다.';
+    const customerData = {
+      type: customerType,
+      bookingId: booking.id,
+    };
+
+    const customerEnabled = await this.preferenceService.isNotificationEnabled(
+      booking.customerId,
+      customerType
+    );
+    if (customerEnabled) {
+      await this.persistNotification({
+        userId: booking.customerId,
+        type: customerType,
+        title: customerTitle,
+        body: customerBody,
+        data: customerData,
+      });
+      await this.pushService.sendToUser(booking.customerId, {
+        title: customerTitle,
+        body: customerBody,
+        data: customerData,
+      });
+    }
+  }
+
+  async notifyBookingCancelledByArtist(booking: BookingSummary, reason: string): Promise<void> {
+    logger.info({ bookingId: booking.id }, 'Booking cancelled by artist notification');
+
+    const type = 'booking_cancelled_by_artist';
+    const title = '아티스트가 예약을 취소했습니다';
+    const body = `취소 사유: ${reason}`;
+    const data = {
+      type,
+      bookingId: booking.id,
+      reason,
+    };
+
+    const isEnabled = await this.preferenceService.isNotificationEnabled(booking.customerId, type);
+    if (!isEnabled) {
+      logger.info(
+        { bookingId: booking.id, customerId: booking.customerId },
+        'Notification disabled by user preference'
+      );
+      return;
+    }
+
+    await this.persistNotification({
+      userId: booking.customerId,
+      type,
+      title,
+      body,
+      data,
+    });
+
+    await this.pushService.sendToUser(booking.customerId, { title, body, data });
+  }
+
   async notifyBookingStatusChanged(booking: BookingSummary): Promise<void> {
     logger.info(
       { bookingId: booking.id, status: booking.status },

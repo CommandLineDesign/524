@@ -10,6 +10,7 @@ const logger = createLogger('upload-controller');
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_PROFILE_PHOTO_BYTES = 5 * 1024 * 1024; // 5 MB
 const MAX_REVIEW_PHOTO_BYTES = 5 * 1024 * 1024; // 5 MB per review photo
+const MAX_BOOKING_REFERENCE_PHOTO_BYTES = 5 * 1024 * 1024; // 5 MB per booking reference photo
 
 // Shared helper function for photo presign requests
 async function presignPhotoUpload(
@@ -143,6 +144,19 @@ export const UploadController = {
         res.status(statusCode).json({ error: error.message });
         return;
       }
+      next(error);
+    }
+  },
+
+  async presignBookingReferencePhoto(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      await presignPhotoUpload(req, res, {
+        folder: 'booking-reference-photos',
+        maxBytes: MAX_BOOKING_REFERENCE_PHOTO_BYTES,
+        getUserIdForFolder: (user) => user.id,
+        // No additional validation needed - booking doesn't exist yet when reference photo is uploaded
+      });
+    } catch (error) {
       next(error);
     }
   },

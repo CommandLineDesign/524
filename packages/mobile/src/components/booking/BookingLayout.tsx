@@ -248,7 +248,7 @@ const styles = StyleSheet.create({
   },
   footerWithBack: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: spacing.md,
   },
   backButton: {

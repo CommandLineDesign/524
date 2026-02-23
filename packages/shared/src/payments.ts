@@ -6,3 +6,9 @@ export interface PaymentAuthorizationResult {
   status: 'authorized' | 'failed';
   transactionId: string;
 }
+
+export interface PaymentVoidResult {
+  bookingId: string;
+  provider: PaymentProvider;
+  status: 'voided' | 'failed';
+}

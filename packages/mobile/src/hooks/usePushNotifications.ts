@@ -48,12 +48,17 @@ function getErrorMessage(result: InitializeResult): string | null {
   }
 }
 
+interface UsePushNotificationsOptions {
+  isAuthenticated: boolean;
+  isArtist: boolean;
+}
+
 /**
  * Hook to manage push notifications.
  * Initializes push notifications when user is authenticated,
  * handles notification taps for navigation, and provides state.
  */
-export function usePushNotifications(isAuthenticated: boolean) {
+export function usePushNotifications({ isAuthenticated, isArtist }: UsePushNotificationsOptions) {
   const [state, setState] = useState<PushNotificationState>({
     token: null,
     isEnabled: false,
@@ -73,8 +78,14 @@ export function usePushNotifications(isAuthenticated: boolean) {
       switch (type) {
         case 'booking_created':
         case 'booking_status_changed':
+        case 'booking_cancelled_by_artist':
           if (data.bookingId) {
-            navigation.navigate('BookingDetail', { bookingId: data.bookingId });
+            // Route to appropriate booking detail screen based on user role
+            if (isArtist) {
+              navigation.navigate('ArtistBookingDetail', { bookingId: data.bookingId });
+            } else {
+              navigation.navigate('BookingDetail', { bookingId: data.bookingId });
+            }
           }
           break;
 
@@ -90,7 +101,7 @@ export function usePushNotifications(isAuthenticated: boolean) {
           break;
       }
     },
-    [navigation]
+    [navigation, isArtist]
   );
 
   const handleInitResult = useCallback((result: InitializeResult) => {

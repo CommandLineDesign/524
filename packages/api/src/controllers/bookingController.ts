@@ -241,6 +241,35 @@ export const BookingController = {
     }
   },
 
+  async cancelConfirmedBooking(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      if (!req.user?.id) {
+        res.status(401).json({ error: 'User not authenticated' });
+        return;
+      }
+
+      const reason = req.body?.reason;
+      if (!reason || typeof reason !== 'string' || reason.trim().length === 0) {
+        res.status(400).json({ error: 'Cancellation reason is required' });
+        return;
+      }
+
+      if (reason.length > 500) {
+        res.status(400).json({ error: 'Cancellation reason cannot exceed 500 characters' });
+        return;
+      }
+
+      const booking = await bookingService.cancelConfirmedBooking(
+        req.params.bookingId,
+        req.user.id,
+        reason.trim()
+      );
+      res.json(booking);
+    } catch (error) {
+      next(error);
+    }
+  },
+
   async completeBooking(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       if (!req.user?.id) {

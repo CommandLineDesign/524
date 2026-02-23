@@ -7,5 +7,10 @@ const router = Router();
 
 router.post('/profile-photo/presign', requireArtist(), UploadController.presignProfilePhoto);
 router.post('/review-photos/presign', requireCustomer(), UploadController.presignReviewPhoto);
+router.post(
+  '/booking-reference-photos/presign',
+  requireCustomer(),
+  UploadController.presignBookingReferencePhoto
+);
 
 export const uploadRouter: IRouter = router;

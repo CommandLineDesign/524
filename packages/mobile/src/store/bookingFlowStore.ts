@@ -575,6 +575,7 @@ export const useBookingFlowStore = create<BookingFlowStore>((set, get) => ({
       selectedTreatments,
       location,
       customerNotes,
+      customStyleImage,
     } = state;
 
     // Validate required fields
@@ -664,6 +665,8 @@ export const useBookingFlowStore = create<BookingFlowStore>((set, get) => ({
           }
         : DEV_DEFAULT_LOCATION,
       notes: customerNotes || undefined,
+      // Include reference images if user uploaded a style reference photo
+      referenceImages: customStyleImage ? [customStyleImage] : undefined,
     };
   },
 }));

@@ -35,7 +35,7 @@ async function getPresignedUrl(
 ): Promise<PresignedUploadResponse> {
   try {
     const response = await apiClient.post<PresignedUploadResponse>(
-      '/uploads/review-photo/presign',
+      '/api/v1/uploads/review-photos/presign',
       {
         contentType,
         contentLength,

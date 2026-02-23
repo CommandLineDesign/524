@@ -361,7 +361,7 @@ export interface GetBookingsParams {
 }
 
 export async function createBooking(payload: CreateBookingPayload) {
-  return request('/api/v1/bookings', {
+  return request<BookingSummary>('/api/v1/bookings', {
     method: 'POST',
     body: JSON.stringify(payload),
   });
@@ -421,6 +421,13 @@ export async function cancelBooking(bookingId: string) {
   return request<BookingSummary>(`/api/v1/bookings/${bookingId}/cancel`, {
     method: 'POST',
     body: JSON.stringify({}),
+  });
+}
+
+export async function cancelConfirmedBooking(bookingId: string, reason: string) {
+  return request<BookingSummary>(`/api/v1/bookings/${bookingId}/cancel-confirmed`, {
+    method: 'POST',
+    body: JSON.stringify({ reason }),
   });
 }
 

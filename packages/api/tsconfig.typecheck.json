@@ -9,6 +9,7 @@
     "paths": {
       "@524/shared": ["packages/shared/src/index.ts"],
       "@524/shared/bookings": ["packages/shared/src/bookings.ts"],
+      "@524/shared/payments": ["packages/shared/src/payments.ts"],
       "@524/shared/*": ["packages/shared/src/*.ts"],
       "@524/database": ["packages/database/src/index.ts"],
       "@524/database/*": ["packages/database/src/*.ts"],

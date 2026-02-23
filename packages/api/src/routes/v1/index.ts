@@ -24,6 +24,6 @@ router.use('/onboarding', onboardingRouter);
 router.use('/reviews', reviewRouter);
 router.use('/uploads', uploadRouter);
 router.use('/notifications', notificationRouter);
-router.use('/', messagingRouter);
+router.use('/messaging', messagingRouter);
 
 export const v1Router: IRouter = router;

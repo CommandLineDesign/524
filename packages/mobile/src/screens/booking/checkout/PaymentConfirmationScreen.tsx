@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -11,14 +12,13 @@ import {
 } from 'react-native';
 
 import { createBooking, getArtistById } from '../../../api/client';
-import { BookingLayout, ContinueButton } from '../../../components/booking';
+import { BookingLayout, ContinueButton, OccasionTypeahead } from '../../../components/booking';
 import { paymentStrings } from '../../../constants/bookingOptions';
 import { useAuthStore } from '../../../store/authStore';
 import { useBookingFlowStore } from '../../../store/bookingFlowStore';
 import { borderRadius, colors, spacing } from '../../../theme';
 
 interface PaymentConfirmationScreenProps {
-  onContinue: () => void;
   onBack?: () => void;
   onExit?: () => void;
   showBackButton?: boolean;
@@ -26,7 +26,6 @@ interface PaymentConfirmationScreenProps {
 }
 
 export function PaymentConfirmationScreen({
-  onContinue,
   onBack,
   onExit,
   showBackButton = false,
@@ -37,12 +36,17 @@ export function PaymentConfirmationScreen({
     selectedDate,
     selectedTimeSlot,
     selectedTreatments,
+    serviceType,
     location,
+    occasion,
+    setOccasion,
     customerNotes,
     setCustomerNotes,
     totalAmount,
     estimatedDuration,
     buildBookingPayload,
+    customStyleImage,
+    completeFlow,
   } = useBookingFlowStore();
 
   const user = useAuthStore((state) => state.user);
@@ -60,6 +64,26 @@ export function PaymentConfirmationScreen({
     enabled: Boolean(selectedArtistId),
   });
 
+  // Compute display services: use selectedTreatments if available, otherwise infer from artist pricing
+  const getDisplayServices = (): Array<{ id: string; name: string; price: number }> => {
+    if (selectedTreatments.length > 0) {
+      return selectedTreatments;
+    }
+    if (artist?.servicePrices && serviceType) {
+      const services: Array<{ id: string; name: string; price: number }> = [];
+      if ((serviceType === 'hair' || serviceType === 'combo') && artist.servicePrices.hair) {
+        services.push({ id: 'hair', name: '헤어', price: artist.servicePrices.hair });
+      }
+      if ((serviceType === 'makeup' || serviceType === 'combo') && artist.servicePrices.makeup) {
+        services.push({ id: 'makeup', name: '메이크업', price: artist.servicePrices.makeup });
+      }
+      return services;
+    }
+    return [];
+  };
+  const displayServices = getDisplayServices();
+  const computedTotal = displayServices.reduce((sum, s) => sum + s.price, 0);
+
   const handleNotesChange = (text: string) => {
     setNotes(text);
     setCustomerNotes(text);
@@ -71,7 +95,7 @@ export function PaymentConfirmationScreen({
       return;
     }
 
-    const payload = buildBookingPayload(user.id);
+    const payload = buildBookingPayload(user.id, artist?.servicePrices);
     if (!payload) {
       Alert.alert(
         '정보가 부족해요',
@@ -82,9 +106,10 @@ export function PaymentConfirmationScreen({
 
     try {
       setIsSubmitting(true);
-      await createBooking(payload);
+      const booking = await createBooking(payload);
       Alert.alert('예약 요청 완료', '예약이 성공적으로 생성되었습니다.');
-      onContinue();
+      // Use the real booking ID from the API response
+      completeFlow(booking.id);
     } catch (error) {
       const message = error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.';
       Alert.alert('예약에 실패했습니다', message);
@@ -161,13 +186,11 @@ export function PaymentConfirmationScreen({
         {/* Services Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{paymentStrings.sections.services}</Text>
-          {selectedTreatments.length > 0 ? (
-            selectedTreatments.map((treatment) => (
-              <View key={treatment.id} style={styles.treatmentRow}>
-                <Text style={styles.treatmentName}>{treatment.name}</Text>
-                <Text style={styles.treatmentPrice}>
-                  {treatment.price.toLocaleString('ko-KR')}원
-                </Text>
+          {displayServices.length > 0 ? (
+            displayServices.map((service) => (
+              <View key={service.id} style={styles.treatmentRow}>
+                <Text style={styles.treatmentName}>{service.name}</Text>
+                <Text style={styles.treatmentPrice}>{service.price.toLocaleString('ko-KR')}원</Text>
               </View>
             ))
           ) : (
@@ -180,6 +203,28 @@ export function PaymentConfirmationScreen({
           <Text style={styles.sectionTitle}>{paymentStrings.sections.location}</Text>
           <Text style={styles.sectionValue}>{location ?? '-'}</Text>
         </View>
+
+        {/* Occasion Section */}
+        <View style={[styles.section, styles.occasionSection]}>
+          <Text style={styles.sectionTitle}>{paymentStrings.sections.occasion}</Text>
+          <OccasionTypeahead
+            value={occasion}
+            onSelect={setOccasion}
+            placeholder="일정을 선택하거나 입력해주세요"
+          />
+        </View>
+
+        {/* Reference Image Section - only show if image was uploaded */}
+        {customStyleImage && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>스타일 참고 이미지</Text>
+            <Image
+              source={{ uri: customStyleImage }}
+              style={styles.referenceImage}
+              resizeMode="cover"
+            />
+          </View>
+        )}
 
         {/* Notes Section */}
         <View style={styles.section}>
@@ -203,7 +248,7 @@ export function PaymentConfirmationScreen({
         <View style={styles.priceSection}>
           <View style={styles.priceRow}>
             <Text style={styles.priceLabel}>{paymentStrings.priceBreakdown.subtotal}</Text>
-            <Text style={styles.priceValue}>{totalAmount.toLocaleString('ko-KR')}원</Text>
+            <Text style={styles.priceValue}>{computedTotal.toLocaleString('ko-KR')}원</Text>
           </View>
           <View style={styles.priceRow}>
             <Text style={styles.priceLabel}>{paymentStrings.priceBreakdown.discount}</Text>
@@ -211,7 +256,7 @@ export function PaymentConfirmationScreen({
           </View>
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>{paymentStrings.priceBreakdown.total}</Text>
-            <Text style={styles.totalValue}>{totalAmount.toLocaleString('ko-KR')}원</Text>
+            <Text style={styles.totalValue}>{computedTotal.toLocaleString('ko-KR')}원</Text>
           </View>
         </View>
       </ScrollView>
@@ -227,6 +272,9 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
+  },
+  occasionSection: {
+    zIndex: 100,
   },
   sectionTitle: {
     fontSize: 14,
@@ -262,6 +310,12 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 14,
     color: colors.muted,
+  },
+  referenceImage: {
+    width: 80,
+    height: 80,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.surfaceAlt,
   },
   notesInput: {
     backgroundColor: colors.surface,
