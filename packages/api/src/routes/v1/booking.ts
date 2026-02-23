@@ -69,6 +69,14 @@ router.post(
   BookingController.cancelPendingBooking
 );
 
+// Artist action: cancel confirmed booking (requires reason)
+router.post(
+  '/:bookingId/cancel-confirmed',
+  requireArtist(),
+  validateBookingId,
+  BookingController.cancelConfirmedBooking
+);
+
 // Artist action: mark booking as complete
 router.post(
   '/:bookingId/complete',

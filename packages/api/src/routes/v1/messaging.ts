@@ -32,7 +32,7 @@ const messageService = new MessageService();
 // Conversation routes
 
 /**
- * GET /api/v1/conversations
+ * GET /api/v1/messaging/conversations
  * Get user's conversations with pagination
  */
 router.get('/conversations', async (req: AuthRequest, res: Response) => {

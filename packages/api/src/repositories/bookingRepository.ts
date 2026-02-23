@@ -3,7 +3,7 @@ import crypto from 'node:crypto';
 import { nowUTC } from '@524/shared';
 import { and, desc, eq } from 'drizzle-orm';
 
-import { bookings, reviews, users } from '@524/database';
+import { artistProfiles, bookings, reviews, users } from '@524/database';
 import type {
   BookedService,
   BookingSummary,
@@ -18,6 +18,7 @@ type BookingRow = typeof bookings.$inferSelect & {
   artistName?: string | null;
   completedAt?: Date | null;
   completedBy?: string | null;
+  referenceImages?: unknown;
   review?: {
     id: string;
     overallRating: number;
@@ -51,6 +52,10 @@ function mapRowToSummary(row: BookingRow): BookingSummary {
     statusHistory: row.statusHistory as BookingSummary['statusHistory'],
     completedAt: row.completedAt?.toISOString() ?? undefined,
     completedBy: row.completedBy ?? undefined,
+    referenceImages: (row.referenceImages as string[] | null) ?? undefined,
+    cancellationReason: row.cancellationReason ?? undefined,
+    cancelledBy: (row.cancelledBy as 'artist' | 'customer') ?? undefined,
+    cancelledAt: row.cancelledAt?.toISOString() ?? undefined,
     review: row.review
       ? {
           id: row.review.id,
@@ -72,7 +77,10 @@ function roundTo(value: number, precision = 0) {
 }
 
 export class BookingRepository {
-  async create(payload: CreateBookingPayload): Promise<BookingSummary> {
+  async create(
+    payload: CreateBookingPayload,
+    initialStatus: 'pending' | 'confirmed' = 'pending'
+  ): Promise<BookingSummary> {
     const bookingNumber = this.generateBookingNumber();
     const scheduleStart = new Date(payload.scheduledStartTime ?? payload.scheduledDate);
     const scheduleEnd = new Date(payload.scheduledEndTime ?? scheduleStart);
@@ -80,7 +88,21 @@ export class BookingRepository {
     const platformFee = roundTo(subtotal * 0.15);
     const tax = roundTo((subtotal + platformFee) * 0.1);
     const totalAmount = subtotal + platformFee + tax;
-    const historyEntry = { status: 'pending', timestamp: nowUTC() };
+    const historyEntry = { status: initialStatus, timestamp: nowUTC() };
+
+    // The incoming artistId is an artist_profiles.id (profile ID); resolve it to the users.id
+    // required by the bookings.artist_id FK constraint.
+    const [artistProfile] = await db
+      .select({ userId: artistProfiles.userId })
+      .from(artistProfiles)
+      .where(eq(artistProfiles.id, payload.artistId))
+      .limit(1);
+
+    if (!artistProfile) {
+      throw new Error(`Artist profile not found for id: ${payload.artistId}`);
+    }
+
+    const resolvedArtistId = artistProfile.userId;
 
     const [record] = await db
       .insert(bookings)
@@ -88,7 +110,7 @@ export class BookingRepository {
         id: crypto.randomUUID(),
         bookingNumber,
         customerId: payload.customerId,
-        artistId: payload.artistId,
+        artistId: resolvedArtistId,
         serviceType: payload.serviceType,
         occasion: payload.occasion ?? '',
         services: payload.services,
@@ -106,8 +128,10 @@ export class BookingRepository {
         locationType: 'customer_location',
         address: payload.location,
         specialRequests: payload.notes ?? null,
-        status: 'pending',
+        referenceImages: payload.referenceImages ?? null,
+        status: initialStatus,
         statusHistory: [historyEntry],
+        confirmedAt: initialStatus === 'confirmed' ? new Date() : null,
         paymentStatus: 'pending',
         totalAmount: totalAmount.toFixed(2),
         breakdown: {
@@ -144,6 +168,10 @@ export class BookingRepository {
         createdAt: bookings.createdAt,
         completedAt: bookings.completedAt,
         completedBy: bookings.completedBy,
+        referenceImages: bookings.referenceImages,
+        cancellationReason: bookings.cancellationReason,
+        cancelledBy: bookings.cancelledBy,
+        cancelledAt: bookings.cancelledAt,
         review: {
           id: reviews.id,
           overallRating: reviews.overallRating,
@@ -201,6 +229,10 @@ export class BookingRepository {
         createdAt: bookings.createdAt,
         completedAt: bookings.completedAt,
         completedBy: bookings.completedBy,
+        referenceImages: bookings.referenceImages,
+        cancellationReason: bookings.cancellationReason,
+        cancelledBy: bookings.cancelledBy,
+        cancelledAt: bookings.cancelledAt,
       })
       .from(bookings)
       .leftJoin(users, eq(users.id, bookings.artistId))
@@ -262,6 +294,10 @@ export class BookingRepository {
         createdAt: bookings.createdAt,
         completedAt: bookings.completedAt,
         completedBy: bookings.completedBy,
+        referenceImages: bookings.referenceImages,
+        cancellationReason: bookings.cancellationReason,
+        cancelledBy: bookings.cancelledBy,
+        cancelledAt: bookings.cancelledAt,
       })
       .from(bookings)
       .leftJoin(users, eq(users.id, bookings.artistId))
@@ -367,6 +403,45 @@ export class BookingRepository {
     return mapRowToSummary(record);
   }
 
+  async cancelConfirmedBooking(
+    bookingId: string,
+    artistId: string,
+    reason: string
+  ): Promise<BookingSummary> {
+    const existing = await this.findById(bookingId);
+    if (!existing) {
+      throw Object.assign(new Error('Booking not found'), { status: 404 });
+    }
+    if (existing.artistId !== artistId) {
+      throw Object.assign(new Error('Forbidden'), { status: 403 });
+    }
+    if (existing.status !== 'confirmed') {
+      throw Object.assign(new Error('Only confirmed bookings can be cancelled by the artist'), {
+        status: 409,
+      });
+    }
+    if (!reason || reason.trim().length === 0) {
+      throw Object.assign(new Error('Cancellation reason is required'), { status: 400 });
+    }
+
+    const [record] = await db
+      .update(bookings)
+      .set({
+        status: 'cancelled',
+        cancelledBy: 'artist',
+        cancellationReason: reason.trim(),
+        cancelledAt: new Date(),
+        statusHistory: buildStatusHistory(
+          existing.statusHistory as Array<{ status: string; timestamp: string }> | null,
+          'cancelled'
+        ),
+      })
+      .where(eq(bookings.id, bookingId))
+      .returning();
+
+    return mapRowToSummary(record);
+  }
+
   async completeBooking(bookingId: string, artistId: string): Promise<BookingSummary> {
     const existing = await this.findById(bookingId);
     if (!existing) {
@@ -430,6 +505,8 @@ export class BookingRepository {
       .toISOString()
       .replace(/[-:TZ.]/g, '')
       .slice(0, 12);
-    return `BK-${datePart}`;
+    // Add random suffix to avoid collisions when multiple bookings are created in the same minute
+    const randomSuffix = Math.random().toString(36).substring(2, 6).toUpperCase();
+    return `BK-${datePart}-${randomSuffix}`;
   }
 }

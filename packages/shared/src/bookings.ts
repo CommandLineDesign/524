@@ -27,6 +27,7 @@ export interface CreateBookingPayload {
   services: BookedService[];
   location: ServiceLocation;
   notes?: string;
+  referenceImages?: string[];
 }
 
 export interface BookingSummary {
@@ -49,6 +50,10 @@ export interface BookingSummary {
   timezone?: string;
   completedAt?: string;
   completedBy?: string;
+  referenceImages?: string[];
+  cancellationReason?: string;
+  cancelledBy?: 'artist' | 'customer';
+  cancelledAt?: string;
   review?: {
     id: string;
     overallRating: number;

@@ -25,8 +25,8 @@ export function BookingCompleteScreen({ onGoHome, onViewDetails }: BookingComple
     return `${year}년 ${month}월 ${day}일 (${weekday}) ${selectedTimeSlot ?? ''}`;
   };
 
-  // Generate a mock booking ID if not available
-  const displayBookingId = createdBookingId ?? `BK${Date.now().toString().slice(-8)}`;
+  // Use the real booking ID from the API - should always be present after successful booking
+  const displayBookingId = createdBookingId ?? '';
 
   return (
     <BookingLayout
@@ -71,16 +71,6 @@ export function BookingCompleteScreen({ onGoHome, onViewDetails }: BookingComple
           <View style={styles.divider} />
           <Text style={styles.dateTime}>{formatDateTime()}</Text>
         </View>
-
-        {/* Add to Calendar Button (optional) */}
-        <ContinueButton
-          label={bookingCompleteStrings.addToCalendar}
-          onPress={() => {
-            // In production, this would open calendar app
-            console.log('Add to calendar');
-          }}
-          variant="secondary"
-        />
       </View>
     </BookingLayout>
   );

@@ -4,6 +4,7 @@ import React from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -22,6 +23,7 @@ import { useCreateConversation } from '../query/messaging';
 import { useAuthStore } from '../store/authStore';
 import { colors } from '../theme/colors';
 import { canLeaveReview } from '../utils/bookingUtils';
+import { formatRelativeTime } from '../utils/dateDisplay';
 
 type BookingDetailNavProp = NativeStackNavigationProp<RootStackParamList, 'BookingDetail'>;
 type BookingDetailRouteProp = RouteProp<RootStackParamList, 'BookingDetail'>;
@@ -64,6 +66,9 @@ export function BookingDetailScreen() {
   // Check if review exists or button should be shown
   const hasReview = Boolean(data.review);
   const canLeaveReviewForBooking = !hasReview && canLeaveReview(data, user);
+
+  // Terminal statuses where cancel/reschedule actions don't apply
+  const isTerminalStatus = ['completed', 'declined', 'cancelled'].includes(data.status);
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom', 'left', 'right']}>
@@ -108,6 +113,18 @@ export function BookingDetailScreen() {
           </View>
         </View>
 
+        {/* Reference Image Section - only show if referenceImages exist */}
+        {data.referenceImages && data.referenceImages.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>스타일 참고 이미지</Text>
+            <Image
+              source={{ uri: data.referenceImages[0] }}
+              style={styles.referenceImage}
+              resizeMode="cover"
+            />
+          </View>
+        )}
+
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>이용 장소</Text>
           <Text style={styles.primaryText}>{data.location?.addressLine ?? '주소 정보 없음'}</Text>
@@ -121,6 +138,19 @@ export function BookingDetailScreen() {
           <Text style={styles.primaryText}>결제 상태: {paymentStatusLabel}</Text>
           <BookingStatusHistory history={data.statusHistory} />
         </View>
+
+        {data.status === 'cancelled' && data.cancellationReason && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>취소 정보</Text>
+            <Text style={styles.secondaryText}>
+              취소자: {data.cancelledBy === 'artist' ? '아티스트' : '고객'}
+            </Text>
+            <Text style={styles.primaryText}>{data.cancellationReason}</Text>
+            {data.cancelledAt && (
+              <Text style={styles.secondaryText}>{formatRelativeTime(data.cancelledAt)}</Text>
+            )}
+          </View>
+        )}
 
         {hasReview && data.review && <ReviewDisplay review={data.review} />}
 
@@ -167,17 +197,21 @@ export function BookingDetailScreen() {
             </TouchableOpacity>
           )}
 
-          <Text style={styles.secondaryText}>
-            취소 및 변경은 곧 제공될 예정입니다. 현재는 확인만 가능합니다.
-          </Text>
-          <View style={styles.actionRow}>
-            <TouchableOpacity style={[styles.disabledButton, styles.halfButton]} disabled>
-              <Text style={styles.disabledText}>예약 취소 (준비 중)</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.disabledButton, styles.halfButton]} disabled>
-              <Text style={styles.disabledText}>일정 변경 (준비 중)</Text>
-            </TouchableOpacity>
-          </View>
+          {!isTerminalStatus && (
+            <>
+              <Text style={styles.secondaryText}>
+                취소 및 변경은 곧 제공될 예정입니다. 현재는 확인만 가능합니다.
+              </Text>
+              <View style={styles.actionRow}>
+                <TouchableOpacity style={[styles.disabledButton, styles.halfButton]} disabled>
+                  <Text style={styles.disabledText}>예약 취소 (준비 중)</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.disabledButton, styles.halfButton]} disabled>
+                  <Text style={styles.disabledText}>일정 변경 (준비 중)</Text>
+                </TouchableOpacity>
+              </View>
+            </>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -243,6 +277,12 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: colors.border,
     marginVertical: 4,
+  },
+  referenceImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 14,
+    backgroundColor: colors.surfaceAlt,
   },
   total: {
     fontSize: 16,

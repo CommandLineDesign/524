@@ -10,6 +10,7 @@ import type {
 
 import { BookingRepository } from '../repositories/bookingRepository.js';
 import { createLogger } from '../utils/logger.js';
+import { ArtistAvailabilityService } from './artistAvailabilityService.js';
 import { ConversationService } from './conversationService.js';
 import { MessageService } from './messageService.js';
 import { MessageTemplateService } from './messageTemplateService.js';
@@ -39,7 +40,8 @@ export class BookingService {
     private readonly paymentService = new PaymentService(),
     private readonly messageService = new MessageService(),
     private readonly conversationService = new ConversationService(),
-    private readonly messageTemplateService = new MessageTemplateService()
+    private readonly messageTemplateService = new MessageTemplateService(),
+    private readonly artistAvailabilityService = new ArtistAvailabilityService()
   ) {}
 
   /**
@@ -104,14 +106,36 @@ export class BookingService {
   }
 
   async createBooking(payload: CreateBookingPayload): Promise<BookingSummary> {
-    const booking = await this.repository.create(payload);
+    // Calculate total duration from services for availability check
+    const totalDurationMinutes = payload.services.reduce(
+      (sum, service) => sum + service.durationMinutes,
+      0
+    );
+
+    // Check if the artist has declared availability for this time slot
+    // If so, auto-confirm the booking; otherwise, set to pending
+    const isAutoConfirmable = await this.artistAvailabilityService.isArtistAvailable(
+      payload.artistId,
+      payload.scheduledStartTime ?? payload.scheduledDate,
+      totalDurationMinutes
+    );
+
+    const initialStatus = isAutoConfirmable ? 'confirmed' : 'pending';
+    const booking = await this.repository.create(payload, initialStatus);
+
     // Payment is still authorized immediately on booking request creation.
     // This keeps parity with the existing flow until deferred payments are introduced.
     await this.paymentService.authorizePayment(booking);
-    await this.notificationService.notifyBookingCreated(booking);
+
+    // Send appropriate notification based on status
+    if (initialStatus === 'confirmed') {
+      await this.notificationService.notifyBookingAutoConfirmed(booking);
+    } else {
+      await this.notificationService.notifyBookingCreated(booking);
+    }
 
     // Send system message for new booking (fire-and-forget)
-    this.sendBookingStatusSystemMessage(booking, 'pending');
+    this.sendBookingStatusSystemMessage(booking, initialStatus);
 
     return booking;
   }
@@ -216,6 +240,25 @@ export class BookingService {
 
     // Send system message for completion (fire-and-forget)
     this.sendBookingStatusSystemMessage(booking, 'completed');
+
+    return booking;
+  }
+
+  async cancelConfirmedBooking(
+    bookingId: string,
+    artistId: string,
+    reason: string
+  ): Promise<BookingSummary> {
+    const booking = await this.repository.cancelConfirmedBooking(bookingId, artistId, reason);
+
+    // Void the payment authorization since artist is cancelling
+    await this.paymentService.voidAuthorization(booking);
+
+    // Notify customer about artist cancellation
+    await this.notificationService.notifyBookingCancelledByArtist(booking, reason);
+
+    // Send system message for cancellation (fire-and-forget)
+    this.sendBookingStatusSystemMessage(booking, 'cancelled');
 
     return booking;
   }

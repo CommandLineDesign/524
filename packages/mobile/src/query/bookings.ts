@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   acceptBooking,
   cancelBooking,
+  cancelConfirmedBooking,
   completeBooking,
   declineBooking,
   getArtistBookings,
@@ -73,6 +74,18 @@ export function useCancelBookingMutation() {
     onSuccess: (_data, bookingId) => {
       queryClient.invalidateQueries();
       queryClient.invalidateQueries({ queryKey: bookingDetailKey(bookingId) });
+    },
+  });
+}
+
+export function useCancelConfirmedBookingMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (variables: { bookingId: string; reason: string }) =>
+      cancelConfirmedBooking(variables.bookingId, variables.reason),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries();
+      queryClient.invalidateQueries({ queryKey: bookingDetailKey(variables.bookingId) });
     },
   });
 }

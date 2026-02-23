@@ -1,9 +1,10 @@
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React from 'react';
+import React, { useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -14,22 +15,25 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BookingStatusBadge } from '../components/bookings/BookingStatusBadge';
 import { BookingStatusHistory } from '../components/bookings/BookingStatusHistory';
+import { CancellationReasonModal } from '../components/bookings/CancellationReasonModal';
 import { formatCurrency, formatSchedule } from '../components/bookings/bookingDisplay';
 import type { RootStackParamList } from '../navigation/AppNavigator';
 import {
   useAcceptBookingMutation,
   useBookingDetail,
+  useCancelConfirmedBookingMutation,
   useCompleteBookingMutation,
   useDeclineBookingMutation,
   useUpdateBookingStatusMutation,
 } from '../query/bookings';
 import { useCreateConversation } from '../query/messaging';
 import { colors } from '../theme/colors';
+import { formatRelativeTime } from '../utils/dateDisplay';
 
 // Helper function to get user-friendly error messages from API errors
 function getBookingErrorMessage(
   error: unknown,
-  action: 'accept' | 'decline' | 'complete' | 'start'
+  action: 'accept' | 'decline' | 'complete' | 'start' | 'cancel'
 ): string {
   if (error instanceof Error) {
     const message = error.message.toLowerCase();
@@ -42,6 +46,9 @@ function getBookingErrorMessage(
     }
     if (message.includes('only pending') || message.includes('409')) {
       return '대기 중인 예약만 처리할 수 있습니다.';
+    }
+    if (message.includes('only confirmed') || message.includes('409')) {
+      return '확정된 예약만 취소할 수 있습니다.';
     }
     if (message.includes('network') || message.includes('fetch')) {
       return '네트워크 오류가 발생했습니다. 다시 시도해 주세요.';
@@ -58,6 +65,7 @@ function getBookingErrorMessage(
   if (action === 'decline') return '예약 거절에 실패했습니다.';
   if (action === 'complete') return '예약 완료 처리에 실패했습니다.';
   if (action === 'start') return '서비스 시작에 실패했습니다.';
+  if (action === 'cancel') return '예약 취소에 실패했습니다.';
   return '예약 처리에 실패했습니다.';
 }
 
@@ -72,14 +80,18 @@ export function ArtistBookingDetailScreen() {
   const route = useRoute<ArtistBookingDetailRouteProp>();
   const bookingId = route.params.bookingId;
 
+  const [cancelModalVisible, setCancelModalVisible] = useState(false);
+
   const { data, isLoading, isError, refetch } = useBookingDetail(bookingId);
   const acceptMutation = useAcceptBookingMutation();
   const declineMutation = useDeclineBookingMutation();
   const completeMutation = useCompleteBookingMutation();
   const updateStatusMutation = useUpdateBookingStatusMutation();
+  const cancelConfirmedMutation = useCancelConfirmedBookingMutation();
   const createConversationMutation = useCreateConversation();
 
   const isPending = data?.status === 'pending';
+  const isConfirmed = data?.status === 'confirmed';
   const canStartService = data?.status === 'confirmed' && data?.paymentStatus === 'paid';
   const canComplete = data?.status === 'in_progress' && data?.paymentStatus === 'paid';
 
@@ -204,11 +216,36 @@ export function ArtistBookingDetailScreen() {
           </View>
         </View>
 
+        {/* Reference Image Section - only show if referenceImages exist */}
+        {data.referenceImages && data.referenceImages.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>고객 스타일 참고 이미지</Text>
+            <Image
+              source={{ uri: data.referenceImages[0] }}
+              style={styles.referenceImage}
+              resizeMode="cover"
+            />
+          </View>
+        )}
+
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>진행 상태</Text>
           <Text style={styles.primaryText}>결제 상태: {paymentStatusLabel}</Text>
           <BookingStatusHistory history={data.statusHistory} />
         </View>
+
+        {data.status === 'cancelled' && data.cancellationReason && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>취소 정보</Text>
+            <Text style={styles.secondaryText}>
+              취소자: {data.cancelledBy === 'artist' ? '아티스트' : '고객'}
+            </Text>
+            <Text style={styles.primaryText}>{data.cancellationReason}</Text>
+            {data.cancelledAt && (
+              <Text style={styles.secondaryText}>{formatRelativeTime(data.cancelledAt)}</Text>
+            )}
+          </View>
+        )}
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>메시지</Text>
@@ -315,7 +352,43 @@ export function ArtistBookingDetailScreen() {
             <Text style={styles.secondaryText}>이 예약은 더 이상 응답이 필요하지 않습니다.</Text>
           </View>
         )}
+
+        {isConfirmed && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>예약 취소</Text>
+            <Text style={styles.secondaryText}>
+              부득이한 사정으로 예약을 취소해야 하는 경우 사유를 입력해 주세요.
+            </Text>
+            <TouchableOpacity
+              style={[styles.actionButton, styles.cancelConfirmedButton]}
+              onPress={() => setCancelModalVisible(true)}
+            >
+              <Text style={styles.cancelConfirmedText}>예약 취소</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </ScrollView>
+
+      <CancellationReasonModal
+        visible={cancelModalVisible}
+        onClose={() => setCancelModalVisible(false)}
+        onSubmit={(reason) => {
+          cancelConfirmedMutation.mutate(
+            { bookingId: data?.id ?? '', reason },
+            {
+              onSuccess: () => {
+                setCancelModalVisible(false);
+                Alert.alert('예약 취소 완료', '예약이 취소되었습니다.');
+                navigation.goBack();
+              },
+              onError: (error) => {
+                Alert.alert('취소 실패', getBookingErrorMessage(error, 'cancel'));
+              },
+            }
+          );
+        }}
+        isSubmitting={cancelConfirmedMutation.isPending}
+      />
     </SafeAreaView>
   );
 }
@@ -379,6 +452,12 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: colors.border,
     marginVertical: 4,
+  },
+  referenceImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 14,
+    backgroundColor: colors.surfaceAlt,
   },
   total: {
     fontSize: 16,
@@ -469,5 +548,15 @@ const styles = StyleSheet.create({
     color: colors.background,
     fontSize: 15,
     fontWeight: '600',
+  },
+  cancelConfirmedButton: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.error,
+    marginTop: 8,
+  },
+  cancelConfirmedText: {
+    color: colors.error,
+    fontWeight: '700',
   },
 });

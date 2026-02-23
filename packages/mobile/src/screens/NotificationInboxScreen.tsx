@@ -20,6 +20,7 @@ import {
   useNotifications,
 } from '../hooks/useNotifications';
 import type { RootStackParamList } from '../navigation/AppNavigator';
+import { useAuthStore } from '../store/authStore';
 import { colors } from '../theme/colors';
 import { formatRelativeTime } from '../utils/dateDisplay';
 
@@ -62,6 +63,8 @@ export function NotificationInboxScreen() {
   const { data: notifications, isLoading, isError, refetch, isRefetching } = useNotifications();
   const markAsRead = useMarkNotificationAsRead();
   const markAllAsRead = useMarkAllNotificationsAsRead();
+  const user = useAuthStore((state) => state.user);
+  const isArtist = user?.primaryRole === 'artist';
 
   const handleNotificationPress = useCallback(
     (notification: NotificationItem) => {
@@ -77,8 +80,14 @@ export function NotificationInboxScreen() {
       switch (data.type) {
         case 'booking_created':
         case 'booking_status_changed':
+        case 'booking_cancelled_by_artist':
           if (data.bookingId) {
-            navigation.navigate('BookingDetail', { bookingId: data.bookingId });
+            // Route to appropriate booking detail screen based on user role
+            if (isArtist) {
+              navigation.navigate('ArtistBookingDetail', { bookingId: data.bookingId });
+            } else {
+              navigation.navigate('BookingDetail', { bookingId: data.bookingId });
+            }
           }
           break;
         case 'new_message':
@@ -91,7 +100,7 @@ export function NotificationInboxScreen() {
           break;
       }
     },
-    [navigation, markAsRead]
+    [navigation, markAsRead, isArtist]
   );
 
   const handleMarkAllAsRead = useCallback(() => {

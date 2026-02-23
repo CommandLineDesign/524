@@ -16,6 +16,8 @@ export interface StyleCardProps {
   onPress: () => void;
   /** Whether this is a camera/upload card */
   isUploadCard?: boolean;
+  /** Whether the card is disabled (e.g., during upload) */
+  disabled?: boolean;
   /** Test ID */
   testID?: string;
 }
@@ -27,16 +29,18 @@ export function StyleCard({
   selected = false,
   onPress,
   isUploadCard = false,
+  disabled = false,
   testID,
 }: StyleCardProps) {
   if (isUploadCard) {
     return (
       <TouchableOpacity
-        style={styles.container}
+        style={[styles.container, disabled && styles.disabledContainer]}
         onPress={onPress}
         activeOpacity={0.7}
         accessibilityRole="button"
         accessibilityLabel={label ?? 'Upload image'}
+        disabled={disabled}
         testID={testID}
       >
         <View style={[styles.imageContainer, styles.uploadContainer]}>
@@ -49,12 +53,13 @@ export function StyleCard({
 
   return (
     <TouchableOpacity
-      style={styles.container}
+      style={[styles.container, disabled && styles.disabledContainer]}
       onPress={onPress}
       activeOpacity={0.7}
       accessibilityRole="checkbox"
       accessibilityState={{ checked: selected }}
       accessibilityLabel={label ?? `Style ${id}`}
+      disabled={disabled}
       testID={testID}
     >
       <View style={styles.imageContainer}>
@@ -98,6 +103,9 @@ const styles = StyleSheet.create({
   container: {
     width: '30%',
     marginBottom: spacing.md,
+  },
+  disabledContainer: {
+    opacity: 0.5,
   },
   imageContainer: {
     aspectRatio: 1,
