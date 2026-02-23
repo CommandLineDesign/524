@@ -8,8 +8,6 @@ export interface ArtistDetailHeaderProps {
   name: string;
   /** Profile image URL */
   imageUrl?: string | null;
-  /** Artist username/handle */
-  username?: string;
   /** Artist specialty */
   specialty?: string;
   /** Rating (0-5) */
@@ -25,7 +23,6 @@ export interface ArtistDetailHeaderProps {
 export function ArtistDetailHeader({
   name,
   imageUrl,
-  username,
   specialty,
   rating,
   reviewCount,
@@ -41,11 +38,6 @@ export function ArtistDetailHeader({
         ) : (
           <View style={[styles.image, styles.imagePlaceholder]}>
             <Text style={styles.imagePlaceholderText}>{name.charAt(0)}</Text>
-          </View>
-        )}
-        {username && (
-          <View style={styles.usernameOverlay}>
-            <Text style={styles.usernameText}>@{username}</Text>
           </View>
         )}
       </View>
@@ -114,7 +106,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     backgroundColor: colors.background,
     borderBottomWidth: 6,
-    borderBottomColor: '#efeff0',
+    borderBottomColor: colors.surfaceAlt,
   },
   imageContainer: {
     position: 'relative',
@@ -137,21 +129,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.muted,
   },
-  usernameOverlay: {
-    position: 'absolute',
-    bottom: 4,
-    left: 4,
-    right: 4,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    borderRadius: 4,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-  },
-  usernameText: {
-    fontSize: 13,
-    color: '#ffffff',
-    fontWeight: '400',
-  },
   info: {
     flex: 1,
     marginLeft: spacing.md,
@@ -166,12 +143,12 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#19191b',
+    color: colors.text,
     flex: 1,
   },
   specialty: {
     fontSize: 14,
-    color: '#19191b',
+    color: colors.text,
     marginBottom: 4,
     fontWeight: '400',
   },
@@ -184,22 +161,22 @@ const styles = StyleSheet.create({
   },
   starText: {
     fontSize: 12,
-    color: '#19191b',
+    color: colors.text,
   },
   rating: {
     fontSize: 14,
     fontWeight: '400',
-    color: '#19191b',
+    color: colors.text,
   },
   divider: {
     width: 1,
     height: 11,
-    backgroundColor: '#19191b',
+    backgroundColor: colors.primary,
     marginHorizontal: 8,
   },
   reviewCount: {
     fontSize: 14,
-    color: '#19191b',
+    color: colors.text,
     fontWeight: '400',
   },
   iconButton: {

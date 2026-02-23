@@ -187,7 +187,6 @@ export function ArtistListFilteredScreen() {
               startingPrice={item.priceRange[0]}
               onPress={() => handleArtistPress(item.id)}
               onInfoPress={() => handleArtistPress(item.id)}
-              username={item.stageName.toLowerCase().replace(/\s+/g, '')}
               specialties={item.specialties}
               testID={`artist-card-${item.id}`}
             />

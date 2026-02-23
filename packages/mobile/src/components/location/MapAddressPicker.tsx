@@ -480,7 +480,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     // Shadow for visibility against map
-    shadowColor: '#000',
+    shadowColor: colors.text,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 4,
@@ -502,7 +502,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     // Shadow for visibility against map
-    shadowColor: '#000',
+    shadowColor: colors.text,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 4,
@@ -531,7 +531,7 @@ const styles = StyleSheet.create({
     minHeight: 70,
     justifyContent: 'center',
     // Shadow for visibility against map
-    shadowColor: '#000',
+    shadowColor: colors.text,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 4,
@@ -592,7 +592,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     alignItems: 'center',
     // Shadow for visibility against map
-    shadowColor: '#000',
+    shadowColor: colors.text,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 4,

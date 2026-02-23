@@ -2,6 +2,8 @@ import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import Svg, { Circle, ClipPath, Defs, G } from 'react-native-svg';
 
+import { colors } from '../../theme';
+
 interface VennDiagramProps {
   /** Size of the diagram (width and height) */
   size?: number;
@@ -35,8 +37,8 @@ export function VennDiagram({ size = 156, step }: VennDiagramProps) {
   const bottomLeftCircle = { cx: centerX - offset * 0.866, cy: centerY + offset * 1.5 };
   const bottomRightCircle = { cx: centerX + offset * 0.866, cy: centerY + offset * 1.5 };
 
-  const fillColor = '#E8E8E8'; // Light gray fill
-  const strokeColor = '#19191b';
+  const fillColor = colors.surfaceAlt;
+  const strokeColor = colors.text;
 
   return (
     <View style={[styles.container, { width: totalWidth, height: totalHeight }]}>

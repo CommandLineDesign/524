@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 
-import { borderRadius, colors, spacing } from '../../theme';
+import { borderRadius, colors, primitives, spacing } from '../../theme';
 
 export interface KakaoMapViewProps {
   /** Latitude coordinate */
@@ -47,10 +47,10 @@ function generateMapHtml(
       center: new kakao.maps.LatLng(${latitude}, ${longitude}),
       radius: ${radiusKm * 1000},
       strokeWeight: 2,
-      strokeColor: '#19191b',
+      strokeColor: '${primitives.nearBlack}',
       strokeOpacity: 0.8,
       strokeStyle: 'solid',
-      fillColor: '#19191b',
+      fillColor: '${primitives.nearBlack}',
       fillOpacity: 0.1
     });
     circle.setMap(map);

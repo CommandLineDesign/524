@@ -107,7 +107,7 @@ export function DevLoginScreen() {
               disabled={isLoading}
             >
               {isLoading ? (
-                <ActivityIndicator color="#fff" />
+                <ActivityIndicator color={colors.background} />
               ) : (
                 <Text style={styles.buttonText}>로그인</Text>
               )}
@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   buttonText: {
-    color: '#fff',
+    color: colors.background,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
   },
   testUserButton: {
     padding: spacing.md,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.surface,
     borderRadius: 8,
     marginBottom: spacing.sm,
     borderWidth: 1,
@@ -275,20 +275,20 @@ const styles = StyleSheet.create({
   },
   infoBox: {
     padding: spacing.md,
-    backgroundColor: '#e3f2fd',
+    backgroundColor: colors.surfaceHighlight,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#90caf9',
+    borderColor: colors.accent,
   },
   infoTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#1976d2',
+    color: colors.text,
     marginBottom: spacing.xs,
   },
   infoText: {
     fontSize: 12,
-    color: '#1565c0',
+    color: colors.textSecondary,
     lineHeight: 18,
   },
 });

@@ -1,3 +1,4 @@
+import { colors, statusColors } from '@524/shared';
 import {
   BooleanField,
   Datagrid,
@@ -16,7 +17,9 @@ import {
 const EmptyArtists = () => (
   <div style={{ padding: 24 }}>
     <h3 style={{ margin: 0 }}>No artists found</h3>
-    <p style={{ marginTop: 8, color: '#555' }}>Try adjusting your filters or search query.</p>
+    <p style={{ marginTop: 8, color: colors.subtle }}>
+      Try adjusting your filters or search query.
+    </p>
   </div>
 );
 
@@ -56,12 +59,12 @@ const VerificationStatusField = () => (
     label="Status"
     render={(record) => {
       const status = record?.verificationStatus;
-      const colors: Record<string, string> = {
-        pending_review: '#f59e0b',
-        in_review: '#3b82f6',
-        verified: '#10b981',
-        rejected: '#ef4444',
-        suspended: '#6b7280',
+      const statusColorMap: Record<string, string> = {
+        pending_review: statusColors.pendingReview,
+        in_review: statusColors.inReview,
+        verified: statusColors.verified,
+        rejected: statusColors.rejected,
+        suspended: statusColors.suspended,
       };
       const labels: Record<string, string> = {
         pending_review: 'Pending',
@@ -73,7 +76,7 @@ const VerificationStatusField = () => (
       return (
         <span
           style={{
-            color: colors[status] ?? '#6b7280',
+            color: statusColorMap[status] ?? colors.muted,
             fontWeight: 500,
           }}
         >

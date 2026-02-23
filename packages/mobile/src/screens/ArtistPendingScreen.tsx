@@ -12,7 +12,7 @@ export function ArtistPendingScreen() {
         alignItems: 'center',
         justifyContent: 'center',
         padding: spacing.lg,
-        backgroundColor: '#fff',
+        backgroundColor: colors.background,
         gap: spacing.lg,
       }}
     >

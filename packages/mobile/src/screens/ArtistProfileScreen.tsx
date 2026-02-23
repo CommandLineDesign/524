@@ -236,7 +236,7 @@ const styles = StyleSheet.create({
   },
   stars: {
     fontSize: 20,
-    color: '#FFB800',
+    color: colors.rating,
   },
   reviewCount: {
     fontSize: 14,
@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
   },
   ratingBarFill: {
     height: '100%',
-    backgroundColor: '#FFB800',
+    backgroundColor: colors.rating,
     borderRadius: 4,
   },
   dimensionScore: {

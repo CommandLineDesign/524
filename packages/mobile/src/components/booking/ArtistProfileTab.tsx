@@ -348,12 +348,12 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#19191b',
+    color: colors.text,
     marginBottom: 12,
   },
   bioText: {
     fontSize: 14,
-    color: '#19191b',
+    color: colors.text,
     lineHeight: 20,
   },
   bioInput: {
@@ -367,14 +367,14 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   tag: {
-    backgroundColor: '#efeff0',
+    backgroundColor: colors.surfaceAlt,
     borderRadius: 16,
     paddingHorizontal: 12,
     paddingVertical: 6,
   },
   tagText: {
     fontSize: 14,
-    color: '#19191b',
+    color: colors.text,
     fontWeight: '400',
   },
   servicesList: {
@@ -386,14 +386,14 @@ const styles = StyleSheet.create({
   },
   serviceBullet: {
     fontSize: 14,
-    color: '#19191b',
+    color: colors.text,
     marginRight: 8,
     lineHeight: 20,
   },
   serviceText: {
     flex: 1,
     fontSize: 14,
-    color: '#19191b',
+    color: colors.text,
     lineHeight: 20,
   },
   servicePrice: {
@@ -402,7 +402,7 @@ const styles = StyleSheet.create({
   },
   priceText: {
     fontSize: 14,
-    color: '#19191b',
+    color: colors.text,
     fontWeight: '500',
   },
   availabilityButton: {

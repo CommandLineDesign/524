@@ -265,7 +265,6 @@ export function ArtistDetailScreen({ route }: ArtistDetailScreenProps) {
       <ArtistDetailHeader
         name={artist.stageName}
         imageUrl={artist.profileImageUrl}
-        username={artist.stageName.toLowerCase().replace(/\s+/g, '')}
         specialty={artist.specialties?.[0] || '전문'}
         rating={artist.averageRating}
         reviewCount={artist.totalReviews}

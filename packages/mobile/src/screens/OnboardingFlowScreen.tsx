@@ -296,9 +296,14 @@ export function OnboardingFlowScreen() {
   if (isLoading || !data || !activeStepKey) {
     return (
       <View
-        style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: colors.background,
+        }}
       >
-        <ActivityIndicator size="large" color="#d4a574" />
+        <ActivityIndicator size="large" color={colors.spinner} />
       </View>
     );
   }

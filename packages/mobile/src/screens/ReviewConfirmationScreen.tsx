@@ -70,14 +70,14 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#10b981',
+    backgroundColor: colors.success,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 24,
   },
   checkmark: {
     fontSize: 48,
-    color: 'white',
+    color: colors.buttonText,
     fontWeight: 'bold',
   },
   title: {
@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   homeButtonText: {
-    color: 'white',
+    color: colors.buttonText,
     fontSize: 16,
     fontWeight: '600',
   },

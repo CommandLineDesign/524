@@ -105,7 +105,7 @@ export function SignupForm({
               disabled={isLoading}
             >
               {isLoading ? (
-                <ActivityIndicator color="#fff" />
+                <ActivityIndicator color={colors.background} />
               ) : (
                 <Text style={styles.buttonText}>{submitLabel}</Text>
               )}
@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   buttonText: {
-    color: '#fff',
+    color: colors.background,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -190,13 +190,13 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   helperError: {
-    color: '#d32f2f',
+    color: colors.error,
     fontSize: 12,
     marginTop: -4,
     marginBottom: spacing.sm,
   },
   helperSuccess: {
-    color: '#2e7d32',
+    color: colors.success,
     fontSize: 12,
     marginTop: -4,
     marginBottom: spacing.sm,

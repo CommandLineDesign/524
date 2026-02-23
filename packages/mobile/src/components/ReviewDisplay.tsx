@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
   },
   stars: {
     fontSize: 16,
-    color: '#f59e0b',
+    color: colors.rating,
   },
   ratingNumber: {
     fontSize: 14,

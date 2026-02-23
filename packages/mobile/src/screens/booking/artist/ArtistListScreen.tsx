@@ -211,7 +211,6 @@ export function ArtistListScreen({
               onPress={() => handleArtistSelect(item.id)}
               onInfoPress={() => handleArtistDetailPress(item.id)}
               onBookmarkToggle={() => handleBookmarkToggle(item.id)}
-              username={item.stageName.toLowerCase().replace(/\s+/g, '')}
               specialties={item.specialties}
               testID={`artist-card-${item.id}`}
             />
@@ -248,7 +247,7 @@ const styles = StyleSheet.create({
   artistCount: {
     fontSize: 14,
     fontWeight: '400',
-    color: '#19191b',
+    color: colors.text,
   },
   sortButton: {
     flexDirection: 'row',
@@ -260,7 +259,7 @@ const styles = StyleSheet.create({
   sortButtonText: {
     fontSize: 14,
     fontWeight: '400',
-    color: '#19191b',
+    color: colors.text,
   },
   caretIcon: {
     width: 12,
@@ -270,7 +269,7 @@ const styles = StyleSheet.create({
   },
   caretText: {
     fontSize: 8,
-    color: '#19191b',
+    color: colors.text,
   },
   list: {
     paddingBottom: spacing.lg,

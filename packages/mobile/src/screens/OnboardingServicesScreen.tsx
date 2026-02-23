@@ -12,6 +12,7 @@ import { OnboardingLayout } from '../components/onboarding/OnboardingLayout';
 import type { RootStackParamList } from '../navigation/AppNavigator';
 import { useCompleteOnboarding, useSaveOnboardingResponse } from '../query/onboarding';
 import { useAuthStore } from '../store/authStore';
+import { colors } from '../theme';
 
 const SERVICE_OPTIONS: MultiSelectOption[] = [
   { id: 'hair', label: 'Hair styling' },
@@ -75,7 +76,7 @@ export function OnboardingServicesScreen() {
       <View style={{ marginBottom: 12 }}>
         <MultiSelectButtons options={SERVICE_OPTIONS} selected={selected} onToggle={toggleOption} />
       </View>
-      <Text style={{ color: '#6b7280' }}>
+      <Text style={{ color: colors.muted }}>
         We will use this to tailor offers, artists, and content to your preferences.
       </Text>
     </OnboardingLayout>

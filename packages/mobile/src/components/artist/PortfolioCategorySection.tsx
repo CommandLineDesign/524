@@ -3,7 +3,7 @@ import React, { useCallback } from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 
 import { usePortfolioUpload } from '../../hooks/usePortfolioUpload';
-import { borderRadius, colors, spacing } from '../../theme';
+import { borderRadius, colors, overlays, spacing } from '../../theme';
 
 const GRID_GAP = spacing.sm;
 const GRID_PADDING = spacing.lg;
@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: overlays.modalBackdropDark,
     justifyContent: 'center',
     alignItems: 'center',
   },

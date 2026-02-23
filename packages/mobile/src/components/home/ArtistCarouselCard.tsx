@@ -4,7 +4,7 @@ import React from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { borderRadius } from '../../theme/borderRadius';
-import { colors } from '../../theme/colors';
+import { colors, overlays } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 
 export interface ArtistCarouselCardProps {
@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 2,
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    backgroundColor: overlays.lightOverlay,
     paddingHorizontal: spacing.xs,
     paddingVertical: 2,
     borderRadius: borderRadius.sm,

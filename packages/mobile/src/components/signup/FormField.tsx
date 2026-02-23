@@ -113,12 +113,12 @@ const styles = StyleSheet.create({
     paddingRight: 40, // Space for the accessory
   },
   helperError: {
-    color: '#d32f2f',
+    color: colors.error,
     fontSize: 12,
     marginTop: 4,
   },
   helperSuccess: {
-    color: '#2e7d32',
+    color: colors.success,
     fontSize: 12,
     marginTop: 4,
   },

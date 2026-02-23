@@ -1,14 +1,38 @@
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
+  /* Green color palette based on #49AA65 */
+  --color-green-50: #ecf6ef;
+  --color-green-100: #d4eadb;
+  --color-green-200: #b4d9c0;
+  --color-green-300: #8dc49d;
+  --color-green-400: #69b37c;
+  --color-green-500: #49aa65;
+  --color-green-600: #3d8f55;
+  --color-green-700: #317346;
+  --color-green-800: #255837;
+  --color-green-900: #183d27;
+  --color-green-950: #07110a;
+
+  /* Semantic colors */
+  --color-background: var(--color-green-50);
+  --color-surface: var(--color-green-100);
+  --color-text: var(--color-green-950);
+  --color-text-secondary: var(--color-green-700);
+  --color-border: var(--color-green-200);
+  --color-accent: var(--color-green-500);
+  --color-error: #dc2626;
+  --color-success: #22c55e;
+
+  /* Legacy RGB variables (for compatibility) */
+  --foreground-rgb: 7, 17, 10;
+  --background-start-rgb: 236, 246, 239;
+  --background-end-rgb: 236, 246, 239;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
+    --foreground-rgb: 236, 246, 239;
+    --background-start-rgb: 7, 17, 10;
+    --background-end-rgb: 7, 17, 10;
   }
 }
 
@@ -20,18 +44,18 @@ body {
   padding: 0;
 }
 
-/* Override default blue focus outlines with black */
+/* Override default blue focus outlines with green-based dark */
 input:focus,
 textarea:focus,
 select:focus {
-  outline-color: #19191b !important;
-  border-color: #19191b !important;
+  outline-color: var(--color-text) !important;
+  border-color: var(--color-text) !important;
 }
 
 /* For inputs with custom focus rings */
 input:focus-visible,
 textarea:focus-visible,
 select:focus-visible {
-  outline: 2px solid #19191b !important;
+  outline: 2px solid var(--color-text) !important;
   outline-offset: 2px;
 }

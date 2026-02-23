@@ -261,7 +261,7 @@ const styles = StyleSheet.create({
     color: colors.muted,
   },
   error: {
-    color: '#b91c1c',
+    color: colors.error,
     fontSize: 14,
     textAlign: 'center',
   },
@@ -290,7 +290,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     borderWidth: 1,
     borderColor: colors.border,
-    backgroundColor: '#f9fafb',
+    backgroundColor: colors.surface,
     alignItems: 'center',
   },
   halfButton: {
@@ -313,7 +313,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   reviewButton: {
-    backgroundColor: '#10b981', // Green color for positive action
+    backgroundColor: colors.success,
     paddingVertical: 12,
     borderRadius: 10,
     alignItems: 'center',

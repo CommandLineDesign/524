@@ -97,10 +97,10 @@ const styles = StyleSheet.create({
     padding: 2,
   },
   star: {
-    color: colors.border,
+    color: colors.muted,
   },
   starFilled: {
-    color: '#FFD700', // Gold color for filled stars
+    color: colors.rating,
   },
   ratingValue: {
     fontSize: 16,

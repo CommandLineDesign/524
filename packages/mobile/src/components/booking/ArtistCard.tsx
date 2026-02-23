@@ -28,8 +28,6 @@ export interface ArtistCardProps {
   selected?: boolean;
   /** Test ID */
   testID?: string;
-  /** Artist username/handle */
-  username?: string;
   /** Artist specialties/services */
   specialties?: string[];
   /** Whether to show the chat button (default: false) */
@@ -53,7 +51,6 @@ export function ArtistCard({
   onBookmarkToggle,
   selected = false,
   testID,
-  username,
   specialties,
   showChatButton = false,
   onChatPress,
@@ -86,11 +83,6 @@ export function ArtistCard({
           ) : (
             <View style={[styles.image, styles.imagePlaceholder]}>
               <Text style={styles.imagePlaceholderText}>{name.charAt(0)}</Text>
-            </View>
-          )}
-          {username && (
-            <View style={styles.usernameOverlay}>
-              <Text style={styles.usernameText}>@{username}</Text>
             </View>
           )}
         </TouchableOpacity>
@@ -184,7 +176,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     backgroundColor: colors.background,
     borderBottomWidth: 1,
-    borderBottomColor: '#19191b',
+    borderBottomColor: colors.primary,
   },
   cardContent: {
     flex: 1,
@@ -211,21 +203,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.muted,
   },
-  usernameOverlay: {
-    position: 'absolute',
-    bottom: 4,
-    left: 4,
-    right: 4,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    borderRadius: 4,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-  },
-  usernameText: {
-    fontSize: 13,
-    color: '#ffffff',
-    fontWeight: '400',
-  },
   info: {
     flex: 1,
     marginLeft: spacing.md,
@@ -240,7 +217,7 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#19191b',
+    color: colors.text,
     flex: 1,
   },
   chatButton: {
@@ -258,7 +235,7 @@ const styles = StyleSheet.create({
   },
   specialty: {
     fontSize: 14,
-    color: '#19191b',
+    color: colors.text,
     marginBottom: 4,
     fontWeight: '400',
   },
@@ -282,22 +259,22 @@ const styles = StyleSheet.create({
   },
   starText: {
     fontSize: 12,
-    color: '#19191b',
+    color: colors.text,
   },
   rating: {
     fontSize: 14,
     fontWeight: '400',
-    color: '#19191b',
+    color: colors.text,
   },
   divider: {
     width: 1,
     height: 11,
-    backgroundColor: '#19191b',
+    backgroundColor: colors.primary,
     marginHorizontal: 8,
   },
   reviewCount: {
     fontSize: 14,
-    color: '#19191b',
+    color: colors.text,
     fontWeight: '400',
   },
   bookButton: {
@@ -305,20 +282,20 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 7,
     borderWidth: 1,
-    borderColor: '#19191b',
+    borderColor: colors.primary,
     backgroundColor: 'transparent',
     marginLeft: spacing.sm,
   },
   bookButtonSelected: {
-    backgroundColor: '#19191b',
-    borderColor: '#19191b',
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   bookButtonText: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#19191b',
+    color: colors.text,
   },
   bookButtonTextSelected: {
-    color: '#ffffff',
+    color: colors.background,
   },
 });

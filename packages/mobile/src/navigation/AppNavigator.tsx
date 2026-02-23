@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React, { useEffect, useMemo } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 
+import { GradientBackground } from '../components/common/GradientBackground';
 import { useOfflineQueueProcessor } from '../hooks/useOfflineQueueProcessor';
 import { useArtistProfile } from '../query/artist';
 import { useOnboardingState } from '../query/onboarding';
@@ -36,6 +37,7 @@ import { BookingFlowScreen } from '../screens/booking';
 import { ArtistDetailScreen } from '../screens/booking/artist/ArtistDetailScreen';
 import { useAuthStore } from '../store/authStore';
 import type { EntryPath } from '../store/bookingFlowStore';
+import { colors } from '../theme';
 
 // Feature flag to control customer onboarding visibility
 const isCustomerOnboardingEnabled = process.env.EXPO_PUBLIC_SHOW_CUSTOMER_ONBOARDING === 'true';
@@ -208,11 +210,11 @@ export function AppNavigator() {
 
   if (isLoading || (user && (onboardingLoading || artistProfileLoading))) {
     return (
-      <View
-        style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}
-      >
-        <ActivityIndicator size="large" color="#d4a574" />
-      </View>
+      <GradientBackground>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color={colors.spinner} />
+        </View>
+      </GradientBackground>
     );
   }
 

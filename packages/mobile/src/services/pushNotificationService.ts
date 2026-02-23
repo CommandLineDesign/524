@@ -5,6 +5,7 @@ import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 
 import { apiClient } from '../api/client';
+import { colors } from '../theme';
 
 const PUSH_TOKEN_KEY = 'push_notification_token';
 
@@ -119,7 +120,7 @@ export class PushNotificationService {
       name: 'Booking Notifications',
       importance: Notifications.AndroidImportance.HIGH,
       vibrationPattern: [0, 250, 250, 250],
-      lightColor: '#FF6B35',
+      lightColor: colors.accent,
       sound: 'default',
       enableVibrate: true,
       enableLights: true,

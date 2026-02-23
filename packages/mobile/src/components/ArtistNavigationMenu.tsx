@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { RootStackParamList } from '../navigation/AppNavigator';
 import { useArtistProfile } from '../query/artist';
 import { useAuthStore } from '../store/authStore';
+import { colors, primitives } from '../theme/colors';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 type SimpleRoute = {
@@ -125,7 +126,7 @@ export function ArtistNavigationMenu({ visible, onClose }: ArtistNavigationMenuP
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -134,25 +135,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
+    borderBottomColor: colors.border,
   },
   headerText: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#111827',
+    color: colors.text,
     letterSpacing: 2,
   },
   closeButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#f3f4f6',
+    backgroundColor: colors.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
   },
   closeButtonText: {
     fontSize: 24,
-    color: '#6b7280',
+    color: colors.muted,
   },
   content: {
     flex: 1,
@@ -164,7 +165,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#6b7280',
+    color: colors.muted,
     textTransform: 'uppercase',
     letterSpacing: 1,
     marginBottom: 12,
@@ -175,30 +176,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 16,
     paddingHorizontal: 16,
-    backgroundColor: '#f9fafb',
+    backgroundColor: colors.surface,
     borderRadius: 12,
     marginBottom: 8,
   },
   menuItemText: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#111827',
+    color: colors.text,
   },
   menuItemArrow: {
     fontSize: 24,
-    color: '#9ca3af',
+    color: colors.muted,
   },
   logoutButton: {
-    backgroundColor: '#fef2f2',
-    borderColor: '#fee2e2',
+    backgroundColor: primitives.errorLight,
+    borderColor: primitives.errorLight,
   },
   logoutButtonDisabled: {
     opacity: 0.6,
   },
   logoutText: {
-    color: '#b91c1c',
+    color: colors.error,
   },
   logoutArrow: {
-    color: '#fca5a5',
+    color: colors.error,
   },
 });

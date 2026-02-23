@@ -12,3 +12,4 @@ export * from './payments';
 export * from './dev';
 export * from './onboarding';
 export * from './onboardingConfig';
+export * from './theme';

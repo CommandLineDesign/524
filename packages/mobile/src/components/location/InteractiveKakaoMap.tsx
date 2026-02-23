@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 
-import { borderRadius, colors, spacing } from '../../theme';
+import { borderRadius, colors, primitives, spacing } from '../../theme';
 
 // Web-specific types
 declare global {
@@ -111,10 +111,10 @@ function generateMapHtml(options: GenerateMapHtmlOptions): string {
       center: circleCenter,
       radius: ${initialRadius},
       strokeWeight: 2,
-      strokeColor: '#19191b',
+      strokeColor: '${primitives.nearBlack}',
       strokeOpacity: 0.8,
       strokeStyle: 'solid',
-      fillColor: '#19191b',
+      fillColor: '${primitives.nearBlack}',
       fillOpacity: 0.1
     });
     ${radiusKm ? 'circle.setMap(map);' : '// Circle hidden initially'}
@@ -203,7 +203,7 @@ function generateMapHtml(options: GenerateMapHtmlOptions): string {
     .pin-head {
       width: 24px;
       height: 24px;
-      background-color: #19191b;
+      background-color: ${primitives.nearBlack};
       border-radius: 50% 50% 50% 0;
       transform: rotate(-45deg);
       display: flex;
@@ -214,7 +214,7 @@ function generateMapHtml(options: GenerateMapHtmlOptions): string {
       content: '';
       width: 10px;
       height: 10px;
-      background-color: white;
+      background-color: ${primitives.lightest};
       border-radius: 50%;
       transform: rotate(45deg);
     }
@@ -240,7 +240,7 @@ function generateMapHtml(options: GenerateMapHtmlOptions): string {
     .fixed-pin .pin-head {
       width: 24px;
       height: 24px;
-      background-color: #19191b;
+      background-color: ${primitives.nearBlack};
       border-radius: 50% 50% 50% 0;
       transform: rotate(-45deg);
       display: flex;
@@ -251,7 +251,7 @@ function generateMapHtml(options: GenerateMapHtmlOptions): string {
       content: '';
       width: 10px;
       height: 10px;
-      background-color: white;
+      background-color: ${primitives.lightest};
       border-radius: 50%;
       transform: rotate(45deg);
     }
