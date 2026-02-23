@@ -1,8 +1,8 @@
 import React from 'react';
 import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { colors } from '../../theme';
-import { spacing } from '../../theme';
+import { colors, spacing } from '../../theme';
+import { GradientBackground } from '../common/GradientBackground';
 
 type OnboardingLayoutProps = {
   title: string;
@@ -40,30 +40,31 @@ export function OnboardingLayout({
   );
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.progressTrack}>
-        <View style={[styles.progressBar, { width: `${progress * 100}%` }]} />
-      </View>
-      {fillContent ? (
-        <View style={styles.fillContent}>
-          {headerContent}
-          <View style={styles.fillBody}>{children}</View>
+    <GradientBackground>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.progressTrack}>
+          <View style={[styles.progressBar, { width: `${progress * 100}%` }]} />
         </View>
-      ) : (
-        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          {headerContent}
-          <View style={styles.body}>{children}</View>
-        </ScrollView>
-      )}
-      {footer ? <View style={styles.footer}>{footer}</View> : null}
-    </SafeAreaView>
+        {fillContent ? (
+          <View style={styles.fillContent}>
+            {headerContent}
+            <View style={styles.fillBody}>{children}</View>
+          </View>
+        ) : (
+          <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+            {headerContent}
+            <View style={styles.body}>{children}</View>
+          </ScrollView>
+        )}
+        {footer ? <View style={styles.footer}>{footer}</View> : null}
+      </SafeAreaView>
+    </GradientBackground>
   );
 }
 
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   progressTrack: {
     height: 6,

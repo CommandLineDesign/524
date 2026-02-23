@@ -13,7 +13,7 @@ import {
 import type { ScrollView as ScrollViewType } from 'react-native';
 
 import { usePortfolioUpload } from '../../hooks/usePortfolioUpload';
-import { borderRadius, colors, spacing } from '../../theme';
+import { borderRadius, colors, overlays, spacing } from '../../theme';
 
 const GRID_GAP = spacing.sm;
 const GRID_PADDING = spacing.lg;
@@ -387,7 +387,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: overlays.modalBackdropDark,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -414,7 +414,7 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.95)',
+    backgroundColor: overlays.modalBackdropHeavy,
     justifyContent: 'center',
   },
   closeButton: {
@@ -425,7 +425,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: overlays.lightOverlaySubtle,
     justifyContent: 'center',
     alignItems: 'center',
   },

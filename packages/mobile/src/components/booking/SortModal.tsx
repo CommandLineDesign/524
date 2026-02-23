@@ -3,7 +3,7 @@ import { Modal, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'reac
 
 import type { ArtistSortOption, ArtistSortType } from '../../constants/bookingOptions';
 import { artistSortOptions } from '../../constants/bookingOptions';
-import { borderRadius, colors, spacing } from '../../theme';
+import { borderRadius, colors, overlays, spacing } from '../../theme';
 
 export interface SortModalProps {
   /** Whether the modal is visible */
@@ -97,7 +97,7 @@ export function SortModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: overlays.modalBackdrop,
     justifyContent: 'flex-end',
   },
   container: {

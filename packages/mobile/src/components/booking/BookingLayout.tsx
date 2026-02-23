@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { borderRadius, colors, spacing } from '../../theme';
+import { GradientBackground } from '../common/GradientBackground';
 
 export interface BookingLayoutProps {
   /** Main title for the step */
@@ -133,17 +134,23 @@ export function BookingLayout({
 
   if (avoidKeyboard) {
     return (
-      <KeyboardAvoidingView
-        style={styles.container}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
-      >
-        {mainContent}
-      </KeyboardAvoidingView>
+      <GradientBackground>
+        <KeyboardAvoidingView
+          style={styles.container}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+        >
+          {mainContent}
+        </KeyboardAvoidingView>
+      </GradientBackground>
     );
   }
 
-  return <View style={styles.container}>{mainContent}</View>;
+  return (
+    <GradientBackground>
+      <View style={styles.container}>{mainContent}</View>
+    </GradientBackground>
+  );
 }
 
 // Close (X) icon component
@@ -159,11 +166,9 @@ function CloseIcon() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   safeArea: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -220,7 +225,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#19191b',
+    color: colors.text,
     lineHeight: 22,
     textAlign: 'center',
     marginBottom: spacing.md,

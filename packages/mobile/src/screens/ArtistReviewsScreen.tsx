@@ -215,11 +215,11 @@ const styles = StyleSheet.create({
   },
   stars: {
     fontSize: 24,
-    color: '#FFB800',
+    color: colors.rating,
   },
   starsSmall: {
     fontSize: 16,
-    color: '#FFB800',
+    color: colors.rating,
   },
   reviewCount: {
     fontSize: 14,

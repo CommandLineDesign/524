@@ -397,7 +397,7 @@ const styles = StyleSheet.create({
     color: colors.muted,
   },
   error: {
-    color: '#b91c1c',
+    color: colors.error,
     fontSize: 14,
     textAlign: 'center',
   },
@@ -430,7 +430,7 @@ const styles = StyleSheet.create({
   declineButton: {
     borderWidth: 1,
     borderColor: colors.border,
-    backgroundColor: '#f9fafb',
+    backgroundColor: colors.surface,
   },
   acceptButton: {
     backgroundColor: colors.primary,

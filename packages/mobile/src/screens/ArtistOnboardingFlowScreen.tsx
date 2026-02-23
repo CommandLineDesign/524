@@ -32,7 +32,7 @@ import { usePortfolioUpload } from '../hooks/usePortfolioUpload';
 import type { RootStackParamList } from '../navigation/AppNavigator';
 import { useUpdateArtistProfile } from '../query/artist';
 import { useAuthStore } from '../store/authStore';
-import { borderRadius, colors, spacing } from '../theme';
+import { borderRadius, colors, overlays, spacing } from '../theme';
 import { formStyles } from '../theme/formStyles';
 import { getCurrentWeekId, getPreviousWeekId } from '../utils/weekUtils';
 
@@ -713,7 +713,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: overlays.modalBackdropDark,
     justifyContent: 'center',
     alignItems: 'center',
   },

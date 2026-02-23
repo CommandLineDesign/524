@@ -1,3 +1,4 @@
+import { colors } from '@524/shared';
 import { FormEvent, useState } from 'react';
 import { useLogin, useNotify } from 'react-admin';
 
@@ -34,7 +35,7 @@ const AdminLoginPage = () => {
         alignItems: 'center',
         justifyContent: 'center',
         height: '100vh',
-        background: '#f5f5f5',
+        background: colors.surface,
       }}
     >
       <form onSubmit={handleLogin}>
@@ -44,16 +45,16 @@ const AdminLoginPage = () => {
             padding: 32,
             borderRadius: 12,
             boxShadow: '0 6px 18px rgba(0,0,0,0.08)',
-            background: '#fff',
+            background: colors.background,
           }}
         >
-          <h2 style={{ marginTop: 0, marginBottom: 12 }}>Admin Dashboard</h2>
-          <p style={{ marginTop: 0, color: '#555' }}>
+          <h2 style={{ marginTop: 0, marginBottom: 12, color: colors.text }}>Admin Dashboard</h2>
+          <p style={{ marginTop: 0, color: colors.subtle }}>
             Sign in with your admin credentials. Use the test account to autofill.
           </p>
 
           <label style={{ display: 'block', marginBottom: 12 }}>
-            <span style={{ display: 'block', marginBottom: 6, color: '#333' }}>Email</span>
+            <span style={{ display: 'block', marginBottom: 6, color: colors.text }}>Email</span>
             <input
               type="email"
               required
@@ -64,7 +65,7 @@ const AdminLoginPage = () => {
                 width: '100%',
                 padding: '12px 14px',
                 borderRadius: 8,
-                border: '1px solid #d0d7de',
+                border: `1px solid ${colors.border}`,
                 fontSize: 14,
                 boxSizing: 'border-box',
               }}
@@ -72,7 +73,7 @@ const AdminLoginPage = () => {
           </label>
 
           <label style={{ display: 'block', marginBottom: 12 }}>
-            <span style={{ display: 'block', marginBottom: 6, color: '#333' }}>Password</span>
+            <span style={{ display: 'block', marginBottom: 6, color: colors.text }}>Password</span>
             <input
               type="password"
               required
@@ -83,7 +84,7 @@ const AdminLoginPage = () => {
                 width: '100%',
                 padding: '12px 14px',
                 borderRadius: 8,
-                border: '1px solid #d0d7de',
+                border: `1px solid ${colors.border}`,
                 fontSize: 14,
                 boxSizing: 'border-box',
               }}
@@ -101,10 +102,10 @@ const AdminLoginPage = () => {
               style={{
                 flex: 1,
                 padding: '12px 16px',
-                border: '1px solid #d0d7de',
+                border: `1px solid ${colors.border}`,
                 borderRadius: 8,
-                background: '#f7f7f7',
-                color: '#111',
+                background: colors.surface,
+                color: colors.text,
                 fontSize: 14,
                 cursor: 'pointer',
               }}
@@ -119,8 +120,8 @@ const AdminLoginPage = () => {
                 padding: '12px 16px',
                 border: 'none',
                 borderRadius: 8,
-                background: '#1976d2',
-                color: '#fff',
+                background: colors.accent,
+                color: colors.background,
                 fontSize: 14,
                 cursor: 'pointer',
               }}

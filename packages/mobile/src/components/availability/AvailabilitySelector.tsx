@@ -2,7 +2,7 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { LayoutChangeEvent, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 
-import { borderRadius, colors, spacing } from '../../theme';
+import { borderRadius, colors, overlays, spacing } from '../../theme';
 import {
   DAY_NAMES_KO,
   TIME_SLOTS,
@@ -480,10 +480,10 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.sm,
   },
   cellPreviewSelect: {
-    backgroundColor: 'rgba(46, 125, 50, 0.4)', // colors.success with opacity
+    backgroundColor: overlays.successOverlay,
   },
   cellPreviewDeselect: {
-    backgroundColor: 'rgba(211, 47, 47, 0.4)', // colors.error with opacity
+    backgroundColor: overlays.errorOverlay,
   },
   loadingOverlay: {
     flex: 1,

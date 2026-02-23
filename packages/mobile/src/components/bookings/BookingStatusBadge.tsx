@@ -2,7 +2,7 @@ import type { BookingStatus } from '@524/shared';
 import React from 'react';
 import { type StyleProp, StyleSheet, Text, View, type ViewStyle } from 'react-native';
 
-import { colors } from '../../theme/colors';
+import { colors, statusColors } from '../../theme/colors';
 import { STATUS_LABELS } from './bookingDisplay';
 
 interface Props {
@@ -39,15 +39,15 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   statusDefault: {
-    backgroundColor: '#eef2ff',
+    backgroundColor: statusColors.pending,
   },
   statusCompleted: {
-    backgroundColor: '#ecfdf3',
+    backgroundColor: statusColors.completed,
   },
   statusDeclined: {
-    backgroundColor: '#fff7ed',
+    backgroundColor: statusColors.declined,
   },
   statusCancelled: {
-    backgroundColor: '#fef2f2',
+    backgroundColor: statusColors.cancelled,
   },
 });

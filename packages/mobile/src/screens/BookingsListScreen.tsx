@@ -150,8 +150,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   filterChipActive: {
-    backgroundColor: '#fef3c7',
-    borderColor: '#fcd34d',
+    backgroundColor: colors.surfaceHighlight,
+    borderColor: colors.accent,
   },
   filterText: {
     color: colors.subtle,
@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 14,
-    color: '#b91c1c',
+    color: colors.error,
     textAlign: 'center',
   },
   retryButton: {

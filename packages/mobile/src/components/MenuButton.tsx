@@ -1,6 +1,8 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
+import { colors } from '../theme';
+
 interface MenuButtonProps {
   onPress: () => void;
 }
@@ -23,9 +25,9 @@ const styles = StyleSheet.create({
     height: 44,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.background,
     borderRadius: 12,
-    shadowColor: '#000',
+    shadowColor: colors.text,
     shadowOffset: {
       width: 0,
       height: 2,
@@ -42,7 +44,7 @@ const styles = StyleSheet.create({
   bar: {
     width: 24,
     height: 3,
-    backgroundColor: '#111827',
+    backgroundColor: colors.text,
     borderRadius: 2,
   },
 });

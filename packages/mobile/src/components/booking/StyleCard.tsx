@@ -1,7 +1,7 @@
 import React from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import { borderRadius, colors, spacing } from '../../theme';
+import { borderRadius, colors, overlays, spacing } from '../../theme';
 
 export interface StyleCardProps {
   /** Style ID */
@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
   },
   selectedOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(25, 25, 27, 0.4)',
+    backgroundColor: overlays.modalBackdropLight,
     justifyContent: 'center',
     alignItems: 'center',
   },

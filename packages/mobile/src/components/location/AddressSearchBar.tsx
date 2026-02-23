@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
     borderColor: colors.borderDark,
     borderRadius: borderRadius.md,
     maxHeight: 250,
-    shadowColor: '#000',
+    shadowColor: colors.text,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,

@@ -25,7 +25,7 @@ import { createBooking, searchArtists } from '../api/client';
 import type { RootStackParamList } from '../navigation/AppNavigator';
 import { useAuthStore } from '../store/authStore';
 import { useBookingStore } from '../store/bookingStore';
-import { colors } from '../theme/colors';
+import { colors, overlays } from '../theme/colors';
 
 const webPickerInputStyle: CSSProperties = {
   width: '100%',
@@ -569,7 +569,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   artistOptionSelected: {
-    backgroundColor: '#fef3c7',
+    backgroundColor: colors.surfaceHighlight,
   },
   artistOptionInfo: {
     flex: 1,
@@ -590,7 +590,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 13,
-    color: '#b91c1c',
+    color: colors.error,
     textAlign: 'center',
   },
   ctaButton: {
@@ -609,7 +609,7 @@ const styles = StyleSheet.create({
   },
   modalBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: overlays.modalBackdropLight,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
@@ -655,7 +655,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: overlays.modalBackdropLight,
     padding: 24,
     zIndex: 20,
   },

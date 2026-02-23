@@ -29,7 +29,7 @@ import {
   validateReviewPhotos,
 } from '../services/reviewPhotoUploadService';
 import { ReviewUploadQueueService } from '../services/reviewUploadQueueService';
-import { colors } from '../theme/colors';
+import { colors, overlays } from '../theme/colors';
 
 type ReviewSubmissionNavProp = NativeStackNavigationProp<RootStackParamList, 'ReviewSubmission'>;
 type ReviewSubmissionRouteProp = RouteProp<RootStackParamList, 'ReviewSubmission'>;
@@ -315,7 +315,7 @@ export function ReviewSubmissionScreen() {
           {/* Offline indicator */}
           {!networkStatus.isConnected && (
             <View style={styles.offlineBanner}>
-              <Ionicons name="cloud-offline-outline" size={20} color="white" />
+              <Ionicons name="cloud-offline-outline" size={20} color={colors.buttonText} />
               <Text style={styles.offlineBannerText}>
                 오프라인 모드 - 연결 복원 시 자동 제출됩니다
               </Text>
@@ -391,7 +391,7 @@ export function ReviewSubmissionScreen() {
                       style={styles.removePhotoButton}
                       onPress={() => handleRemovePhoto(index)}
                     >
-                      <Ionicons name="close-circle" size={24} color="white" />
+                      <Ionicons name="close-circle" size={24} color={colors.buttonText} />
                     </TouchableOpacity>
                   </View>
                 ))}
@@ -430,7 +430,7 @@ export function ReviewSubmissionScreen() {
               disabled={!allRatingsProvided || submitReviewMutation.isPending}
             >
               {submitReviewMutation.isPending ? (
-                <ActivityIndicator color="white" />
+                <ActivityIndicator color={colors.buttonText} />
               ) : (
                 <Text style={styles.submitButtonText}>리뷰 제출하기</Text>
               )}
@@ -474,7 +474,7 @@ const styles = StyleSheet.create({
   offlineBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FF6B6B',
+    backgroundColor: colors.error,
     padding: 12,
     borderRadius: 8,
     marginBottom: 16,
@@ -483,7 +483,7 @@ const styles = StyleSheet.create({
   offlineBannerText: {
     flex: 1,
     fontSize: 14,
-    color: 'white',
+    color: colors.buttonText,
     fontWeight: '500',
   },
   draftBanner: {
@@ -558,7 +558,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.border,
   },
   submitButtonText: {
-    color: 'white',
+    color: colors.buttonText,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -600,7 +600,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 4,
     right: 4,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: overlays.modalBackdropDark,
     borderRadius: 12,
   },
   addPhotoButton: {

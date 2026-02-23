@@ -1,5 +1,5 @@
 export { borderRadius } from './borderRadius';
-export { colors } from './colors';
+export { colors, primitives, statusColors, gradients, overlays } from './colors';
 export { formStyles, formConstants } from './formStyles';
 export { spacing } from './spacing';
 export { typography } from './typography';

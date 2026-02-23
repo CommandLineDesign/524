@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 14,
-    color: '#b91c1c',
+    color: colors.error,
     textAlign: 'center',
   },
   retryButton: {

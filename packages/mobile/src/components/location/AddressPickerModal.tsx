@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 
-import { borderRadius, colors, spacing } from '../../theme';
+import { borderRadius, colors, overlays, spacing } from '../../theme';
 import type { DaumPostcodeResult } from '../../types/kakao';
 
 export interface AddressPickerModalProps {
@@ -162,7 +162,7 @@ export function AddressPickerModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: overlays.modalBackdrop,
     justifyContent: 'flex-end',
   },
   container: {

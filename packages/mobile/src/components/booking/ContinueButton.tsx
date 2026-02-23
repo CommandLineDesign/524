@@ -1,7 +1,8 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import { borderRadius, colors, spacing } from '../../theme';
+import { borderRadius, colors, gradients, spacing } from '../../theme';
 
 export interface ContinueButtonProps {
   /** Button label */
@@ -32,14 +33,24 @@ export function ContinueButton({
   const isPrimary = variant === 'primary';
   const isDisabled = disabled || loading;
 
+  const buttonContent = loading ? (
+    <ActivityIndicator color={isPrimary ? colors.buttonText : colors.primary} size="small" />
+  ) : (
+    <Text
+      style={[
+        styles.buttonText,
+        isPrimary ? styles.buttonTextPrimary : styles.buttonTextSecondary,
+        isDisabled &&
+          (isPrimary ? styles.buttonTextPrimaryDisabled : styles.buttonTextSecondaryDisabled),
+      ]}
+    >
+      {label}
+    </Text>
+  );
+
   return (
     <View style={styles.container}>
       <TouchableOpacity
-        style={[
-          styles.button,
-          isPrimary ? styles.buttonPrimary : styles.buttonSecondary,
-          isDisabled && (isPrimary ? styles.buttonPrimaryDisabled : styles.buttonSecondaryDisabled),
-        ]}
         onPress={onPress}
         disabled={isDisabled}
         activeOpacity={0.8}
@@ -48,19 +59,26 @@ export function ContinueButton({
         accessibilityLabel={label}
         testID={testID}
       >
-        {loading ? (
-          <ActivityIndicator color={isPrimary ? colors.background : colors.primary} size="small" />
+        {isPrimary ? (
+          <LinearGradient
+            colors={[...gradients.accent.colors]}
+            start={gradients.accent.start}
+            end={gradients.accent.end}
+            locations={[...gradients.accent.locations]}
+            style={[styles.button, isDisabled && styles.buttonPrimaryDisabled]}
+          >
+            {buttonContent}
+          </LinearGradient>
         ) : (
-          <Text
+          <View
             style={[
-              styles.buttonText,
-              isPrimary ? styles.buttonTextPrimary : styles.buttonTextSecondary,
-              isDisabled &&
-                (isPrimary ? styles.buttonTextPrimaryDisabled : styles.buttonTextSecondaryDisabled),
+              styles.button,
+              styles.buttonSecondary,
+              isDisabled && styles.buttonSecondaryDisabled,
             ]}
           >
-            {label}
-          </Text>
+            {buttonContent}
+          </View>
         )}
       </TouchableOpacity>
       {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
@@ -77,9 +95,6 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.pill,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  buttonPrimary: {
-    backgroundColor: colors.primary,
   },
   buttonSecondary: {
     backgroundColor: colors.background,
@@ -99,13 +114,13 @@ const styles = StyleSheet.create({
     letterSpacing: -0.408,
   },
   buttonTextPrimary: {
-    color: colors.background,
+    color: colors.buttonText,
   },
   buttonTextSecondary: {
     color: colors.primary,
   },
   buttonTextPrimaryDisabled: {
-    color: colors.background,
+    color: colors.buttonText,
   },
   buttonTextSecondaryDisabled: {
     color: colors.muted,

@@ -2,7 +2,7 @@ import type { ArtistLocation } from '@524/shared';
 import React, { useCallback, useState } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
-import { borderRadius, colors, spacing } from '../../theme';
+import { borderRadius, colors, overlays, spacing } from '../../theme';
 import { formStyles } from '../../theme/formStyles';
 import type { MapAddressPickerResult } from '../../types/kakao';
 import { KakaoMapView } from './KakaoMapView';
@@ -223,14 +223,14 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: spacing.sm,
     right: spacing.sm,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: overlays.modalBackdropDark,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
     borderRadius: borderRadius.sm,
   },
   mapOverlayText: {
     fontSize: 12,
-    color: '#fff',
+    color: colors.background,
     fontWeight: '500',
   },
   helperText: {
