@@ -1,7 +1,8 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import { borderRadius, colors, spacing } from '../../theme';
+import { borderRadius, colors, overlays, spacing } from '../../theme';
+import { shadows } from '../../theme/shadows';
 
 export type MultiSelectOption = {
   id: string;
@@ -48,17 +49,19 @@ const styles = StyleSheet.create({
   button: {
     height: spacing.inputHeight,
     borderWidth: 1,
-    borderColor: colors.borderDark,
-    borderRadius: borderRadius.md,
+    borderColor: colors.border,
+    borderRadius: 14,
     paddingHorizontal: spacing.md,
-    backgroundColor: colors.background,
+    backgroundColor: overlays.frostedGlass,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    ...shadows.sm,
   },
   buttonActive: {
-    borderWidth: 3,
-    borderColor: colors.borderDark,
+    borderWidth: 2,
+    borderColor: colors.accentAlt,
+    backgroundColor: colors.surfaceAlt,
   },
   buttonContent: {
     flex: 1,
@@ -71,7 +74,7 @@ const styles = StyleSheet.create({
   },
   description: {
     fontSize: 14,
-    color: colors.textSecondary,
+    color: colors.textMuted,
     marginTop: spacing.xs,
   },
   checkbox: {
@@ -83,7 +86,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   checkboxActive: {
-    borderColor: colors.primary,
+    borderColor: colors.accentAlt,
     backgroundColor: colors.primary,
   },
 });

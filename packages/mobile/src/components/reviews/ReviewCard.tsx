@@ -11,9 +11,9 @@ import {
 } from 'react-native';
 
 import type { Review } from '../../api/client';
-import { colors } from '../../theme/colors';
+import { colors, overlays } from '../../theme/colors';
 import { formatStandardDate } from '../../utils/dateDisplay';
-import { renderStars } from '../../utils/starUtils';
+import { StarRating } from '../common/StarRating';
 
 interface ReviewCardProps {
   review: Review;
@@ -29,10 +29,7 @@ export function ReviewCard({ review, onPress, containerStyle, isLast }: ReviewCa
   return (
     <Wrapper style={[styles.card, isLast && styles.lastCard, containerStyle]} {...wrapperProps}>
       <View style={styles.cardHeader}>
-        <View style={styles.ratingContainer}>
-          <Text style={styles.stars}>{renderStars(review.overallRating)}</Text>
-          <Text style={styles.ratingText}>{review.overallRating.toFixed(1)}</Text>
-        </View>
+        <StarRating rating={review.overallRating} size={16} showValue />
         <Text style={styles.date}>{formatStandardDate(review.createdAt)}</Text>
       </View>
 
@@ -76,11 +73,10 @@ export function ReviewCard({ review, onPress, containerStyle, isLast }: ReviewCa
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.background,
-    paddingVertical: 16,
-    paddingHorizontal: 0,
+    paddingVertical: 20,
+    paddingHorizontal: 24,
     borderBottomWidth: 1,
-    borderBottomColor: colors.primary,
+    borderBottomColor: colors.border,
     gap: 12,
   },
   lastCard: {
@@ -91,23 +87,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  ratingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stars: {
-    fontSize: 16,
-    color: colors.primary,
-  },
-  ratingText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.text,
-  },
   date: {
     fontSize: 13,
-    color: colors.subtle,
+    color: colors.textMuted,
   },
   cardBody: {
     gap: 10,
@@ -130,15 +112,16 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   response: {
-    backgroundColor: colors.surface,
-    borderRadius: 8,
+    backgroundColor: overlays.frostedGlass,
+    borderRadius: 12,
     padding: 12,
+    marginTop: 4,
     gap: 6,
   },
   responseLabel: {
     fontSize: 12,
     fontWeight: '600',
-    color: colors.primary,
+    color: colors.textSecondary,
   },
   responseText: {
     fontSize: 13,

@@ -2,6 +2,8 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { colors } from '../theme/colors';
+import { shadows } from '../theme/shadows';
+import { StarRating } from './common/StarRating';
 
 interface ReviewDisplayProps {
   review: {
@@ -24,10 +26,6 @@ export function ReviewDisplay({ review }: ReviewDisplayProps) {
     });
   };
 
-  const renderStars = (rating: number) => {
-    return '★'.repeat(rating) + '☆'.repeat(5 - rating);
-  };
-
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -38,34 +36,22 @@ export function ReviewDisplay({ review }: ReviewDisplayProps) {
       <View style={styles.ratingsContainer}>
         <View style={styles.ratingRow}>
           <Text style={styles.ratingLabel}>전체 만족도</Text>
-          <View style={styles.ratingValue}>
-            <Text style={styles.stars}>{renderStars(review.overallRating)}</Text>
-            <Text style={styles.ratingNumber}>{review.overallRating.toFixed(1)}</Text>
-          </View>
+          <StarRating rating={review.overallRating} size={16} showValue />
         </View>
 
         <View style={styles.ratingRow}>
           <Text style={styles.ratingLabel}>서비스 품질</Text>
-          <View style={styles.ratingValue}>
-            <Text style={styles.stars}>{renderStars(review.qualityRating)}</Text>
-            <Text style={styles.ratingNumber}>{review.qualityRating.toFixed(1)}</Text>
-          </View>
+          <StarRating rating={review.qualityRating} size={16} showValue />
         </View>
 
         <View style={styles.ratingRow}>
           <Text style={styles.ratingLabel}>전문성</Text>
-          <View style={styles.ratingValue}>
-            <Text style={styles.stars}>{renderStars(review.professionalismRating)}</Text>
-            <Text style={styles.ratingNumber}>{review.professionalismRating.toFixed(1)}</Text>
-          </View>
+          <StarRating rating={review.professionalismRating} size={16} showValue />
         </View>
 
         <View style={styles.ratingRow}>
           <Text style={styles.ratingLabel}>시간 준수</Text>
-          <View style={styles.ratingValue}>
-            <Text style={styles.stars}>{renderStars(review.timelinessRating)}</Text>
-            <Text style={styles.ratingNumber}>{review.timelinessRating.toFixed(1)}</Text>
-          </View>
+          <StarRating rating={review.timelinessRating} size={16} showValue />
         </View>
       </View>
 
@@ -81,11 +67,12 @@ export function ReviewDisplay({ review }: ReviewDisplayProps) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.surfaceAlt,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.accentAlt,
     padding: 16,
+    ...shadows.md,
   },
   header: {
     flexDirection: 'row',
@@ -100,7 +87,7 @@ const styles = StyleSheet.create({
   },
   date: {
     fontSize: 13,
-    color: colors.textSecondary,
+    color: colors.textMuted,
   },
   ratingsContainer: {
     gap: 12,
@@ -112,20 +99,6 @@ const styles = StyleSheet.create({
   },
   ratingLabel: {
     fontSize: 14,
-    color: colors.text,
-  },
-  ratingValue: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stars: {
-    fontSize: 16,
-    color: colors.rating,
-  },
-  ratingNumber: {
-    fontSize: 14,
-    fontWeight: '600',
     color: colors.text,
   },
   textContainer: {

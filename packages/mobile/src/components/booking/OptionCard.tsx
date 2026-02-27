@@ -1,7 +1,8 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import { borderRadius, colors, spacing } from '../../theme';
+import { borderRadius, colors, overlays, spacing } from '../../theme';
+import { shadows } from '../../theme/shadows';
 
 export interface OptionCardProps {
   /** Main label text */
@@ -96,16 +97,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: spacing.md,
-    backgroundColor: colors.background,
-    borderRadius: borderRadius.lg,
+    backgroundColor: overlays.frostedGlass,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: colors.border,
     minHeight: 72,
+    ...shadows.sm,
   },
   containerSelected: {
-    borderColor: colors.borderDark,
-    borderWidth: 3,
-    backgroundColor: colors.background,
+    borderColor: colors.accentAlt,
+    borderWidth: 2,
+    backgroundColor: colors.surfaceAlt,
   },
   containerDisabled: {
     opacity: 0.5,
@@ -136,7 +138,7 @@ const styles = StyleSheet.create({
   },
   description: {
     fontSize: 14,
-    color: colors.subtle,
+    color: colors.textMuted,
     lineHeight: 20,
   },
   descriptionSelected: {

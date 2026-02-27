@@ -1,7 +1,10 @@
 import React from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import { borderRadius, colors, spacing } from '../../theme';
+import { primitives } from '@524/shared/theme';
+import { Ionicons } from '@expo/vector-icons';
+import { borderRadius, colors, overlays, spacing } from '../../theme';
+import { shadows } from '../../theme/shadows';
 
 export interface ArtistCardProps {
   /** Artist ID */
@@ -156,7 +159,7 @@ export function ArtistCard({
 function StarIcon() {
   return (
     <View style={styles.starIcon}>
-      <Text style={styles.starText}>★</Text>
+      <Ionicons name="star" size={12} color={primitives.base} />
     </View>
   );
 }
@@ -173,10 +176,14 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: spacing.md,
-    backgroundColor: colors.background,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.primary,
+    padding: spacing.md,
+    marginVertical: 6,
+    marginHorizontal: 4,
+    backgroundColor: overlays.frostedGlass,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.accentAlt,
+    ...shadows.sm,
   },
   cardContent: {
     flex: 1,
@@ -201,7 +208,7 @@ const styles = StyleSheet.create({
   imagePlaceholderText: {
     fontSize: 28,
     fontWeight: '600',
-    color: colors.muted,
+    color: colors.textMuted,
   },
   info: {
     flex: 1,
@@ -247,7 +254,7 @@ const styles = StyleSheet.create({
   },
   moreSpecialties: {
     fontSize: 14,
-    color: colors.muted,
+    color: colors.textMuted,
     fontWeight: '400',
   },
   ratingRow: {
@@ -257,10 +264,6 @@ const styles = StyleSheet.create({
   starIcon: {
     marginRight: 4,
   },
-  starText: {
-    fontSize: 12,
-    color: colors.text,
-  },
   rating: {
     fontSize: 14,
     fontWeight: '400',
@@ -269,7 +272,7 @@ const styles = StyleSheet.create({
   divider: {
     width: 1,
     height: 11,
-    backgroundColor: colors.primary,
+    backgroundColor: colors.border,
     marginHorizontal: 8,
   },
   reviewCount: {

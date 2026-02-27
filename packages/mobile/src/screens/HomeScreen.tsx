@@ -261,8 +261,14 @@ export function HomeScreen() {
                   <Text style={styles.regularText}>의 예약이</Text>
                 </Text>
                 <Text style={styles.mainMessage}>
-                  <Text style={styles.boldText}>{daysUntilBooking}일</Text>
-                  <Text style={styles.regularText}> 남았어요</Text>
+                  {daysUntilBooking === 0 ? (
+                    <Text style={styles.boldText}>오늘이에요!</Text>
+                  ) : (
+                    <>
+                      <Text style={styles.boldText}>{daysUntilBooking}일</Text>
+                      <Text style={styles.regularText}> 남았어요</Text>
+                    </>
+                  )}
                 </Text>
               </>
             ) : (

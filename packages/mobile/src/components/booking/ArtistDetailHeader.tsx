@@ -1,7 +1,10 @@
+import { primitives } from '@524/shared/theme';
+import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import { colors, spacing } from '../../theme';
+import { colors, spacing, textStyles } from '../../theme';
+import { shadows } from '../../theme/shadows';
 
 export interface ArtistDetailHeaderProps {
   /** Artist name */
@@ -31,7 +34,7 @@ export function ArtistDetailHeader({
 }: ArtistDetailHeaderProps) {
   return (
     <View style={styles.container} testID={testID}>
-      {/* Profile Image */}
+      {/* Profile Image - Centered and Larger */}
       <View style={styles.imageContainer}>
         {imageUrl ? (
           <Image source={{ uri: imageUrl }} style={styles.image} />
@@ -42,82 +45,68 @@ export function ArtistDetailHeader({
         )}
       </View>
 
-      {/* Artist Info */}
-      <View style={styles.info}>
-        <View style={styles.topRow}>
-          <Text style={styles.name} numberOfLines={1}>
-            {name}
-          </Text>
-          {onChatPress && (
-            <TouchableOpacity
-              style={styles.iconButton}
-              onPress={onChatPress}
-              accessibilityLabel="메시지 보내기"
-              accessibilityRole="button"
-            >
-              <ChatIcon />
-            </TouchableOpacity>
-          )}
-        </View>
+      {/* Artist Name - Large and Bold */}
+      <Text style={styles.name} numberOfLines={1}>
+        {name}
+      </Text>
 
-        {specialty && (
-          <Text style={styles.specialty} numberOfLines={1}>
-            {specialty}
+      {/* Specialty */}
+      {specialty && (
+        <Text style={styles.specialty} numberOfLines={1}>
+          {specialty}
+        </Text>
+      )}
+
+      {/* Stats Row with Teal Accent */}
+      <View style={styles.statsRow}>
+        {rating !== undefined && (
+          <View style={styles.statItem}>
+            <Ionicons name="star" size={14} color={colors.primary} />
+            <Text style={styles.statValue}>{rating.toFixed(1)}</Text>
+          </View>
+        )}
+        {rating !== undefined && reviewCount !== undefined && <View style={styles.statDivider} />}
+        {reviewCount !== undefined && (
+          <Text style={styles.statText}>
+            <Text style={styles.statHighlight}>{reviewCount}</Text> 리뷰
           </Text>
         )}
-
-        {/* Rating and review row */}
-        <View style={styles.ratingRow}>
-          {rating !== undefined && (
-            <>
-              <StarIcon />
-              <Text style={styles.rating}>{rating.toFixed(1)}</Text>
-            </>
-          )}
-          {rating !== undefined && reviewCount !== undefined && <View style={styles.divider} />}
-          {reviewCount !== undefined && <Text style={styles.reviewCount}>리뷰 {reviewCount}</Text>}
-        </View>
       </View>
-    </View>
-  );
-}
 
-function StarIcon() {
-  return (
-    <View style={styles.starIcon}>
-      <Text style={styles.starText}>★</Text>
-    </View>
-  );
-}
-
-function ChatIcon() {
-  return (
-    <View style={styles.chatIcon}>
-      <Text style={styles.chatIconText}>💬</Text>
+      {/* Chat Button - Positioned Absolute */}
+      {onChatPress && (
+        <TouchableOpacity
+          style={styles.chatButton}
+          onPress={onChatPress}
+          accessibilityLabel="메시지 보내기"
+          accessibilityRole="button"
+        >
+          <Ionicons name="chatbubble-outline" size={20} color={colors.text} />
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 24,
-    paddingVertical: 16,
+    paddingVertical: 24,
     backgroundColor: colors.background,
-    borderBottomWidth: 6,
-    borderBottomColor: colors.surfaceAlt,
+    position: 'relative',
   },
   imageContainer: {
-    position: 'relative',
-    width: 80,
-    height: 80,
+    marginBottom: 16,
   },
   image: {
-    width: 80,
-    height: 80,
-    borderRadius: 11.43,
+    width: 120,
+    height: 120,
+    borderRadius: 16,
     backgroundColor: colors.surfaceAlt,
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.8)',
+    ...shadows.md,
   },
   imagePlaceholder: {
     justifyContent: 'center',
@@ -125,71 +114,60 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceAlt,
   },
   imagePlaceholderText: {
-    fontSize: 28,
+    fontSize: 40,
     fontWeight: '600',
-    color: colors.muted,
-  },
-  info: {
-    flex: 1,
-    marginLeft: spacing.md,
-    justifyContent: 'center',
-  },
-  topRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 4,
+    color: colors.textMuted,
   },
   name: {
-    fontSize: 16,
-    fontWeight: '500',
+    ...textStyles.h1,
     color: colors.text,
-    flex: 1,
+    textAlign: 'center',
+    marginBottom: 4,
   },
   specialty: {
-    fontSize: 14,
-    color: colors.text,
-    marginBottom: 4,
-    fontWeight: '400',
+    ...textStyles.body,
+    color: colors.textMuted,
+    textAlign: 'center',
+    marginBottom: 12,
   },
-  ratingRow: {
+  statsRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  starIcon: {
-    marginRight: 4,
+  statItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
-  starText: {
-    fontSize: 12,
+  statValue: {
+    ...textStyles.label,
     color: colors.text,
   },
-  rating: {
-    fontSize: 14,
-    fontWeight: '400',
-    color: colors.text,
-  },
-  divider: {
+  statDivider: {
     width: 1,
-    height: 11,
-    backgroundColor: colors.primary,
-    marginHorizontal: 8,
+    height: 14,
+    backgroundColor: colors.border,
+    marginHorizontal: 12,
   },
-  reviewCount: {
-    fontSize: 14,
-    color: colors.text,
-    fontWeight: '400',
+  statText: {
+    ...textStyles.body,
+    color: colors.textMuted,
   },
-  iconButton: {
-    padding: 4,
-    marginLeft: spacing.xs,
+  statHighlight: {
+    color: colors.primary,
+    fontWeight: '600',
   },
-  chatIcon: {
-    width: 20,
-    height: 20,
+  chatButton: {
+    position: 'absolute',
+    top: 24,
+    right: 24,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  chatIconText: {
-    fontSize: 16,
+    ...shadows.sm,
   },
 });

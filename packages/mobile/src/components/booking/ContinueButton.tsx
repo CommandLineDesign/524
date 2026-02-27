@@ -1,8 +1,8 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import { borderRadius, colors, gradients, spacing } from '../../theme';
+import { borderRadius, colors, spacing } from '../../theme';
+import { shadows } from '../../theme/shadows';
 
 export interface ContinueButtonProps {
   /** Button label */
@@ -58,28 +58,13 @@ export function ContinueButton({
         accessibilityState={{ disabled: isDisabled }}
         accessibilityLabel={label}
         testID={testID}
+        style={[
+          styles.button,
+          isPrimary ? styles.buttonPrimary : styles.buttonSecondary,
+          isDisabled && (isPrimary ? styles.buttonPrimaryDisabled : styles.buttonSecondaryDisabled),
+        ]}
       >
-        {isPrimary ? (
-          <LinearGradient
-            colors={[...gradients.accent.colors]}
-            start={gradients.accent.start}
-            end={gradients.accent.end}
-            locations={[...gradients.accent.locations]}
-            style={[styles.button, isDisabled && styles.buttonPrimaryDisabled]}
-          >
-            {buttonContent}
-          </LinearGradient>
-        ) : (
-          <View
-            style={[
-              styles.button,
-              styles.buttonSecondary,
-              isDisabled && styles.buttonSecondaryDisabled,
-            ]}
-          >
-            {buttonContent}
-          </View>
-        )}
+        {buttonContent}
       </TouchableOpacity>
       {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
     </View>
@@ -96,10 +81,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  buttonPrimary: {
+    backgroundColor: colors.primary,
+    ...shadows.md,
+  },
   buttonSecondary: {
     backgroundColor: colors.background,
     borderWidth: 1,
-    borderColor: colors.primary,
+    borderColor: colors.border,
   },
   buttonPrimaryDisabled: {
     opacity: 0.5,

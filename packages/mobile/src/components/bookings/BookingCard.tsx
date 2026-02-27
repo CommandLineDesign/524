@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 
 import { colors } from '../../theme/colors';
+import { shadows } from '../../theme/shadows';
 import { BookingStatusBadge } from './BookingStatusBadge';
 import { formatCurrency, formatSchedule, summarizeServices } from './bookingDisplay';
 
@@ -65,12 +66,13 @@ export function BookingCard({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.surfaceAlt,
     borderRadius: 14,
     padding: 16,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.accentAlt,
     gap: 10,
+    ...shadows.md,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -79,7 +81,7 @@ const styles = StyleSheet.create({
   },
   bookingNumber: {
     fontSize: 13,
-    color: colors.subtle,
+    color: colors.textMuted,
   },
   cardBody: {
     gap: 4,
@@ -91,11 +93,11 @@ const styles = StyleSheet.create({
   },
   artistText: {
     fontSize: 14,
-    color: colors.subtle,
+    color: colors.textMuted,
   },
   scheduleText: {
     fontSize: 13,
-    color: colors.muted,
+    color: colors.textSecondary,
   },
   cardFooter: {
     flexDirection: 'row',
@@ -105,7 +107,7 @@ const styles = StyleSheet.create({
   },
   footerLabel: {
     fontSize: 13,
-    color: colors.muted,
+    color: colors.textMuted,
   },
   amount: {
     fontSize: 16,

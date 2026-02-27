@@ -25,7 +25,8 @@ import type { RootStackParamList } from '../../../navigation/AppNavigator';
 import { useArtistProfile, useUpdateArtistProfile } from '../../../query/artist';
 import { useAuthStore } from '../../../store/authStore';
 import { useBookingFlowStore } from '../../../store/bookingFlowStore';
-import { borderRadius, colors, spacing } from '../../../theme';
+import { borderRadius, colors, overlays, spacing } from '../../../theme';
+import { shadows } from '../../../theme/shadows';
 
 interface ArtistDetailScreenProps {
   route: {
@@ -270,30 +271,30 @@ export function ArtistDetailScreen({ route }: ArtistDetailScreenProps) {
         reviewCount={artist.totalReviews}
       />
 
-      {/* Tab Bar */}
-      <View style={styles.tabBar}>
+      {/* Tab Bar - Pill Style Segmented Control */}
+      <View style={styles.tabContainer}>
         <TouchableOpacity
-          style={styles.tab}
+          style={[styles.tab, activeTab === 'profile' && styles.tabActive]}
           onPress={() => setActiveTab('profile')}
           accessibilityRole="button"
+          accessibilityState={{ selected: activeTab === 'profile' }}
           accessibilityLabel="상세정보 탭"
         >
           <Text style={[styles.tabText, activeTab === 'profile' && styles.tabTextActive]}>
             상세정보
           </Text>
-          {activeTab === 'profile' && <View style={styles.tabIndicator} />}
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.tab}
+          style={[styles.tab, activeTab === 'reviews' && styles.tabActive]}
           onPress={() => setActiveTab('reviews')}
           accessibilityRole="button"
+          accessibilityState={{ selected: activeTab === 'reviews' }}
           accessibilityLabel="리뷰 탭"
         >
           <Text style={[styles.tabText, activeTab === 'reviews' && styles.tabTextActive]}>
-            리뷰
+            리뷰 {artist.totalReviews ? `(${artist.totalReviews})` : ''}
           </Text>
-          {activeTab === 'reviews' && <View style={styles.tabIndicator} />}
         </TouchableOpacity>
       </View>
 
@@ -444,32 +445,36 @@ const styles = StyleSheet.create({
   buttonDisabled: {
     opacity: 0.5,
   },
-  tabBar: {
+  tabContainer: {
     flexDirection: 'row',
-    borderBottomWidth: 1,
-    borderBottomColor: colors.surfaceAlt,
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    padding: 4,
+    marginHorizontal: 24,
+    marginVertical: 16,
   },
   tab: {
     flex: 1,
-    paddingVertical: 12,
+    paddingVertical: 10,
+    borderRadius: 8,
     alignItems: 'center',
-    position: 'relative',
+  },
+  tabActive: {
+    backgroundColor: colors.background,
+    shadowColor: colors.text,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   tabText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '500',
-    color: colors.muted,
+    color: colors.textMuted,
   },
   tabTextActive: {
+    fontWeight: '600',
     color: colors.text,
-  },
-  tabIndicator: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 2,
-    backgroundColor: colors.text,
   },
   tabContent: {
     flex: 1,
@@ -477,15 +482,18 @@ const styles = StyleSheet.create({
   bookButtonContainer: {
     padding: spacing.lg,
     paddingBottom: spacing.xl,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    backgroundColor: colors.background,
+    backgroundColor: overlays.frostedGlassLight,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    ...shadows.lg,
   },
   bookButton: {
     backgroundColor: colors.primary,
-    paddingVertical: spacing.md,
+    height: 52,
     borderRadius: borderRadius.pill,
     alignItems: 'center',
+    justifyContent: 'center',
+    ...shadows.md,
   },
   bookButtonText: {
     color: colors.background,
@@ -493,15 +501,14 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   unavailableContainer: {
-    backgroundColor: colors.surfaceAlt,
-    paddingVertical: spacing.md,
+    backgroundColor: colors.surface,
+    height: 52,
     borderRadius: borderRadius.pill,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
+    justifyContent: 'center',
   },
   unavailableText: {
-    color: colors.muted,
+    color: colors.textMuted,
     fontSize: 14,
     fontWeight: '500',
     textAlign: 'center',

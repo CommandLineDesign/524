@@ -4,7 +4,8 @@ import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { RootStackParamList } from '../../navigation/AppNavigator';
-import { colors } from '../../theme/colors';
+import { colors, overlays } from '../../theme/colors';
+import { shadows } from '../../theme/shadows';
 
 interface ConversationWithDetails {
   id: string;
@@ -116,11 +117,15 @@ export function ConversationListItem({ conversation }: ConversationListItemProps
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    backgroundColor: colors.surface,
+    marginHorizontal: 16,
+    marginVertical: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderRadius: 14,
+    backgroundColor: overlays.frostedGlass,
+    borderWidth: 1,
+    borderColor: colors.accentAlt,
+    ...shadows.sm,
   },
   avatar: {
     width: 48,
@@ -154,7 +159,7 @@ const styles = StyleSheet.create({
   },
   timestamp: {
     fontSize: 12,
-    color: colors.muted,
+    color: colors.textMuted,
     marginLeft: 8,
   },
   messageRow: {
@@ -164,11 +169,11 @@ const styles = StyleSheet.create({
   },
   lastMessage: {
     fontSize: 14,
-    color: colors.muted,
+    color: colors.textMuted,
     flex: 1,
   },
   unreadBadge: {
-    backgroundColor: colors.primary,
+    backgroundColor: overlays.frostedGlassLight,
     borderRadius: 10,
     minWidth: 20,
     height: 20,
@@ -179,7 +184,7 @@ const styles = StyleSheet.create({
   },
   unreadCount: {
     fontSize: 12,
-    fontWeight: '600',
-    color: colors.background,
+    fontWeight: '700',
+    color: colors.text,
   },
 });

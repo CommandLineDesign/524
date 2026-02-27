@@ -1,7 +1,8 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import { borderRadius, colors, spacing } from '../../theme';
+import { borderRadius, colors, overlays, spacing } from '../../theme';
+import { shadows } from '../../theme/shadows';
 
 export interface TreatmentOptionProps {
   /** Treatment name */
@@ -105,14 +106,16 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.md,
-    backgroundColor: colors.background,
-    borderRadius: borderRadius.md,
+    backgroundColor: overlays.frostedGlass,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: colors.border,
+    ...shadows.sm,
   },
   containerSelected: {
-    backgroundColor: colors.surface,
-    borderColor: colors.primary,
+    backgroundColor: colors.surfaceAlt,
+    borderColor: colors.accentAlt,
+    borderWidth: 2,
   },
   containerDisabled: {
     opacity: 0.5,
@@ -183,13 +186,13 @@ const styles = StyleSheet.create({
   },
   description: {
     fontSize: 14,
-    color: colors.subtle,
+    color: colors.textMuted,
     flex: 1,
     marginRight: spacing.sm,
   },
   duration: {
     fontSize: 13,
-    color: colors.muted,
+    color: colors.textMuted,
   },
   textDisabled: {
     color: colors.muted,

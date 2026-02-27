@@ -46,15 +46,18 @@ export function NewLoginScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [emailFocused, setEmailFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleLogin = async () => {
+    setErrorMessage(null);
+
     if (!email || !password) {
-      Alert.alert('오류', '아이디와 비밀번호를 입력해주세요.');
+      setErrorMessage('아이디와 비밀번호를 입력해주세요.');
       return;
     }
 
     if (!isValidEmail(email)) {
-      Alert.alert('오류', '올바른 이메일 형식을 입력해주세요.');
+      setErrorMessage('올바른 이메일 형식을 입력해주세요.');
       return;
     }
 
@@ -63,10 +66,7 @@ export function NewLoginScreen() {
       await login(email, password);
       // Navigation will be handled by the navigation setup
     } catch (error) {
-      Alert.alert(
-        '로그인 실패',
-        error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.'
-      );
+      setErrorMessage('이메일 또는 비밀번호가 올바르지 않습니다.');
     } finally {
       setIsLoading(false);
     }
@@ -101,7 +101,10 @@ export function NewLoginScreen() {
             <TextInput
               style={[styles.input, emailFocused && styles.inputFocused]}
               value={email}
-              onChangeText={setEmail}
+              onChangeText={(text) => {
+                setEmail(text);
+                if (errorMessage) setErrorMessage(null);
+              }}
               placeholder=""
               keyboardType="email-address"
               autoCapitalize="none"
@@ -120,7 +123,10 @@ export function NewLoginScreen() {
             <TextInput
               style={[styles.input, passwordFocused && styles.inputFocused]}
               value={password}
-              onChangeText={setPassword}
+              onChangeText={(text) => {
+                setPassword(text);
+                if (errorMessage) setErrorMessage(null);
+              }}
               placeholder=""
               secureTextEntry
               editable={!isLoading}
@@ -133,6 +139,9 @@ export function NewLoginScreen() {
             />
           </View>
         </View>
+
+        {/* Error Message */}
+        {errorMessage && <Text style={styles.errorMessage}>{errorMessage}</Text>}
 
         {/* Login Button */}
         <TouchableOpacity
@@ -277,7 +286,13 @@ const styles = StyleSheet.create({
   },
   formSection: {
     gap: spacing.md,
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
+  },
+  errorMessage: {
+    fontSize: typography.sizes.sm,
+    color: colors.error,
+    textAlign: 'center',
+    marginBottom: spacing.sm,
   },
   fieldContainer: {
     gap: spacing.md,
