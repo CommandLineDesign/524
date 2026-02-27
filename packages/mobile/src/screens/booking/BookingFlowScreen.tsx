@@ -262,13 +262,13 @@ export function BookingFlowScreen({ route }: BookingFlowScreenProps) {
 }
 
 // Helper functions to define step order for each flow
+// NOTE: treatmentSelection is disabled. See: docs/architecture/SIMPLIFIED_PRICING.md
 function getCelebrityFlowSteps(): BookingStepKey[] {
   return [
     'locationInput',
     'serviceSelection',
     'scheduleSelection',
     'artistList',
-    // 'treatmentSelection', // SKIP - using simplified artist pricing model
     'styleSelection',
     'paymentConfirmation',
     'bookingComplete',
@@ -280,7 +280,6 @@ function getDirectFlowSteps(): BookingStepKey[] {
     'serviceSelection',
     'scheduleSelection',
     'artistList',
-    // 'treatmentSelection', // SKIP - using simplified artist pricing model
     'styleSelection',
     'paymentConfirmation',
     'bookingComplete',
@@ -290,10 +289,5 @@ function getDirectFlowSteps(): BookingStepKey[] {
 // Home entry flow - location, time, artist, and service are pre-selected from home screen
 // Occasion selection is now handled on the payment confirmation screen
 function getHomeEntryFlowSteps(): BookingStepKey[] {
-  return [
-    // 'treatmentSelection', // SKIP - using simplified artist pricing model
-    'styleSelection',
-    'paymentConfirmation',
-    'bookingComplete',
-  ];
+  return ['styleSelection', 'paymentConfirmation', 'bookingComplete'];
 }

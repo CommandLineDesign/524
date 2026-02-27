@@ -19,6 +19,7 @@ type BookingRow = typeof bookings.$inferSelect & {
   completedAt?: Date | null;
   completedBy?: string | null;
   referenceImages?: unknown;
+  specialRequests?: string | null;
   review?: {
     id: string;
     overallRating: number;
@@ -53,6 +54,7 @@ function mapRowToSummary(row: BookingRow): BookingSummary {
     completedAt: row.completedAt?.toISOString() ?? undefined,
     completedBy: row.completedBy ?? undefined,
     referenceImages: (row.referenceImages as string[] | null) ?? undefined,
+    specialRequests: row.specialRequests ?? undefined,
     cancellationReason: row.cancellationReason ?? undefined,
     cancelledBy: (row.cancelledBy as 'artist' | 'customer') ?? undefined,
     cancelledAt: row.cancelledAt?.toISOString() ?? undefined,
@@ -169,6 +171,7 @@ export class BookingRepository {
         completedAt: bookings.completedAt,
         completedBy: bookings.completedBy,
         referenceImages: bookings.referenceImages,
+        specialRequests: bookings.specialRequests,
         cancellationReason: bookings.cancellationReason,
         cancelledBy: bookings.cancelledBy,
         cancelledAt: bookings.cancelledAt,
@@ -230,6 +233,7 @@ export class BookingRepository {
         completedAt: bookings.completedAt,
         completedBy: bookings.completedBy,
         referenceImages: bookings.referenceImages,
+        specialRequests: bookings.specialRequests,
         cancellationReason: bookings.cancellationReason,
         cancelledBy: bookings.cancelledBy,
         cancelledAt: bookings.cancelledAt,
@@ -295,6 +299,7 @@ export class BookingRepository {
         completedAt: bookings.completedAt,
         completedBy: bookings.completedBy,
         referenceImages: bookings.referenceImages,
+        specialRequests: bookings.specialRequests,
         cancellationReason: bookings.cancellationReason,
         cancelledBy: bookings.cancelledBy,
         cancelledAt: bookings.cancelledAt,

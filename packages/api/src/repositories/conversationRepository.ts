@@ -1,15 +1,22 @@
-import { conversations as conversationsTable } from '@524/database';
+import { conversations as conversationsTable, users } from '@524/database';
 import { and, desc, eq, sql } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/pg-core';
 
 import { conversations, messages } from '@524/database';
 
 import { db } from '../db/client.js';
+
+// Aliases for joining users table twice (customer and artist)
+const customerUser = alias(users, 'customerUser');
+const artistUser = alias(users, 'artistUser');
 
 export interface ConversationWithDetails {
   id: string;
   bookingId: string | null;
   customerId: string;
   artistId: string;
+  customerName: string | null;
+  artistName: string | null;
   status: string | null;
   lastMessageAt: Date;
   unreadCountCustomer: number | null;
@@ -89,10 +96,12 @@ export class ConversationRepository {
   ): Promise<ConversationWithDetails[]> {
     const userIdField = userRole === 'customer' ? conversations.customerId : conversations.artistId;
 
-    // First get paginated conversations, then join with their latest message
+    // Get paginated conversations with user names and latest message
     const result = await db
       .select({
         conversation: conversations,
+        customerName: customerUser.name,
+        artistName: artistUser.name,
         lastMessage: {
           id: messages.id,
           content: messages.content,
@@ -101,6 +110,8 @@ export class ConversationRepository {
         },
       })
       .from(conversations)
+      .leftJoin(customerUser, eq(customerUser.id, conversations.customerId))
+      .leftJoin(artistUser, eq(artistUser.id, conversations.artistId))
       .leftJoin(
         messages,
         and(
@@ -117,6 +128,8 @@ export class ConversationRepository {
 
     return result.map((row) => ({
       ...row.conversation,
+      customerName: row.customerName,
+      artistName: row.artistName,
       lastMessage: row.lastMessage || undefined,
     }));
   }
@@ -128,6 +141,8 @@ export class ConversationRepository {
     const result = await db
       .select({
         conversation: conversations,
+        customerName: customerUser.name,
+        artistName: artistUser.name,
         lastMessage: {
           id: messages.id,
           content: messages.content,
@@ -136,6 +151,8 @@ export class ConversationRepository {
         },
       })
       .from(conversations)
+      .leftJoin(customerUser, eq(customerUser.id, conversations.customerId))
+      .leftJoin(artistUser, eq(artistUser.id, conversations.artistId))
       .leftJoin(
         messages,
         and(
@@ -159,6 +176,8 @@ export class ConversationRepository {
 
     return {
       ...result[0].conversation,
+      customerName: result[0].customerName,
+      artistName: result[0].artistName,
       lastMessage: result[0].lastMessage,
     };
   }
@@ -271,10 +290,12 @@ export class ConversationRepository {
   async getAllConversations(
     pagination: { limit: number; offset: number } = { limit: 20, offset: 0 }
   ): Promise<ConversationWithDetails[]> {
-    // First get paginated conversations, then join with their latest message
+    // Get paginated conversations with user names and latest message
     const result = await db
       .select({
         conversation: conversations,
+        customerName: customerUser.name,
+        artistName: artistUser.name,
         lastMessage: {
           id: messages.id,
           content: messages.content,
@@ -283,6 +304,8 @@ export class ConversationRepository {
         },
       })
       .from(conversations)
+      .leftJoin(customerUser, eq(customerUser.id, conversations.customerId))
+      .leftJoin(artistUser, eq(artistUser.id, conversations.artistId))
       .leftJoin(
         messages,
         and(
@@ -299,6 +322,8 @@ export class ConversationRepository {
 
     return result.map((row) => ({
       ...row.conversation,
+      customerName: row.customerName,
+      artistName: row.artistName,
       lastMessage: row.lastMessage || undefined,
     }));
   }
@@ -310,6 +335,8 @@ export class ConversationRepository {
     const result = await db
       .select({
         conversation: conversations,
+        customerName: customerUser.name,
+        artistName: artistUser.name,
         lastMessage: {
           id: messages.id,
           content: messages.content,
@@ -318,6 +345,8 @@ export class ConversationRepository {
         },
       })
       .from(conversations)
+      .leftJoin(customerUser, eq(customerUser.id, conversations.customerId))
+      .leftJoin(artistUser, eq(artistUser.id, conversations.artistId))
       .leftJoin(
         messages,
         and(
@@ -341,6 +370,8 @@ export class ConversationRepository {
 
     return {
       ...result[0].conversation,
+      customerName: result[0].customerName,
+      artistName: result[0].artistName,
       lastMessage: result[0].lastMessage,
     };
   }
@@ -352,6 +383,8 @@ export class ConversationRepository {
     const result = await db
       .select({
         conversation: conversations,
+        customerName: customerUser.name,
+        artistName: artistUser.name,
         lastMessage: {
           id: messages.id,
           content: messages.content,
@@ -360,6 +393,8 @@ export class ConversationRepository {
         },
       })
       .from(conversations)
+      .leftJoin(customerUser, eq(customerUser.id, conversations.customerId))
+      .leftJoin(artistUser, eq(artistUser.id, conversations.artistId))
       .leftJoin(
         messages,
         and(
@@ -378,6 +413,8 @@ export class ConversationRepository {
 
     return {
       ...result[0].conversation,
+      customerName: result[0].customerName,
+      artistName: result[0].artistName,
       lastMessage: result[0].lastMessage,
     };
   }

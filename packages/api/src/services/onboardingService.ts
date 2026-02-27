@@ -178,4 +178,58 @@ export class OnboardingService {
 
     return this.getState(userId);
   }
+
+  /**
+   * Get onboarding responses that are marked as shareWithStylist
+   * Used to share customer preferences with artists for bookings
+   */
+  async getSharedResponses(customerId: string): Promise<
+    Array<{
+      stepKey: string;
+      title: string;
+      subtitle?: string;
+      response: unknown;
+    }>
+  > {
+    const { flow, variant } = this.assignFlow(customerId);
+
+    // Get steps that are marked as shareWithStylist
+    const sharedSteps = variant.steps.filter((s) => s.shareWithStylist);
+    if (sharedSteps.length === 0) {
+      return [];
+    }
+
+    const sharedStepKeys = sharedSteps.map((s) => s.key);
+
+    // Get responses for shared steps
+    const rows = await db
+      .select({
+        stepKey: onboardingResponses.stepKey,
+        response: onboardingResponses.response,
+      })
+      .from(onboardingResponses)
+      .where(
+        and(
+          eq(onboardingResponses.userId, customerId),
+          eq(onboardingResponses.flowId, flow.id),
+          eq(onboardingResponses.flowVersion, flow.version),
+          eq(onboardingResponses.variantId, variant.id)
+        )
+      );
+
+    // Filter to only shared steps and enrich with metadata
+    const result = rows
+      .filter((row) => sharedStepKeys.includes(row.stepKey as OnboardingStepKey))
+      .map((row) => {
+        const stepDef = sharedSteps.find((s) => s.key === row.stepKey);
+        return {
+          stepKey: row.stepKey,
+          title: stepDef?.title || row.stepKey,
+          subtitle: stepDef?.subtitle,
+          response: row.response,
+        };
+      });
+
+    return result;
+  }
 }

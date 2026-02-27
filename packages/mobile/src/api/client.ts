@@ -868,6 +868,69 @@ export async function updateArtistAvailability(
   });
 }
 
+// === Customer Profile API ===
+
+export interface CustomerProfile {
+  id: string;
+  userId: string;
+  name: string;
+  email: string | null;
+  phoneNumber: string | null;
+  skinType: string | null;
+  skinTone: string | null;
+  hairType: string | null;
+  hairLength: string | null;
+  allergies: unknown;
+  sensitivities: unknown;
+  medicalNotes: string | null;
+  preferredStyles: unknown;
+  favoriteArtists: unknown;
+  genderPreference: string | null;
+  primaryAddress: unknown;
+  savedAddresses: unknown;
+  totalBookings: number;
+  completedBookings: number;
+  cancelledBookings: number;
+  averageRatingGiven: number | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UpdateCustomerProfilePayload {
+  name?: string;
+  skinType?: string | null;
+  skinTone?: string | null;
+  hairType?: string | null;
+  hairLength?: string | null;
+  allergies?: unknown;
+  sensitivities?: unknown;
+  medicalNotes?: string | null;
+  preferredStyles?: unknown;
+  favoriteArtists?: unknown;
+  genderPreference?: string | null;
+  primaryAddress?: unknown;
+  savedAddresses?: unknown;
+}
+
+/**
+ * Get the authenticated customer's profile
+ */
+export async function getCustomerProfile(): Promise<CustomerProfile> {
+  return request('/api/v1/customers/me/profile', { method: 'GET' });
+}
+
+/**
+ * Update the authenticated customer's profile
+ */
+export async function updateCustomerProfile(
+  payload: UpdateCustomerProfilePayload
+): Promise<CustomerProfile> {
+  return request('/api/v1/customers/me/profile', {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+}
+
 // Axios-like API client for compatibility
 export const apiClient = {
   async get<T>(path: string, config?: { params?: Record<string, string> }): Promise<T> {

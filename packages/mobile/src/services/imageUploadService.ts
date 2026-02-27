@@ -1,4 +1,4 @@
-import axios from 'axios';
+import { Image } from 'react-native';
 
 import { apiClient } from '../api/client';
 
@@ -123,21 +123,28 @@ async function getImageInfo(uri: string): Promise<{
   height: number;
   fileSize?: number;
 }> {
-  return new Promise((resolve, reject) => {
-    // This is a simplified version - in a real app you'd use a proper image library
-    // For now, we'll return placeholder values
-    // You might want to use react-native-image-size or similar library
-
-    // Simulate getting image dimensions
-    // In practice, you'd need to:
-    // 1. Use Image.getSize() from react-native
-    // 2. Or use a library like react-native-image-size
-    // 3. Get file size using RNFS.stat()
-
-    resolve({
-      width: 1920, // Placeholder
-      height: 1080, // Placeholder
-      fileSize: 1024 * 1024, // 1MB placeholder
-    });
+  // Get image dimensions using React Native's Image API
+  const dimensions = await new Promise<{ width: number; height: number }>((resolve, reject) => {
+    Image.getSize(
+      uri,
+      (width, height) => resolve({ width, height }),
+      (error) => reject(new Error(`Failed to get image dimensions: ${error}`))
+    );
   });
+
+  // Get file size by fetching the blob
+  let fileSize: number | undefined;
+  try {
+    const response = await fetch(uri);
+    const blob = await response.blob();
+    fileSize = blob.size;
+  } catch (error) {
+    console.warn('Could not determine file size:', error);
+  }
+
+  return {
+    width: dimensions.width,
+    height: dimensions.height,
+    fileSize,
+  };
 }

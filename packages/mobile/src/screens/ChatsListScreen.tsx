@@ -42,8 +42,13 @@ export function ChatsListScreen() {
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const renderConversationItem = useCallback(
-    ({ item }: { item: Conversation }) => <ConversationListItem conversation={item} />,
-    []
+    ({ item }: { item: Conversation }) => (
+      <ConversationListItem
+        conversation={item}
+        currentUserRole={userRole as 'customer' | 'artist'}
+      />
+    ),
+    [userRole]
   );
 
   const renderEmptyState = () => (

@@ -209,15 +209,15 @@ const STEP_FLOW: Record<BookingStepKey, BookingStepKey[]> = {
   locationInput: ['serviceSelection'],
   serviceSelection: ['scheduleSelection'],
 
-  // Common flow (occasionSelection removed - now handled on payment confirmation screen)
-  occasionSelection: ['scheduleSelection'], // Kept for backward compatibility
+  // Common flow (occasionSelection now handled on payment confirmation screen)
+  occasionSelection: ['scheduleSelection'],
   scheduleSelection: ['artistList'],
 
-  // Artist steps - go directly to styleSelection (treatmentSelection is skipped)
+  // Artist steps - NOTE: treatmentSelection disabled (see docs/architecture/SIMPLIFIED_PRICING.md)
   artistList: ['styleSelection'],
   bookmarkedArtists: ['styleSelection'],
 
-  // Treatment steps - kept for backward compatibility but treatmentSelection is skipped
+  // Treatment steps - retained for future use
   treatmentSelection: ['styleSelection'],
   styleSelection: ['paymentConfirmation'],
 
@@ -252,9 +252,7 @@ export const useBookingFlowStore = create<BookingFlowStore>((set, get) => ({
     if (path === 'celebrity') {
       initialStep = 'locationInput';
     } else if (path === 'homeEntry') {
-      // homeEntry starts at styleSelection since location, service, date, time, and artist are pre-selected
-      // treatmentSelection is skipped - using simplified artist pricing model
-      // Occasion selection is handled on the payment confirmation screen
+      // homeEntry starts at styleSelection (location, service, date, time, and artist pre-selected)
       initialStep = 'styleSelection';
     } else {
       // 'direct' starts at serviceSelection
@@ -473,10 +471,7 @@ export const useBookingFlowStore = create<BookingFlowStore>((set, get) => ({
   // ===========================================================================
 
   initializeFromHome: (params) => {
-    // Initialize the store with pre-selected values from home screen
-    // This starts the flow at styleSelection with artist, location, time, and service already set
-    // treatmentSelection is skipped - using simplified artist pricing model
-    // Occasion selection is handled on the payment confirmation screen
+    // Initialize from home screen with pre-selected artist, location, time, and service
     set({
       ...initialState,
       celebrities: { ...initialCelebrities },
@@ -510,15 +505,12 @@ export const useBookingFlowStore = create<BookingFlowStore>((set, get) => ({
   getProgressPercent: () => {
     const { entryPath, currentStep } = get();
 
-    // Define step indices for progress calculation
-    // treatmentSelection is skipped - using simplified artist pricing model
-    // Occasion selection is handled on the payment confirmation screen
+    // Step arrays for progress calculation (treatmentSelection disabled - see docs/architecture/SIMPLIFIED_PRICING.md)
     const celebritySteps: BookingStepKey[] = [
       'locationInput',
       'serviceSelection',
       'scheduleSelection',
       'artistList',
-      // 'treatmentSelection', // SKIP - using simplified artist pricing
       'styleSelection',
       'paymentConfirmation',
       'bookingComplete',
@@ -528,17 +520,13 @@ export const useBookingFlowStore = create<BookingFlowStore>((set, get) => ({
       'serviceSelection',
       'scheduleSelection',
       'artistList',
-      // 'treatmentSelection', // SKIP - using simplified artist pricing
       'styleSelection',
       'paymentConfirmation',
       'bookingComplete',
     ];
 
-    // Home entry flow skips location/service/schedule/artist selection since those are pre-set
-    // treatmentSelection is skipped - using simplified artist pricing model
-    // Occasion selection is handled on the payment confirmation screen
+    // Home entry: location/service/schedule/artist pre-selected
     const homeEntrySteps: BookingStepKey[] = [
-      // 'treatmentSelection', // SKIP - using simplified artist pricing
       'styleSelection',
       'paymentConfirmation',
       'bookingComplete',

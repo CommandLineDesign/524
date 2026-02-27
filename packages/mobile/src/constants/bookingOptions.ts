@@ -490,6 +490,26 @@ export const styleSelectionStrings = {
   selectedCount: (count: number, max: number) => `${count}/${max}개 선택됨`,
 } as const;
 
+export interface StyleOption {
+  id: string;
+  imageUrl: string;
+  label: string;
+}
+
+/**
+ * Default style options for style selection screen.
+ * NOTE: This is placeholder data. In production, these should be fetched from
+ * an API endpoint that returns artist-specific or global style catalog data.
+ */
+export const defaultStyleOptions: StyleOption[] = [
+  { id: 'style-1', imageUrl: 'https://placeholder.com/style1.jpg', label: '내추럴' },
+  { id: 'style-2', imageUrl: 'https://placeholder.com/style2.jpg', label: '글래머' },
+  { id: 'style-3', imageUrl: 'https://placeholder.com/style3.jpg', label: '청순' },
+  { id: 'style-4', imageUrl: 'https://placeholder.com/style4.jpg', label: '섹시' },
+  { id: 'style-5', imageUrl: 'https://placeholder.com/style5.jpg', label: '러블리' },
+  { id: 'style-6', imageUrl: 'https://placeholder.com/style6.jpg', label: '시크' },
+];
+
 // =============================================================================
 // PAYMENT CONFIRMATION SCREEN
 // =============================================================================

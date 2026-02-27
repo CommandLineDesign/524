@@ -18,6 +18,8 @@ export interface Conversation {
   bookingId?: string;
   customerId: string;
   artistId: string;
+  customerName?: string | null;
+  artistName?: string | null;
   status: string;
   lastMessageAt: Date;
   unreadCountCustomer: number;

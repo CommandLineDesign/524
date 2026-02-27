@@ -2,7 +2,11 @@ import React, { useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 
 import { BookingLayout, ContinueButton, StyleCard } from '../../../components/booking';
-import { flowConfig, styleSelectionStrings } from '../../../constants/bookingOptions';
+import {
+  defaultStyleOptions,
+  flowConfig,
+  styleSelectionStrings,
+} from '../../../constants/bookingOptions';
 import {
   pickBookingReferencePhoto,
   uploadBookingReferencePhoto,
@@ -17,16 +21,6 @@ interface StyleSelectionScreenProps {
   showBackButton?: boolean;
   progress: number;
 }
-
-// Mock style options - in production these would come from API
-const mockStyles = [
-  { id: 'style-1', imageUrl: 'https://placeholder.com/style1.jpg', label: '내추럴' },
-  { id: 'style-2', imageUrl: 'https://placeholder.com/style2.jpg', label: '글래머' },
-  { id: 'style-3', imageUrl: 'https://placeholder.com/style3.jpg', label: '청순' },
-  { id: 'style-4', imageUrl: 'https://placeholder.com/style4.jpg', label: '섹시' },
-  { id: 'style-5', imageUrl: 'https://placeholder.com/style5.jpg', label: '러블리' },
-  { id: 'style-6', imageUrl: 'https://placeholder.com/style6.jpg', label: '시크' },
-];
 
 export function StyleSelectionScreen({
   onContinue,
@@ -139,7 +133,7 @@ export function StyleSelectionScreen({
           />
 
           {/* Style cards */}
-          {mockStyles.map((style) => (
+          {defaultStyleOptions.map((style) => (
             <StyleCard
               key={style.id}
               id={style.id}

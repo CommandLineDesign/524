@@ -51,6 +51,7 @@ export interface BookingSummary {
   completedAt?: string;
   completedBy?: string;
   referenceImages?: string[];
+  specialRequests?: string | null;
   cancellationReason?: string;
   cancelledBy?: 'artist' | 'customer';
   cancelledAt?: string;

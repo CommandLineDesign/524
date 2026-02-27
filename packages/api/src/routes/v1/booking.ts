@@ -93,4 +93,12 @@ router.post(
   BookingController.submitReview
 );
 
+// Artist action: get customer onboarding preferences for booking
+router.get(
+  '/:bookingId/customer-preferences',
+  requireAuth(['artist', 'admin']),
+  validateBookingId,
+  BookingController.getCustomerPreferences
+);
+
 export const bookingRouter: IRouter = router;

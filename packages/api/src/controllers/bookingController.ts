@@ -4,6 +4,7 @@ import { BOOKING_STATUS } from '@524/shared';
 
 import type { AuthRequest } from '../middleware/auth.js';
 import { BookingService } from '../services/bookingService.js';
+import { OnboardingService } from '../services/onboardingService.js';
 import { ReviewService, type SubmitReviewPayload } from '../services/reviewService.js';
 
 interface ReviewImageKey {
@@ -15,6 +16,7 @@ interface ReviewImageKey {
 
 const bookingService = new BookingService();
 const reviewService = new ReviewService();
+const onboardingService = new OnboardingService();
 
 // Utility function to extract user roles from request
 function getUserRoles(req: AuthRequest): string[] {
@@ -357,6 +359,57 @@ export const BookingController = {
 
       const review = await reviewService.submitReview(bookingId, userId, payload);
       res.status(201).json(review);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  /**
+   * GET /api/v1/bookings/:bookingId/customer-preferences
+   * Get customer onboarding preferences that are marked as shareWithStylist
+   * Only accessible by the artist assigned to the booking
+   */
+  async getCustomerPreferences(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        res.status(401).json({ error: 'User not authenticated' });
+        return;
+      }
+
+      const bookingId = req.params.bookingId;
+      if (!bookingId) {
+        res.status(400).json({ error: 'Booking ID is required' });
+        return;
+      }
+
+      // Get the booking to verify access and get customer ID
+      const booking = await bookingService.getBookingById(bookingId);
+      if (!booking) {
+        res.status(404).json({ error: 'Booking not found' });
+        return;
+      }
+
+      // Only allow the artist assigned to this booking (or admin)
+      const roles = getUserRoles(req);
+      const isAdmin = roles.includes('admin');
+      const isAssignedArtist = booking.artistId === userId;
+
+      if (!isAdmin && !isAssignedArtist) {
+        res.status(403).json({ error: 'Only the assigned artist can view customer preferences' });
+        return;
+      }
+
+      // Get shared onboarding responses for the customer
+      const preferences = await onboardingService.getSharedResponses(booking.customerId);
+
+      res.json({
+        success: true,
+        data: {
+          customerId: booking.customerId,
+          preferences,
+        },
+      });
     } catch (error) {
       next(error);
     }

@@ -12,6 +12,8 @@ interface ConversationWithDetails {
   bookingId?: string;
   customerId: string;
   artistId: string;
+  customerName?: string | null;
+  artistName?: string | null;
   status: string;
   lastMessageAt: Date;
   unreadCountCustomer: number;
@@ -25,18 +27,16 @@ interface ConversationWithDetails {
     messageType: string;
     sentAt: Date;
   };
-  // Additional fields for display
-  otherUserName?: string;
-  otherUserRole?: 'customer' | 'artist';
 }
 
 interface ConversationListItemProps {
   conversation: ConversationWithDetails;
+  currentUserRole: 'customer' | 'artist';
 }
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
-export function ConversationListItem({ conversation }: ConversationListItemProps) {
+export function ConversationListItem({ conversation, currentUserRole }: ConversationListItemProps) {
   const navigation = useNavigation<NavigationProp>();
 
   const handlePress = () => {
@@ -78,12 +78,17 @@ export function ConversationListItem({ conversation }: ConversationListItemProps
     }
   };
 
-  // In a real app, you'd fetch the other user's name
-  // For now, we'll use placeholder
-  const otherUserName = conversation.otherUserName || 'User';
+  // Get the other user's name based on current user role
+  const otherUserName =
+    currentUserRole === 'customer'
+      ? conversation.artistName || 'Artist'
+      : conversation.customerName || 'Customer';
 
-  // Calculate unread count (would depend on current user)
-  const unreadCount = 0; // TODO: Calculate based on current user role
+  // Get unread count based on current user role
+  const unreadCount =
+    currentUserRole === 'customer'
+      ? (conversation.unreadCountCustomer ?? 0)
+      : (conversation.unreadCountArtist ?? 0);
 
   return (
     <TouchableOpacity style={styles.container} onPress={handlePress} activeOpacity={0.7}>
