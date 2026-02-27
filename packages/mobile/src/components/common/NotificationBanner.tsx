@@ -8,7 +8,8 @@ import {
   type ViewStyle,
 } from 'react-native';
 
-import { colors } from '../../theme/colors';
+import { colors, overlays } from '../../theme/colors';
+import { shadows } from '../../theme/shadows';
 import { spacing } from '../../theme/spacing';
 
 interface TextSegment {
@@ -62,11 +63,14 @@ export function NotificationBanner({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.background,
+    backgroundColor: overlays.frostedGlassLight,
     borderRadius: 20,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
     alignSelf: 'center',
+    borderWidth: 1,
+    borderColor: colors.accentAlt,
+    ...shadows.sm,
   },
   text: {
     fontSize: 13,

@@ -9,7 +9,7 @@ import { ARTIST_PRICE_PRESETS_KRW } from '@524/shared';
 import React from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
-import { borderRadius, colors, spacing } from '../../theme';
+import { borderRadius, colors, spacing, textStyles } from '../../theme';
 import { formStyles } from '../../theme/formStyles';
 import { PortfolioImageGrid, ServiceEditor } from '../artist';
 import { LocationPicker } from '../location';
@@ -346,8 +346,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+    ...textStyles.h3,
     color: colors.text,
     marginBottom: 12,
   },
@@ -367,15 +366,14 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   tag: {
-    backgroundColor: colors.surfaceAlt,
+    backgroundColor: colors.accentAlt,
     borderRadius: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
   },
   tagText: {
-    fontSize: 14,
-    color: colors.text,
-    fontWeight: '400',
+    ...textStyles.labelSmall,
+    color: colors.background,
   },
   servicesList: {
     gap: 8,
@@ -386,7 +384,7 @@ const styles = StyleSheet.create({
   },
   serviceBullet: {
     fontSize: 14,
-    color: colors.text,
+    color: colors.primary,
     marginRight: 8,
     lineHeight: 20,
   },
@@ -435,8 +433,7 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   pricingValue: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: colors.text,
+    ...textStyles.label,
+    color: colors.primary,
   },
 });

@@ -2,8 +2,8 @@ import React, { useMemo } from 'react';
 import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
 
 import { useArtistProfileReviewStats, useArtistProfileReviews } from '../../query/reviews';
-import { colors, spacing } from '../../theme';
-import { renderStars } from '../../utils/starUtils';
+import { colors, spacing, textStyles } from '../../theme';
+import { StarRating } from '../common/StarRating';
 import { ReviewCard } from '../reviews/ReviewCard';
 
 export interface ArtistReviewsTabProps {
@@ -56,26 +56,23 @@ export function ArtistReviewsTab({ artistId, testID }: ArtistReviewsTabProps) {
         stats ? (
           <View style={styles.header}>
             {/* Review Count Title */}
-            <Text style={styles.reviewTitle}>리뷰 {stats.totalReviews}</Text>
+            <Text style={styles.reviewTitle}>
+              리뷰 <Text style={styles.reviewCount}>{stats.totalReviews}</Text>
+            </Text>
 
             {/* Star Rating Row */}
             <View style={styles.ratingRow}>
-              <Text style={styles.stars}>
-                {stats.totalReviews > 0 ? renderStars(stats.averageOverallRating) : '☆☆☆☆☆'}
-              </Text>
-              <Text style={styles.ratingScore}>
-                {stats.averageOverallRating > 0 ? stats.averageOverallRating.toFixed(1) : 'N/A'}
-              </Text>
+              {stats.totalReviews > 0 ? (
+                <StarRating rating={stats.averageOverallRating} size={18} showValue />
+              ) : (
+                <StarRating rating={0} size={18} />
+              )}
             </View>
           </View>
         ) : null
       }
       renderItem={({ item, index }) => (
-        <ReviewCard
-          review={item}
-          containerStyle={styles.reviewCard}
-          isLast={index === reviews.length - 1}
-        />
+        <ReviewCard review={item} isLast={index === reviews.length - 1} />
       )}
       ListEmptyComponent={
         reviewsLoading ? (
@@ -122,35 +119,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: colors.text,
+    borderBottomColor: colors.border,
   },
   reviewTitle: {
-    fontSize: 20,
-    fontWeight: '500',
+    ...textStyles.h2,
     color: colors.text,
-    lineHeight: 24,
-    letterSpacing: 0.5,
     marginBottom: 8,
+  },
+  reviewCount: {
+    color: colors.primary,
+    fontWeight: '700',
   },
   ratingRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-  },
-  stars: {
-    fontSize: 18,
-    color: colors.text,
-  },
-  ratingScore: {
-    fontSize: 18,
-    fontWeight: '400',
-    color: colors.text,
-    lineHeight: 16,
-    letterSpacing: 0.4,
-  },
-  reviewCard: {
-    marginHorizontal: 20,
-    marginBottom: 12,
   },
   emptyState: {
     flex: 1,

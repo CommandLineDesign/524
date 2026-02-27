@@ -3,7 +3,8 @@ import React from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { borderRadius } from '../../theme/borderRadius';
-import { colors } from '../../theme/colors';
+import { colors, overlays } from '../../theme/colors';
+import { shadows } from '../../theme/shadows';
 import { spacing } from '../../theme/spacing';
 
 export interface LocationSelectorButtonProps {
@@ -22,7 +23,7 @@ export function LocationSelectorButton({
 
   return (
     <TouchableOpacity
-      style={styles.container}
+      style={[styles.container, shadows.md]}
       onPress={onPress}
       disabled={isLoading}
       accessibilityRole="button"
@@ -30,7 +31,7 @@ export function LocationSelectorButton({
       accessibilityHint="탭하여 위치를 변경합니다"
     >
       <View style={styles.iconContainer}>
-        <Ionicons name="location-outline" size={20} color={colors.text} />
+        <Ionicons name="location-outline" size={20} color={colors.accentAlt} />
       </View>
 
       <View style={styles.textContainer}>
@@ -52,12 +53,14 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surfaceAlt,
+    backgroundColor: overlays.frostedGlass,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.md,
     borderRadius: borderRadius.lg,
     marginHorizontal: spacing.lg,
     marginBottom: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.accentAlt,
   },
   iconContainer: {
     marginRight: spacing.sm,

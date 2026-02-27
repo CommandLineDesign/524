@@ -10,7 +10,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { borderRadius, colors, spacing } from '../../theme';
+import { borderRadius, colors, overlays, spacing } from '../../theme';
+import { shadows } from '../../theme/shadows';
 import { GradientBackground } from '../common/GradientBackground';
 
 export interface BookingLayoutProps {
@@ -241,10 +242,11 @@ const styles = StyleSheet.create({
   },
   footer: {
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    backgroundColor: colors.background,
+    paddingVertical: spacing.lg,
+    backgroundColor: overlays.frostedGlassLight,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    ...shadows.lg,
   },
   footerWithBack: {
     flexDirection: 'row',

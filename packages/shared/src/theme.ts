@@ -31,6 +31,11 @@ export const primitives = {
   darkest:     '#183d27', // Darker
   nearBlack:   '#07110a', // Replaces black
 
+  // Accent colors (cool teal - complements green)
+  accentCool:      '#2A9D8F', // Teal - primary accent
+  accentCoolLight: '#6FCFC4', // Light teal - gradient highlight
+  accentCoolDark:  '#1D6B62', // Dark teal - depth
+
   // Status colors
   successLight: '#dcfce7',
   success:      '#22c55e',
@@ -59,14 +64,17 @@ export const colors = {
   // Text
   text: primitives.nearBlack,
   textSecondary: primitives.dark,
+  textMuted: primitives.dark, // WCAG AA compliant (4.5:1+) - use instead of muted for text
   subtle: primitives.mediumDark,
-  muted: primitives.medium,
+  muted: primitives.medium, // Warning: low contrast (2.28:1) - avoid for text, use for icons/decorative only
 
   // Brand colors - primary is the green brand color
   primary: primitives.base, // #49AA65 green (main brand color)
   primaryDark: primitives.mediumDark, // #3d8f55 for pressed/hover states
   primaryLight: primitives.lighter,
   accent: primitives.base,
+  accentAlt: primitives.accentCool, // Teal accent
+  accentAltLight: primitives.accentCoolLight, // Light teal
 
   // Borders
   border: primitives.light,
@@ -171,6 +179,14 @@ export const gradients = {
     end: { x: 1, y: 1 },
     locations: [0, 0.5, 1] as const,
   },
+
+  // Bold gradient with movement - for selector buttons
+  bold: {
+    colors: [primitives.light, primitives.mediumLight] as const,
+    start: { x: 0, y: 0 },
+    end: { x: 1, y: 1 },
+    locations: [0, 1] as const,
+  },
 } as const;
 
 /**
@@ -195,6 +211,10 @@ export const overlays = {
   // Light overlays (lightening effects)
   lightOverlay:        'rgba(236, 246, 239, 0.95)', // lightest @ 95%
   lightOverlaySubtle:  'rgba(236, 246, 239, 0.2)',  // lightest @ 20%
+
+  // Frosted glass effect
+  frostedGlass:        'rgba(255, 255, 255, 0.7)',  // White @ 70% - glass effect
+  frostedGlassLight:   'rgba(255, 255, 255, 0.85)', // White @ 85% - lighter glass
 
   // Status overlays with transparency
   successOverlay:      'rgba(34, 197, 94, 0.4)',    // success @ 40%

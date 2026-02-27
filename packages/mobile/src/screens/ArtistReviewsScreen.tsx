@@ -13,11 +13,11 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { Review } from '../api/client';
+import { StarRating } from '../components/common/StarRating';
 import { ReviewCard } from '../components/reviews/ReviewCard';
 import type { RootStackParamList } from '../navigation/AppNavigator';
 import { useArtistReviewStats, useArtistReviews } from '../query/reviews';
 import { colors } from '../theme/colors';
-import { renderStars } from '../utils/starUtils';
 
 type ArtistReviewsNavProp = NativeStackNavigationProp<RootStackParamList, 'ArtistReviews'>;
 
@@ -104,7 +104,7 @@ export function ArtistReviewsScreen() {
         <View style={styles.statsHeader}>
           <View style={styles.overallRating}>
             <Text style={styles.ratingNumber}>{stats.averageOverallRating}</Text>
-            <Text style={styles.stars}>{renderStars(stats.averageOverallRating)}</Text>
+            <StarRating rating={stats.averageOverallRating} size={18} />
             <Text style={styles.reviewCount}>총 {stats.totalReviews}개의 리뷰</Text>
           </View>
         </View>
@@ -112,18 +112,15 @@ export function ArtistReviewsScreen() {
         <View style={styles.detailRatings}>
           <View style={styles.ratingRow}>
             <Text style={styles.ratingLabel}>품질</Text>
-            <Text style={styles.starsSmall}>{renderStars(stats.averageQualityRating)}</Text>
-            <Text style={styles.ratingValue}>{stats.averageQualityRating}</Text>
+            <StarRating rating={stats.averageQualityRating} size={14} showValue />
           </View>
           <View style={styles.ratingRow}>
             <Text style={styles.ratingLabel}>전문성</Text>
-            <Text style={styles.starsSmall}>{renderStars(stats.averageProfessionalismRating)}</Text>
-            <Text style={styles.ratingValue}>{stats.averageProfessionalismRating}</Text>
+            <StarRating rating={stats.averageProfessionalismRating} size={14} showValue />
           </View>
           <View style={styles.ratingRow}>
             <Text style={styles.ratingLabel}>시간 엄수</Text>
-            <Text style={styles.starsSmall}>{renderStars(stats.averageTimelinessRating)}</Text>
-            <Text style={styles.ratingValue}>{stats.averageTimelinessRating}</Text>
+            <StarRating rating={stats.averageTimelinessRating} size={14} showValue />
           </View>
         </View>
       </View>

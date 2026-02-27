@@ -2,7 +2,9 @@
 export const homeStrings = {
   bookingLabel: {
     withBooking: (userName: string, daysUntilBooking: number) =>
-      `${userName}님의 예약이 ${daysUntilBooking}일 남았어요. 탭하여 예약 상세 보기`,
+      daysUntilBooking === 0
+        ? `${userName}님의 예약이 오늘이에요! 탭하여 예약 상세 보기`
+        : `${userName}님의 예약이 ${daysUntilBooking}일 남았어요. 탭하여 예약 상세 보기`,
     withoutBooking: (userName: string) => `${userName}님, 예약이 없습니다`,
   },
   notifications: {

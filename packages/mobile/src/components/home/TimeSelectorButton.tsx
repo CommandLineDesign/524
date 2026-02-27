@@ -3,9 +3,10 @@ import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { borderRadius } from '../../theme/borderRadius';
-import { colors } from '../../theme/colors';
+import { colors, overlays } from '../../theme/colors';
+import { shadows } from '../../theme/shadows';
 import { spacing } from '../../theme/spacing';
-import { formatKoreanDate, parseISO } from '../../utils/dateDisplay';
+import { formatKoreanDate } from '../../utils/dateDisplay';
 
 export interface TimeSelectorButtonProps {
   date: string | null; // ISO date string
@@ -42,14 +43,14 @@ export function TimeSelectorButton({ date, timeSlot, onPress }: TimeSelectorButt
 
   return (
     <TouchableOpacity
-      style={styles.container}
+      style={[styles.container, shadows.md]}
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={`선택된 시간: ${displayText}`}
       accessibilityHint="탭하여 날짜와 시간을 변경합니다"
     >
       <View style={styles.iconContainer}>
-        <Ionicons name="time-outline" size={20} color={colors.text} />
+        <Ionicons name="time-outline" size={20} color={colors.accentAlt} />
       </View>
 
       <View style={styles.textContainer}>
@@ -67,12 +68,14 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surfaceAlt,
+    backgroundColor: overlays.frostedGlass,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.md,
     borderRadius: borderRadius.lg,
     marginHorizontal: spacing.lg,
     marginBottom: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.accentAlt,
   },
   iconContainer: {
     marginRight: spacing.sm,

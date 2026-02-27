@@ -2,7 +2,8 @@ import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { scheduleStrings, timeSlots } from '../../constants/bookingOptions';
-import { borderRadius, colors, spacing } from '../../theme';
+import { borderRadius, colors, overlays, spacing } from '../../theme';
+import { shadows } from '../../theme/shadows';
 
 export interface TimeSlotGridProps {
   /** Currently selected time slot */
@@ -91,19 +92,20 @@ const styles = StyleSheet.create({
     width: '23%',
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.xs,
-    borderRadius: borderRadius.md,
-    backgroundColor: colors.background,
+    borderRadius: 10,
+    backgroundColor: overlays.frostedGlass,
     borderWidth: 1,
-    borderColor: colors.text,
+    borderColor: colors.border,
     alignItems: 'center',
+    ...shadows.sm,
   },
   slotSelected: {
-    backgroundColor: colors.text,
-    borderColor: colors.text,
-    borderWidth: 1,
+    backgroundColor: colors.surfaceAlt,
+    borderColor: colors.accentAlt,
+    borderWidth: 2,
   },
   slotUnavailable: {
-    backgroundColor: colors.surfaceAlt,
+    backgroundColor: colors.surface,
     borderColor: colors.border,
     opacity: 0.5,
   },
@@ -113,11 +115,11 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   slotTextSelected: {
-    color: colors.background,
+    color: colors.text,
     fontWeight: '600',
   },
   slotTextUnavailable: {
-    color: colors.muted,
+    color: colors.textMuted,
     textDecorationLine: 'line-through',
   },
 });

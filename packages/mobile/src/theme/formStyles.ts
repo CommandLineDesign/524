@@ -1,7 +1,8 @@
 import { StyleSheet } from 'react-native';
 
 import { borderRadius } from './borderRadius';
-import { colors } from './colors';
+import { colors, overlays } from './colors';
+import { shadows } from './shadows';
 import { spacing } from './spacing';
 
 /**
@@ -40,16 +41,18 @@ export const formStyles = StyleSheet.create({
   // Selection Item Styles (for option lists)
   selectionItem: {
     height: spacing.inputHeight,
-    borderRadius: borderRadius.md,
-    backgroundColor: colors.background,
+    borderRadius: 14,
+    backgroundColor: overlays.frostedGlass,
     borderWidth: 1,
-    borderColor: colors.borderDark,
+    borderColor: colors.border,
     paddingHorizontal: spacing.md,
     justifyContent: 'center',
+    ...shadows.sm,
   },
   selectionItemSelected: {
-    borderWidth: 3,
-    borderColor: colors.borderDark,
+    borderWidth: 2,
+    borderColor: colors.accentAlt,
+    backgroundColor: colors.surfaceAlt,
   },
   selectionItemDisabled: {
     opacity: 0.5,

@@ -11,10 +11,10 @@ import {
 } from 'react-native';
 
 import type { Review } from '../api/client';
+import { StarRating } from '../components/common/StarRating';
 import { ReviewCard } from '../components/reviews/ReviewCard';
 import { useArtistProfileReviewStats, useArtistProfileReviews } from '../query/reviews';
 import { colors } from '../theme/colors';
-import { renderStars } from '../utils/starUtils';
 
 interface ArtistProfileScreenProps {
   route: {
@@ -87,9 +87,10 @@ export function ArtistProfileScreen({ route }: ArtistProfileScreenProps) {
                     {stats.averageOverallRating > 0 ? stats.averageOverallRating.toFixed(1) : 'N/A'}
                   </Text>
                   <View style={styles.overallRatingDetails}>
-                    <Text style={styles.stars}>
-                      {stats.totalReviews > 0 ? renderStars(stats.averageOverallRating) : '☆☆☆☆☆'}
-                    </Text>
+                    <StarRating
+                      rating={stats.totalReviews > 0 ? stats.averageOverallRating : 0}
+                      size={18}
+                    />
                     <Text style={styles.reviewCount}>
                       {stats.totalReviews === 0 ? '리뷰 없음' : `${stats.totalReviews}개의 리뷰`}
                     </Text>
